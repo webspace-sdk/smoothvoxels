@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    
+    <!-- Add the A-Frame and Smooth Voxels scripts -->
+    <!-- NOTE: Do NOT add a script tag for smoothvoxelworker.js. It will load automatically. -->
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="svox/svox.js"></script>
+    <script src="svox/matrix.js"></script>
+    <script src="svox/planar.js"></script>
+    <script src="svox/boundingbox.js"></script>
+    <script src="svox/voxelmatrix.js"></script>
+    <script src="svox/materiallist.js"></script>
+    <script src="svox/noise.js"></script>
+    <script src="svox/deformer.js"></script>
+    <script src="svox/vertexlinker.js"></script>
+    <script src="svox/vertextransformer.js"></script>
+    <script src="svox/normalscalculator.js"></script>
+    <script src="svox/lightscalculator.js"></script>
+    <script src="svox/aocalculator.js"></script>
+    <script src="svox/colorcombiner.js"></script>
+    <script src="svox/uvassigner.js"></script>
+    <script src="svox/simplifier.js"></script>
+    <script src="svox/facealigner.js"></script>
+    <script src="svox/model.js"></script>
+    <script src="svox/modelreader.js"></script>
+    <script src="svox/meshgenerator.js"></script>
+    <script src="svox/svoxtothreemeshconverter.js"></script>
+    <script src="svox/workerpool.js"></script>
+    <script src="svox/smoothvoxel.js"></script>
+    
+    <script>   
+      // Cherry model created in the Playground
+      SVOX.models.Apple777 = `
+        size = 7
+        scale = 0.15 0.17 0.15
+        rotation = 30 0 0
+        ao = 5 3
+        material lighting = smooth, roughness = 0.25, fade = true, deform = 3
+          colors = A:#C11 B:#F60 D:#000 C:#F93
+        material lighting = smooth, roughness = 1, fade = true, deform = 3
+          colors = E:#840 F:#000
+        voxels
+        ------- --AAA-- --AAA-- --AAA-- ------- ------- ------- 
+        --AAA-- -BAAAA- -BAAAA- -BAAAA- -BAAAA- ------- ------- 
+        -BADAA- BAAAAAA BAAAAAA BAAAAAA -B---A- ------- ------- 
+        -BDDDA- BAAAAAA CAAAAAA CABAAAA -B-E-A- ---E--- ---FF-- 
+        -BBDBA- BAAAAAA CAAAAAA CABBAAA -C---A- ------- ------- 
+        --BBB-- -BAAAB- -CAAAB- -CAAAB- -CCBBB- ------- ------- 
+        ------- --BBB-- --CCB-- --CCB-- ------- ------- -------
+      `;
+    </script>
+       
+  </head>
+  <body>
+    <a-scene id="scene" background="color: #08F">
+      
+      <!-- The svox a-frame component entity for the cherry -->
+      <a-entity 
+        svox="model:Apple777; worker:false;"
+        position="0 1.6 -2"
+        animation="property:rotation; from:0 0 0; to:0 360 0; loop: true; easing:linear; dur:5000">
+      </a-entity>
+      
+    </a-scene>
+  </body>
+</html>
