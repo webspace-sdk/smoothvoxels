@@ -223,7 +223,7 @@ class Model {
 
     UVAssigner.assignUVs(this);
     
-    Simplifier.simplify(this);
+     Simplifier.simplify(this);
     
     FaceAligner.alignFaceDiagonals(this);
   }
@@ -373,7 +373,6 @@ class Model {
                  scatter: material.scatter,
                  flatten: flatten,
                  clamp: clamp,
-                 equidistant: undefined,
                  count:1
                };
       this._setVertex(x, y, z, vertex);

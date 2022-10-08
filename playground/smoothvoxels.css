@@ -1,0 +1,311 @@
+/******************/
+/* General styles */
+/******************/
+
+* { 
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+   box-sizing: border-box; 
+}
+
+html { font-family: Helvetica, sans-serif; font-size: 16px; scroll-behavior: smooth; }
+
+body { margin:0; padding:0; font-family: Helvetica, sans-serif; font-size: 16px; /* overflow:hidden; */ background-color:#8AC; }
+
+div.full { max-width:50em; margin:auto; padding:0 1em 1em 1em; overflow-y:hidden; background-color:#FFFDFA; }
+
+h1 { color:#007dc1; margin: 0.25em 0em 0.25em 0em; }
+h2 { color:#007dc1; margin: 1em 0em 0.25em 0em; }
+h3 { color:#007dc1; margin: 1em 0em 0.0em 0em; }
+
+.button {
+  box-shadow:inset 0px 1px 0px 0px #54a3f7;
+  background:linear-gradient(to bottom, #007dc1 5%, #0061a7 100%);
+  background-color:#007dc1;
+  border-radius:5px;
+  border:1px solid #124d77;
+  display:inline-block;
+  cursor:pointer;
+  color:#ffffff;
+  padding:2px 24px;
+  text-decoration:none;
+  text-shadow:0px 1px 0px #154682;
+  margin: 0.1em; 
+}
+
+div.info { color:#888; font-style:italic; }
+
+.hide { display:none }
+
+a {
+  color: #007dc1;
+}
+
+/**********************/
+/* Cheat sheet styles */
+/**********************/
+
+pre.cheatsheetcode { 
+  font-family: monospace; font-size:0.75rem; font-weight:700; 
+  width:auto; border-radius:2px; padding:0.5em; 
+  background-color:#EEE; border: solid 1px #888; overflow: auto; 
+}
+
+/************************/
+/* Documentation Styles */
+/************************/
+
+div.frontpage {
+  display:none;
+  width:100%;
+  margin:0;
+  padding:0;
+  background-color:black;
+  color:white;
+}
+
+.frontpage div.title {   /* UNUSED? */
+  font-size: x-large;
+  display:block;
+  width:100%;
+  text-align:center;
+}
+ 
+.frontpage div.author {   /* UNUSED? */
+  display:block;
+  width:100%;
+  text-align:center;
+}
+
+div.logo { 
+  max-width:50em; margin:auto; padding:0; overflow-y:hidden; 
+  background: rgb(0,0,0);
+  background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 50%, rgba(255,154,53,1) 50%, rgba(255,154,53,1) 100%);
+}
+
+#ToC, #ToC li a, #ToC li a:visited {
+  list-style-type: none;
+  padding-left: 0.5em;
+  font-size: 20px;
+  color:#007dc1;
+  text-decoration: none;
+}
+
+a.totoc, a.totoc:visited {
+  color:#007dc1;
+  text-decoration: none;
+  clear:both; float:right; margin:-2em 0em 0em 0em;
+}
+
+pre.example { font-family: monospace; font-size:1rem; font-weight:400; width:100%; margin-top:0.75em; border-radius:2px; padding:0.5em; background-size:75vmin auto; background-repeat:no-repeat; background-position: right bottom; background-color:#adf; border: solid 1px #888; overflow: auto; 
+  text-shadow:    
+    -2px -2px 2px #adf,  0px -2px 2px #adf, 2px -2px 2px #adf,
+    -2px  0px 2px #adf,  0px  0px 2px #adf, 2px  0px 2px #adf,
+    -2px  2px 2px #adf,  0px  2px 2px #adf, 2px  2px 2px #adf
+    }
+.button.pre { position: relative; top:2.5em; float:right; right:0.75em; box-shadow: 0px 2px 4px 0px rgba(0,0,0, 0.5); }
+.button.pre:active { top:2.6em; box-shadow: unset; }
+span.pre { font-family: monospace; font-size:1rem; white-space: nowrap; border-radius:100px; padding:0 0.5em; background-color:#F0F0F0; border: solid 1px #AAA; }
+pre.syntax { background-color:#F0F0F0; text-shadow: none; border-radius:2px; border: solid 1px #AAA; padding:0.5em; }
+
+table { border-collapse: collapse; }
+th { border: solid 1px #AAA; padding: 0.5em }
+td { border: solid 1px #AAA; padding: 0.5em }
+
+.note { 
+    margin-top: 15px; 
+    margin-bottom: 15px; 
+    padding: 4px 12px; 
+    background-color: #FFF8D0; 
+    border-left: 6px solid #FFCC00; 
+} 
+
+@media print { 
+  div.frontpage { display:block; }
+  ::-webkit-scrollbar { display:none; }
+  body { background-color:unset; }
+  h2 { page-break-before: always; }
+  .pagebreak { page-break-before: always; }
+  a { text-decoration:unset; color:unset; }
+  a.totoc { display:none; }
+  .button.pre { display:none; }
+  pre { font-size:smaller; }
+  #visitors { display:none; }
+}
+  @page { margin:1cm; }
+
+/* Highlighting styles */
+
+pre { background-color:#FFF8F0; font-size:80%; width:100%; border-radius:2px; padding:0.5em; border: solid 1px #888; overflow: auto; }
+pre span.tag { color:#00F; font-weight:400; } 
+pre span.string { color:#A00; }
+pre span.comment { color:#080; font-style: italic; font-weight:300; }
+pre span.color { color:#A0A; font-weight:400; }
+
+/*********************/
+/* Playground styles */
+/*********************/
+
+.inactive { display:none !important; overflow:hidden; }
+div.playgroundleft { width:50vw; height:100vh; float:left; padding:0 1em 1em 1em; overflow-y:auto; overflow-x:visible; background-color:#FFFDFA; }
+div.playgroundright { width:50vw; height:100vh; float:right; background-color:#8cf; }
+div.buttonbar { width:100%; padding:0.33em; margin:1em 0 0.5em 0; background-color:#EEE; text-align:right; box-shadow:inset 0px 0px 1px 1px #CCC; border-radius:2px; }
+hr { border: 0; border-top: solid 1px #CCC; margin:0 0.5em 0 0.5em; }
+
+.button.green {
+  box-shadow:inset 0px 1px 0px 0px #54f7a3;
+  background:linear-gradient(to bottom, #00c17d 5%, #00a761 100%);
+  border:1px solid #12774d;
+  text-shadow:0px 1px 0px #158246;
+  background-color:#00c17d;  
+}
+.button:hover {
+  background:linear-gradient(to bottom, #0061a7 5%, #007dc1 100%);
+  text-decoration:none;
+  background-color:#0061a7;
+}
+.button.green:hover {
+  background:linear-gradient(to bottom, #00a761 5%, #00c17d 100%);
+  background-color:#00a761;
+}
+.button:active {
+  position:relative;
+  top:1px;
+}
+
+/* Ripple effect */
+.ripple {
+  background-position: center;
+  transition: background 0.4s;
+}
+.ripple:hover {
+  background: #47a7f5 radial-gradient(circle, transparent 1%, #47a7f5 1%) center/15000%;
+}
+.ripple:active {
+  background-color: #6eb9f7;
+  background-size: 100%;
+  transition: background 0s;
+}
+
+div.buttonbarpart { display:inline-block; margin: 0.1em; }
+select { padding:1px 2px 2px 2px}
+textarea { width:100%; min-width:100%; max-width:100%; height:50%; margin-top:0.25em; border-radius:2px; padding:0.5em; outline:none; white-space: pre; overflow: auto; }
+textarea:focus { box-shadow: inset 0 0 1px 1px #09F;  }
+#formula { height:10%; }
+div.errortext { color:red; }
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+  position: relative;
+  display: inline-block;
+  text-align:left;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+  display: none;
+  border: 1px solid #c0c0c0;
+  position: absolute;
+  left: -50px;
+  background-color: #f0f0f0;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+  color: black;
+  padding: 4px 16px;
+  text-decoration: none;
+  display: block;
+  white-space: nowrap;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover {background-color: #8CF;}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {display: block;}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown:hover .a.button {background-color: #3e8e41;}
+
+.editor {
+  width:100%; 
+  min-height:20px; 
+  border:solid 1px silver; 
+  border-radius:3px; 
+  resize:vertical; 
+  overflow:hidden; 
+  z-index:0;
+}
+
+/* Hide cursor when the editor does not have focus */
+.ace_hidden-cursors {
+  opacity: 0;
+}
+
+.fullscreen {
+  position:absolute;
+  width:58px;
+  height:34px;
+  line-height:28px;
+  right:5px; top:5px;
+  background-color: white;
+  border: 3.2px solid #6f90a6;
+  border-radius: 8px;
+  z-index:1;
+  color:#6f90a6;
+  text-align:center;
+  cursor: pointer;
+}
+  
+.fullscreen:hover {
+    color:red;
+    border-color:red;
+}
+
+div.playgroundright.displayfullscreen {
+  position:absolute;
+  width:100vw;
+}
+
+/**********************/
+/* Scroll bars styles */
+/**********************/
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-button {
+  width: 0px;
+  height: 0px;
+}
+::-webkit-scrollbar-thumb {
+  background: #706040;
+  border: 85px none #ffffff;
+  border-radius: 50px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ff8000;
+}
+::-webkit-scrollbar-thumb:active {
+  background: #ff8000;
+}
+::-webkit-scrollbar-track {
+  background: #c0b8a8;
+  border: 0px none #ffffff;
+  border-radius: 100px;
+}
+::-webkit-scrollbar-track:hover {
+  background: #c0b8a8;
+}
+::-webkit-scrollbar-track:active {
+  background: #c0b8a8;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+

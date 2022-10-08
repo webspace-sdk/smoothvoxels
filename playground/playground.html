@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>SVOX Playground</title>
+    <meta name="description" content="New Smooth Voxels Test">
+    
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="smoothvoxels.css">
+    <link rel="icon"       type="image/png" href="https://cdn.glitch.com/7426b469-4cb2-4027-abe8-f01d443ec980%2FFavicon.png?v=1622324946073">  
+    
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    
+    <!-- A-Frame Extras Component which (among other things) allows for the Oculus Go movement using the trackpad -->
+    <!-- https://github.com/donmccurdy/aframe-extras -->
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.0/dist/aframe-extras.min.js"></script>
+
+
+    <script src="../svox/svox.js"></script>
+    <script src="../svox/matrix.js"></script>
+    <script src="../svox/planar.js"></script>
+    <script src="../svox/boundingbox.js"></script>
+    <script src="../svox/voxelmatrix.js"></script>
+    <script src="../svox/materiallist.js"></script>
+    <script src="../svox/noise.js"></script>
+    <script src="../svox/deformer.js"></script>
+    <script src="../svox/vertexlinker.js"></script>
+    <script src="../svox/vertextransformer.js"></script>
+    <script src="../svox/normalscalculator.js"></script>
+    <script src="../svox/lightscalculator.js"></script>
+    <script src="../svox/aocalculator.js"></script>
+    <script src="../svox/colorcombiner.js"></script>
+    <script src="../svox/uvassigner.js"></script>
+    <script src="../svox/simplifier.js"></script>
+    <script src="../svox/facealigner.js"></script>
+    <script src="../svox/model.js"></script>
+    <script src="../svox/modelreader.js"></script>
+    <script src="../svox/meshgenerator.js"></script>
+    <script src="../svox/svoxtothreemeshconverter.js"></script>
+    <script src="../svox/workerpool.js"></script>
+    <script src="../svox/smoothvoxel.js"></script>
+    <script src="playground.1.2.0.js"></script>
+       
+    <!-- Ace Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ace.min.js"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ext-searchbox.min.js"></script>
+
+    <script>
+    // The model for the green rotating base 
+    SVOX.models.__base = `
+      model size = 10 1 10, shape = cylinder-y, scale = 0.15 0.15 0.15, origin = +y, clamp = y
+      material lighting = both, roughness = 1, colors = A:#7BC8A4 B:#5B9884
+      voxels 10B 8(BAAAAAAAAB) 10B
+    `;
+      
+     AFRAME.components["look-controls"].Component.prototype.onTouchMove = function (t) {
+                        let PI_2 = Math.PI/2;
+                        let e = null;
+                        let canvas = this.el.sceneEl.canvas;
+                        let yaw = this.yawObject;
+                        let pitch = this.pitchObject;
+                        if (this.touchStarted && this.data.touchEnabled) {
+                          let deltaX = -2 * Math.PI * (t.touches[0].pageX - this.touchStart.x) / canvas.clientWidth;
+                          let deltaY = -2 * Math.PI * (t.touches[0].pageY - this.touchStart.y) / canvas.clientHeight;
+                          pitch.rotation.x += .3 * deltaY, yaw.rotation.y += .5 * deltaX;
+                          pitch.rotation.x = Math.max(-PI_2, Math.min(PI_2, pitch.rotation.x)); 
+                          this.touchStart = {
+                                x: t.touches[0].pageX,
+                                y: t.touches[0].pageY
+                            };
+                        };
+                     };
+
+    </script>
+
+  </head>
+  <body style="overflow:hidden"> <!-- Dirty Layout Hack -->
+    
+    <div class="playgroundleft">
+           
+      <a href="/"><img style="float:left; height:45px; border-radius:5px; margin:5px 0.5em 0 0;" src="https://cdn.glitch.com/7426b469-4cb2-4027-abe8-f01d443ec980%2FSVOXLogo.svg?v=1621161387179"></a>
+
+      <h1 id="title" style="color:#F80;">
+        &nbsp;  
+      </h1>
+      
+     
+      <div class="buttonbar" style="">
+        <div class="buttonbarpart inactive">          
+          <label for="models">Model&nbsp;</label>
+          <select id="models" onchange="onChooseModel()">
+          </select>
+        </div>         
+        <div class="dropdown inactive">
+          <a href="javascript:void(0)" onclick="" class="button"><span class="fa fa-upload"></span></a>
+          <div class="dropdown-content">
+            <a class="ripple" href="javascript:void(0)" onclick="loadSvox();">SVOX file</a>
+            <a class="ripple" href="javascript:void(0)" onclick="reloadMagicaVoxel();">(Re)load MagicaVoxel VOX file</a>
+            <hr>
+            <a class="ripple" href="javascript:void(0)" onclick="loadImage();">From Image</a>
+            <a class="ripple" href="javascript:void(0)" onclick="addImage();">Add Image</a>
+            <a class="ripple" href="javascript:void(0)" onclick="addEnvironment();">Add Environment</a>
+          </div>
+        </div>
+        <div class="dropdown inactive">
+          <a href="javascript:void(0)" onclick="" class="button"><span class="fa fa-download"></span></a>
+          <div class="dropdown-content">
+            <a class="ripple" href="javascript:void(0)" onclick="downloadTextAsShown();">SVOX As Shown</a>
+            <a class="ripple" href="javascript:void(0)" onclick="downloadUncompressed();">SVOX Uncompressed</a>
+            <a class="ripple" href="javascript:void(0)" onclick="downloadCompressed();">SVOX Compressed</a>
+            <hr>
+            <a class="ripple" href="javascript:void(0)" onclick="downloadAFrameComponent(true,  false  );">A-Frame Full Scene</a>
+            <a class="ripple" href="javascript:void(0)" onclick="downloadAFrameComponent(false, true, 1);">A-Frame 0.1 precision</a>
+            <a class="ripple" href="javascript:void(0)" onclick="downloadAFrameComponent(false, true, 2);">A-Frame 0.01 precision</a>
+            <a class="ripple" href="javascript:void(0)" onclick="downloadAFrameComponent(false, true, 3);">A-Frame 0.001 precision</a>
+            <hr>
+            <a class="ripple" href="javascript:void(0)" onclick="downloadGltf(false);">glTF Model</a>
+            <a class="ripple" href="javascript:void(0)" onclick="downloadGltf(true);">glTF Binary Model</a>
+            <hr>
+            <a class="ripple" href="javascript:void(0)" onclick="downloadUncompressed(2);">SVOX Repeat x 2</a>
+            <a class="ripple" href="javascript:void(0)" onclick="downloadUncompressed(3);">SVOX Repeat x 3</a>
+            <a class="ripple" href="javascript:void(0)" onclick="downloadUncompressed(5);">SVOX Repeat x 5</a>
+            <hr>
+            <a class="ripple" href="javascript:void(0)" onclick="copyViewerUrl();">Copy viewer url</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a href="javascript:void(0)" onclick="resetOrbitCamera();" class="button"><span class="fa fa-cogs"></span></a>
+          <div class="dropdown-content">
+            <a class="ripple" href="javascript:void(0)" onclick="resetOrbitCamera();">Reset view</a>
+            <hr>
+            <a class="ripple" id="toggleAutoRender" href="javascript:void(0)" onclick="toggleAutoRender();">Render Auto/Off</a>
+            <a class="ripple" id="toggleRotate" href="javascript:void(0)" onclick="toggleRotate();">Rotate On/Off</a>
+            <a class="ripple" id="toggleFps" href="javascript:void(0)" onclick="toggleFps();">FPS On/Off</a>
+            <hr>
+            <a class="ripple" id="toggleScene" href="javascript:void(0)" onclick="toggleScene();">Scene Day/Night</a>
+            <a class="ripple" id="toggleBackground" href="javascript:void(0)" onclick="toggleBackground();">Background On/Off</a>
+            <a class="ripple" id="toggleEnvironment" href="javascript:void(0)" onclick="toggleEnvironment();">Env. Map On/Off</a>
+            <a class="ripple" id="toggleLights" href="javascript:void(0)" onclick="toggleLights();">Lights On/Off</a>
+            <a class="ripple" id="toggleShadow" href="javascript:void(0)" onclick="toggleShadow();">Shadow On/Off</a>
+            <a class="ripple" id="toggleBaseVisible" href="javascript:void(0)" onclick="toggleBaseVisible();">Base On/Off</a>
+            <hr>
+            <a class="ripple" id="toggleClampColors" href="javascript:void(0)" onclick="toggleClampColors();">ClampColors On/Off</a>
+          </div>
+        </div>
+        
+        <a href="javascript:void(0)" onclick="renderModel();" class="button green"><span title="Show" class="fa fa-play"></span></a>
+      </div>
+    
+      <div id="svoxerrors" class="errortext" style="float:left;"></div>
+      <div id="svoxstats" class="info" style="float:left;"></div>
+      
+      <a style="float:right; font-size:smaller;" target="_blank" href="/cheatsheet.html">Cheat Sheet</a>
+      <span style="float:right;">&nbsp;</span>
+      <a style="float:right; font-size:smaller;" target="_blank" href="/">Documentation</a>
+      
+      <div id="editor" class="editor" style="height:300px;">
+         <!-- Ace Editor -->
+      </div>
+      
+      <div class="buttonbar inactive">
+        <div class="buttonbarpart">          
+          <label for="formulas">Generate</label>
+          <select id="formulas" onchange="onChooseFormula()">
+          </select>
+        </div>  
+        <div class="buttonbarpart">          
+          <label for="palettes">in</label>
+          <select id="palettes" onchange="onChoosePalette()">
+          </select>
+        </div>  
+        <div class="buttonbarpart">         
+          <label>&nbsp;</label>
+          <select id="direction" class="hide">
+            <option name="Up">Up</option>
+            <option name="Down">Down</option>
+            <option name="Right">Right</option>
+            <option name="Left">Left</option>
+            <option name="Front">Front</option>
+            <option name="Back">Back</option>
+            <option name="Out">Out</option>
+            <option name="In">In</option>
+            <option name="X-Out">X-Out</option>
+            <option name="X-In">X-In</option>
+            <option name="Y-Out">Y-Out</option>
+            <option name="Y-In">Y-In</option>
+            <option name="Z-Out">Z-Out</option>
+            <option name="Z-In">Z-In</option>
+          </select>
+        </div>  
+        <div class="buttonbarpart">          
+          <label for="size">size</label>
+          <input id="size" type="text" value="10" maxlength="3" size="1">
+        </div>  
+        <div class="buttonbarpart">          
+          <label for="form">as</label>
+          <select id="form">
+            <option value="Smooth">Smooth</option>
+            <option value="Smooth-AO">Smooth AO</option>
+            <option value="Voxels">Voxels</option>
+            <option value="Voxels-AO">Voxels AO</option>
+          </select>
+        </div>  
+        <a href="javascript:void(0)" onclick="generateModel();" class="button green"><span title="Generate" class="fa fa-play"></span></a>
+      </div>
+
+      <div id="formulaerrors" class="errortext inactive"></div>
+
+      <div id="formula" class="editor inactive" style="height:100px;">
+         <!-- Ace Editor -->
+      </div>
+
+      <div class="info">
+        Edit the SVOX Model and press the 'Play' button to show the changes.<br>
+        <span class="inactive">Generate new models using the formula at the bottom.<br></span> 
+        Ctrl-h to replace with 'S' for only in selection (e.g. the voxels block).<br>
+        Alt-click-drag down for multiline edit.
+      </div>
+      <br>
+      <img id="visitors" src="https://visitor-badge.glitch.me/badge?page_id=samuelvanegmond.svox.playground&left_color=black&right_color=darkorange" alt="visitor badge"/>
+
+    </div>
+
+
+    <div id="right" class="playgroundright displayfullscreen">
+      
+    <a href="javascript:void(0)" onclick="onEnterFullScreen();">
+      <div id="enterfullscreen" class="fullscreen hide">
+        <span class="fa fa-expand"></span>
+      </div>
+    </a>
+      
+    <a href="javascript:void(0)" onclick="onExitFullScreen();">
+      <div id="exitfullscreen" class="fullscreen">
+        <span class="fa fa-compress"></span>
+      </div>
+    </a>
+      
+    <!-- fog="type: linear; color: #000; near:1; far:1.5"  -->   
+    <a-scene id="scene" embedded loading-screen="enabled:false"
+             light="defaultLightsEnabled: false"
+             background="color:#adf" 
+             renderer="highRefreshRate:true; logarithmicDepthBuffer:false; colorManagement: false;"
+             inspector screenshot vr-mode-ui device-orientation-permission-ui>
+      
+      <a-entity id="camera" camera></a-entity>
+  
+      <a-entity class="light" visible="false"                   
+                light="type: hemisphere;  color: #FFF; groundColor: #7BF8C8; intensity: 0.5"></a-entity>
+      <a-entity class="light" visible="false" position="-1 1 1" 
+                light="type: directional; color: #FFF; intensity: 0.75; 
+                       castShadow:true;  shadowBias:0.001; shadowMapWidth:2048; shadowMapHeight:2048;
+                       shadowCameraVisible:false; shadowCameraNear:0; shadowCameraFar:10; 
+                       shadowCameraBottom:-1; shadowCameraLeft:-2; shadowCameraTop:2; shadowCameraRight:2;"></a-entity>
+      <a-entity class="light" visible="false" position="0 1 -1" light="type: directional; color: #FFF; intensity: 0.50; castShadow:false; shadowBias:0.001;"></a-entity>
+    
+      
+      <a-entity id="container">  
+        <a-entity id="base" svox="model:__base" shadow></a-entity>
+        <!-- <a-box position="0 0.5 0" material="color:red; opacity:0.25;"></a-box> -->
+      </a-entity>
+        
+    </a-scene>
+      
+    </div>
+
+        
+   </body>
+
+  <script>
+    var editor = ace.edit("editor");
+    editor.setShowPrintMargin(false);
+    editor.session.setMode("ace/mode/text");
+    editor.setAutoScrollEditorIntoView(true);
+    editor.session.setUseSoftTabs(true);
+    editor.session.setTabSize(2);
+    editor.session.on('change', onModelChange);
+    new ResizeObserver(editorResize).observe(document.getElementById('editor'));
+    function editorResize() {
+      editor.resize();
+    }
+    
+    var formulaEditor = ace.edit("formula");
+    formulaEditor.setShowPrintMargin(false);
+    formulaEditor.session.setMode("ace/mode/text");
+    formulaEditor.setAutoScrollEditorIntoView(true);
+    formulaEditor.session.setUseSoftTabs(true);
+    formulaEditor.session.setTabSize(2);
+    new ResizeObserver(formulaEditorResize).observe(document.getElementById('formula'));
+    function formulaEditorResize() {
+      formulaEditor.resize();
+    }
+      
+    let PALETTES = [
+      { name: "Gold", size: 1, colors: `A:#FC4`, material:', metalness = 1, roughness = 0.1' },
+      { name: "Silver", size: 1, colors: `A:#FED`, material:', metalness = 1, roughness = 0.1' },
+      { name: "Glass", size: 1, colors: `A:#ADF`, material:', type = phong, metalness = 1, roughness = 0, refractionmap = env, refractionRatio = 0.9' },
+      { name: "Reflective Glass", size: 1, colors: `A:#ADF\r\n// The reflection is a shell, so an extra material and twice as many faces!\r\nmaterial lighting = flat, type = phong, metalness = 1, roughness = 0, reflectionmap = env, opacity = 0.2\r\n  colors = B:#FFF`, 
+                                          material:', type = phong, metalness = 1, roughness = 0, refractionmap = env, refractionRatio = 0.9, shell = B 0.01' },
+      { name: "Orange", size: 1, colors: `A:#F40`, material:'' },
+      { name: "Red", size: 1, colors: `A:#A00`, material:'' },
+      { name: "Green", size: 1, colors: `A:#080`, material:'' },
+      { name: "Blue", size: 1, colors: `A:#04F`, material:'' },
+      { name: "White", size: 1, colors: `A:#FFF`, material:'' },
+      { name: "Grey", size: 1, colors: `A:#888`, material:'' },
+      { name: "Black", size: 1, colors: `A:#000`, material:'' },
+      { 
+        name: "Black - White", 
+        size: 16,
+        colors: `A:#000 B:#111 C:#222 D:#333 E:#444 F:#555 G:#666 H:#777 I:#888 J:#999 K:#AAA L:#BBB M:#CCC N:#DDD O:#EEE P:#FFF`, 
+        material:', fade = true' 
+      },
+      { 
+        name: "Red - Yellow", 
+        size: 16,
+        colors: `A:#F00 B:#F10 C:#F20 D:#F30 E:#F40 F:#F50 G:#F60 H:#F70 I:#F80 J:#F90 K:#FA0 L:#FB0 M:#FC0 N:#FD0 O:#FE0 P:#FF0`, 
+        material:', fade = true' 
+      },
+      { 
+        name: "Blue - White", 
+        size: 16,
+        colors: `A:#04F B:#15F C:#26F D:#36F E:#47F F:#58F G:#68F H:#79F I:#8AF J:#9AF K:#ABF L:#BCF M:#CCF N:#DDF O:#EFF P:#FFF`, 
+        material:', fade = true' 
+      },
+      {
+        name: "Rainbow",
+        size: 16,
+        colors: `A:#FF0000 B:#FF6100 C:#FFBF00 D:#DDFF00 E:#7FFF00 F:#1DFF00 G:#00FF3F H:#00FFA1 I:#00FFFF J:#009DFF K:#003FFF L:#2200FF M:#7F00FF N:#E100FF O:#FF00BF P:#FF005D`,
+        material:', fade = true'
+      },
+      {
+        name: "Heightmap",
+        size: 16,
+        colors: `A:#268 B:#BB0 C:#8C4 D:#7B3 E:#6A3 F:#592 G:#482 H:#371 I:#261 J:#150 K:#999 L:#888 M:#777 N:#666 O:#DDD P:#FFF`,
+        material: ', fade = true'
+      }
+    ];
+    
+    let FORMULAS = [
+      { 
+        name: "Sphere", 
+        size: 10,
+        formula: `return (Math.sqrt(x*x + y*y + z*z) / (size/2));` 
+      },
+      {
+        name: "Cone",
+        size: 15,
+        formula: "return Math.sqrt(x*x + z*z) / (size/2) + (y - 1 + size/2) / (size);"
+      },
+      {
+        name: "Pyramid",
+        size: 40,
+        formula: "return (y+size/2-1)/(size) + Math.max(Math.abs(x/(size/2)), + Math.abs(z/(size/2)));"
+      },
+      { 
+        name: "Cube - Sphere", 
+        size: 10,
+        formula: `return 2 - (Math.sqrt(x*x + y*y + z*z) / (size/2));`
+      },
+      { 
+        name: "Cube - Cylinder", 
+        size: 10,
+        formula: `return 2 - Math.sqrt(x*x + y*y) / (size/4);`
+      },
+      {
+        name: "Torus",
+        size: 25,
+        formula: `let a = size*3/8, b = size/8;
+return Math.pow(x*x+y*y+z*z-(a*a+b*b),2)-4*a*a*(b*b-y*y)+1;`
+      },
+      {
+        name: "Screw",
+        size: 25,
+        formula: `//shape = cylinder-y
+//clamp = -y +y
+//material = both, roughness = 0.5, metalness = 0.75, deform = 10, colors = A:#9AB
+return Math.max(Math.abs(x), Math.abs(z)) / (size/3) < 1 ? 0 : 
+       (Math.atan2(x, z) / 2 / Math.PI * 47.5 + y + 5000) / 4 % 2`
+      },
+      {
+        name: "SpiralStairs",
+        size: 60,
+        formula: `// Size = 30, 40, 50, etc.
+
+let stepsize = 5;
+y += size/2;
+let sx = -Math.floor(x/stepsize);
+let sy = Math.floor(z/stepsize);
+
+// Formula from the answer by Axalix on:
+// https://math.stackexchange.com/questions/163080/on-a-two-dimensional-grid-is-there-a-formula-i-can-use-to-spiral-coordinates-in
+
+let step = Math.pow((Math.abs(Math.abs(sx) - Math.abs(sy)) + Math.abs(sx) + Math.abs(sy)), 2) 
+         + Math.abs(sx + sy + 0.1) / (sx + sy + 0.1) 
+         * (Math.abs(Math.abs(sx) - Math.abs(sy)) + Math.abs(sx) + Math.abs(sy) + sx - sy) + 1;
+
+// Uncomment for floating stairs
+//if (step<(size-y-2)) return 1;
+if (step>(size-y)) return 1;
+return 0;`
+      },
+      { 
+        name: "Bubblewrap", 
+        size: 24,
+        formula: `return (x * y * z) % 2 + 2;`
+      },
+      { 
+        name: "Corners", 
+        size: 30,
+        formula: `return Math.min(Math.abs(x), Math.abs(y), Math.abs(z)) % 2 ;`
+      },
+      {
+        name: "HelloSVOX! (Small)",
+        size: 70,
+        formula: `let text = ["Hello", "SVOX!"];
+let chars = [
+'--------A----A-A---A-A----A---AA-----AAA----A------A---A-----------------------------------------AAA----A----AAA---AAA----AA--AAAAA--AAA--AAAAA--AAA---AAA---------------------------------AAA---AAA---AAA--AAAA---AAA--AAAA--AAAAA-AAAAA--AAA--A---A-AAAAA-AAAAA-A---A-A-----A---A-A---A--AAA--AAAA---AAA--AAAA---AAAA-AAAAA-A---A-A---A-A---A-A---A-A---A-AAAAA---AA---------AA-----A----------A----------A---------------A---------AA--------A-------A-------A-A-----A------------------------------------------------A-------------------------------------------A----A----A---------', 
+'--------A----A-A---A-A---AAAA-AA--A-A--A----A-----A-----A---A-A-A---A-------------------------A-A---A--AA---A---A-A---A--A-A--A-----A---------A-A---A-A---A---A-----A------A---------A----A---A-A---A-A---A-A---A-A---A-A---A-A-----A-----A---A-A---A---A-------A-A---A-A-----AA-AA-A---A-A---A-A---A-A---A-A---A-A-------A---A---A-A---A-A---A-A---A-A---A-----A---A---A-------A----A-A----------A---------A---------------A--------A----------A-----------------A-----A------------------------------------------------A------------------------------------------A-----A-----A--------', 
+'--------A---------AAAAA-A-A------A--A-A----------A-------A---AAA----A------------------------A--A--AA-A-A-------A-----A-A--A--A-----A--------A--A---A-A---A---------------A---AAAAA---A---A---A-A-AAA-A---A-A---A-A-----A---A-A-----A-----A-----A---A---A-------A-A--A--A-----A-A-A-AA--A-A---A-A---A-A---A-A---A-A-------A---A---A-A---A-A---A--A-A---A-A-----A----A----A------A----------------------AAA--AAAA---AAA---AAAA--AAA--AAAAA--AAAA-AAAA--AAA-----AAA-A--A--A-----AA-A--AAAA---AAA--AAAA---AAAA-A-AA---AAAA-AAAA--A---A-A---A-A---A-A---A-A---A-AAAAA---A-----A-----A----A--A',
+'--------A----------A-A---AAA----A----A-----------A-------A--AAAAA-AAAAA-------AAAAA---------A---A-A-A---A------A----AA--AAAAA-AAAA--AAAA----A----AAA---AAAA--------------A-------------A-----A--A-A-A-AAAAA-AAAA--A-----A---A-AAAA--AAAA--A-----AAAAA---A-------A-AAA---A-----A---A-A-A-A-A---A-AAAA--A---A-AAAA---AAA----A---A---A-A---A-A---A---A-----A-----A-----A-----A-----A-------------------------A-A---A-A---A-A---A-A---A--A----A---A-A---A---A-------A-AAA---A-----A-A-A-A---A-A---A-A---A-A---A-AA--A-A------A----A---A-A---A-A---A--A-A--A---A----A---A------A------A--A-AA-', 
+'--------A---------AAAAA---A-A--A----A-A-A--------A-------A---AAA----A-----A----------------A----AA--A---A-----A-------A----A------A-A---A--A----A---A-----A---------A-----A---AAAAA---A-----A---A-AAA-A---A-A---A-A-----A---A-A-----A-----A--AA-A---A---A-------A-A--A--A-----A---A-A--AA-A---A-A-----A-A-A-A---A-----A---A---A---A-A---A-A-A-A--A-A----A----A------A------A----A----------------------AAAA-A---A-A-----A---A-AAAAA--A-----AAAA-A---A---A-------A-A--A--A-----A-A-A-A---A-A---A-AAAA---AAAA-A------AAA---A----A---A-A---A-A---A---A----AAAA---A-----A-----A-----A--------', 
+'-------------------A-A--AAAA--A--AA-A--A----------A-----A---A-A-A---A-----A---------------A-----A---A---A----A----A---A----A------A-A---A--A----A---A-----A---A-----A------A---------A----------A-----A---A-A---A-A---A-A---A-A-----A-----A---A-A---A---A---A---A-A---A-A-----A---A-A---A-A---A-A-----A--A--A---A-----A---A---A---A--A-A--AA-AA-A---A---A---A-------A-------A---A---------------------A---A-A---A-A---A-A---A-A------A--------A-A---A---A---A---A-A---A-A-----A---A-A---A-A---A-A---------A-A---------A--A--A-A---A--A-A--A-A-A--A-A------A--A------A-----A-----A--------',
+'--------A----------A-A----A------AA--AA-A----------A---A-----------------A------------A----------AAA--AAAAA-AAAAA--AAA-----A--AAAA---AAA---A-----AAA---AAA---------A------------------------A----AAA--A---A-AAAA---AAA--AAAA--AAAAA-A------AAA--A---A-AAAAA--AAA--A---A-AAAAA-A---A-A---A--AAA--A------AA-A-A---A-AAAA----A----AAA----A---A---A-A---A---A---AAAAA---AA---------AA---------AAAAA--------AAAA-AAAA---AAA---AAAA--AAAA--A-----AAA--A---A-AAAAA--AAA--A---A--AAA--A---A-A---A--AAA--A---------A-A-----AAAA----AA---AAAA---A----A-A--A---A--AAA--AAAAA----A----A----A---------', 
+'-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'
+];
+x = Math.floor(x + size / 2);
+y = Math.floor(y + size / 2);
+z = Math.floor(z + size / 2);
+if (z>=(text.length*8)) return 1;
+if (y>=1) return 1;
+let i = Math.floor(x / 6);
+let j = Math.floor(z / 8);
+if (i+1>text[j].length) return 1;
+let c = text[j].charCodeAt(i);
+if (chars[z%8][(c-32)*6+(x-i*6)] === '-') return 1;
+return 0;`
+      },
+      {
+        name: "HelloSVOX! (Medium)",
+        size: 140,
+        formula: `let text = ["Hello", "SVOX!"];
+let chars = [
+'------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------',
+'-----------------AA--------AA--AA------AA--AA--------AA-------AA----------AAAAAA---------AA------------AA------AA----------------------------------------------------------------------------------AAAAAA--------AA--------AAAAAA------AAAAAA----------AA----AAAAAAAAAA----AAAAAA----AAAAAAAAAA----AAAAAA------AAAAAA------------------------------------------------------------------AAAAAA------AAAAAA------AAAAAA----AAAAAAAA------AAAAAA----AAAAAAAA----AAAAAAAAAA--AAAAAAAAAA----AAAAAA----AA------AA--AAAAAAAAAA--AAAAAAAAAA--AA------AA--AA----------AA------AA--AA------AA----AAAAAA----AAAAAAAA------AAAAAA----AAAAAAAA------AAAAAAAA--AAAAAAAAAA--AA------AA--AA------AA--AA------AA--AA------AA--AA------AA--AAAAAAAAAA-----AAAAA------------------AAAAA---------AA---------------------AA-------------------AA------------------------------AA------------------AAAA----------------AA--------------AA--------------AA--AA----------AA------------------------------------------------------------------------------------------------AA--------------------------------------------------------------------------------------AAA-------AA-------AAA-------------------',
+'-----------------AA--------AA--AA------AA--AA--------AA------AAAA--------AAAAAAAA--------AA-----------AA--------AA--------------------------------------------------------------------------------AAAAAAAA------AAA-------AAAAAAAA----AAAAAAAA--------AAA----AAAAAAAAAA---AAAAAAA----AAAAAAAAAA---AAAAAAAA----AAAAAAAA----------------------------------------------------------------AAAAAAAA----AAAAAAAA----AAAAAAAA---AAAAAAAAA----AAAAAAAA---AAAAAAAAA---AAAAAAAAAA--AAAAAAAAAA---AAAAAAAA---AA------AA--AAAAAAAAAA--AAAAAAAAAA--AA------AA--AA----------AAA----AAA--AA------AA---AAAAAAAA---AAAAAAAAA----AAAAAAAA---AAAAAAAAA----AAAAAAAAA--AAAAAAAAAA--AA------AA--AA------AA--AA------AA--AA------AA--AA------AA--AAAAAAAAAA-----AAAAA------------------AAAAA--------AAAA---------------------AA------------------AA------------------------------AA-----------------AAAAA----------------AA--------------AA--------------AA--AA----------AA------------------------------------------------------------------------------------------------AA-------------------------------------------------------------------------------------AAAA-------AA-------AAAA------------------',
+'-----------------AA--------AA--AA------AA--AA-----AAAAAAAAA--AAAA----AA--AA----AA--------AA----------AA----------AA------AA--AA--AA------AA--------------------------------------------------AA--AA------AA----AAAA------AA------AA--AA------AA------AAAA----AA----------AA------------------AA--AA------AA--AA------AA------AA----------AA------------AA------------------AA--------AA------AA--AA------AA--AA------AA--AA------AA--AA------AA--AA------AA--AA----------AA----------AA------AA--AA------AA------AA--------------AA--AA------AA--AA----------AAAA--AAAA--AA------AA--AA------AA--AA------AA--AA------AA--AA------AA--AA--------------AA------AA------AA--AA------AA--AA------AA--AA------AA--AA------AA----------AA-----AA-------AA---------------AA-------AA--AA---------------------AA-----------------AA------------------------------AA----------------AA--------------------AA----------------------------------AA----------AA------------------------------------------------------------------------------------------------AA------------------------------------------------------------------------------------AA----------AA----------AA-----------------',
+'-----------------AA--------AA--AA------AA--AA----AAAAAAAAAA---AA----AA---AA----AA--------AA----------AA----------AA------AAA-AA-AAA------AA-------------------------------------------------AA---AA-----AAA---AAAAA------AA------AA--AA------AA-----AA-AA----AA----------AA-----------------AA---AA------AA--AA------AA------AA----------AA-----------AA--------------------AA-------AA------AA--AA------AA--AA------AA--AA------AA--AA------AA--AA------AA--AA----------AA----------AA------AA--AA------AA------AA--------------AA--AA-----AA---AA----------AA-AAAA-AA--AAA-----AA--AA------AA--AA------AA--AA------AA--AA------AA--AA--------------AA------AA------AA--AA------AA--AA------AA---AA----AA---AA------AA---------AA------AA--------AA--------------AA------AA----AA--------------------AA-----------------AA------------------------------AA----------------AA--------------------AA----------------------------------AA----------AA------------------------------------------------------------------------------------------------AA------------------------------------------------------------------------------------AA----------AA----------AA-----------------',
+'-----------------AA------------------AAAAAAAAAA--AA--AA------------AA----AA---AA--------------------AA------------AA------AAAAAAAA-------AA------------------------------------------------AA----AA----AAAA--AAA-AA--------------AA----------AA----AA--AA----AA----------AA----------------AA----AA------AA--AA------AA------------------------------AA------AAAAAAAAAA------AA------AA------AA--AA---AAAAA--AA------AA--AA------AA--AA----------AA------AA--AA----------AA----------AA----------AA------AA------AA--------------AA--AA----AA----AA----------AA--AA--AA--AAAA----AA--AA------AA--AA------AA--AA------AA--AA------AA--AA--------------AA------AA------AA--AA------AA--AA------AA----AA--AA-----AA----AA---------AA-------AA---------AA-------------AA----------------------------------AA------AAAAAAA----AAAAAAAA------AAAAAA------AAAAAAAA----AAAAAA----AAAAAAAAAA----AAAAAAAA--AAAAAAAA----AAAAAA----------AAAAAA--AA----AA----AA----------AAAA--AAA---AAAAAAAA------AAAAAA----AAAAAAAA------AAAAAAAA--AA--AAAA------AAAAAAAA--AAAAAAAA----AA------AA--AA------AA--AA------AA--AA------AA--AA------AA--AAAAAAAAAA------AA----------AA----------AA--------AA----AA-',
+'-----------------AA------------------AAAAAAAAAA--AA--AA-----------AA------AA-AA---------------------AA------------AA-------AAAAAA--------AA-----------------------------------------------AA-----AA---AA-AA--AA--AA-------------AA----------AA----AA---AA----AA----------AA---------------AA-----AA------AA--AA------AA-----------------------------AA-------AAAAAAAAAA-------AA-----AA-----AA---AA--AAAAAA--AA------AA--AA-----AAA--AA----------AA------AA--AA----------AA----------AA----------AA------AA------AA--------------AA--AA---AA-----AA----------AA--AA--AA--AA-AA---AA--AA------AA--AA------AA--AA------AA--AA------AA--AA--------------AA------AA------AA--AA------AA--AA------AA-----AAAA-------AA--AA---------AA--------AA----------AA------------AA------------------------------------------AAAAAAAA---AAAAAAAAA----AAAAAAAA----AAAAAAAAA---AAAAAAAA---AAAAAAAAAA---AAAAAAAAA--AAAAAAAAA---AAAAAA----------AAAAAA--AA---AA-----AA----------AAAAAAAAAA--AAAAAAAAA----AAAAAAAA---AAAAAAAAA----AAAAAAAAA--AA-AAAAAA----AAAAAAAAA--AAAAAAAA----AA------AA--AA------AA--AA------AA---AA----AA---AA------AA--AAAAAAAAAA-----AA-----------AA-----------AA------AAAAA--AA-',
+'-----------------AA--------------------AA--AA----AAAAAAAAA-------AA--------AAA----------------------AA------------AA-----AAAAAAAAAA--AAAAAAAAAA--------------AAAAAAAAAA------------------AA------AA--AA--AA------AA------------AA--------AAAA----AAA---AA----AAAAAAAA----AAAAAAAA--------AA-------AAAAAAAA----AAAAAAAAA----------------------------AA--------------------------AA----------AA----AA--AA--AA--AAAAAAAAAA--AAAAAAAAA---AA----------AA------AA--AAAAAAAA----AAAAAAAA----AA--AAAAAA--AAAAAAAAAA------AA--------------AA--AAAAAA------AA----------AA------AA--AA--AA--AA--AA------AA--AAAAAAAAA---AA------AA--AAAAAAAAA----AAAAAAA--------AA------AA------AA--AA------AA--AA------AA------AA---------AAAA---------AA---------AA-----------AA-----------AA-------------------------------------------------AA--AA------AA--AA------AA--AA------AA--AA------AA----AA--------AA------AA--AA------AA------AA--------------AA--AAAAAA------AA----------AA--AA--AA--AA------AA--AA------AA--AA------AA--AA------AA--AAAA----AA--AA------------AA--------AA------AA--AA------AA--AA------AA----AA--AA----AA------AA---------AA-----AA------------AA------------AA----AA--AAAAA--',
+'-----------------AA--------------------AA--AA-----AAAAAAAAA-----AA--------AAAA----------------------AA------------AA-----AAAAAAAAAA--AAAAAAAAAA--------------AAAAAAAAAA-----------------AA-------AA-AA---AA------AA-----------AA---------AAAA----AA----AA----AAAAAAAAA---AAAAAAAAA------AA--------AAAAAAAA-----AAAAAAAA-----------------------------AA------------------------AA----------AA-----AA--AA--AA--AAAAAAAAAA--AAAAAAAAA---AA----------AA------AA--AAAAAAAA----AAAAAAAA----AA--AAAAAA--AAAAAAAAAA------AA--------------AA--AAAAAA------AA----------AA------AA--AA---AA-AA--AA------AA--AAAAAAAA----AA------AA--AAAAAAAAA-----AAAAAAA-------AA------AA------AA--AA------AA--AA--AA--AA-----AAAA---------AA---------AA----------AA------------AA----------AA-------------------------------------------------AA--AA------AA--AA------AA--AA------AA--AA------AA----AA--------AA------AA--AA------AA------AA--------------AA--AAAAAA------AA----------AA--AA--AA--AA------AA--AA------AA--AA------AA--AA------AA--AAA-----AA--AA------------AA--------AA------AA--AA------AA--AA------AA-----AAAA-----AA------AA--------AA-------AA-----------AA-----------AA-----AA----AA---',
+'-----------------AA------------------AAAAAAAAAA------AA--AA----AA--------AA--AA--AA-----------------AA------------AA-------AAAAAA--------AA--------------------------------------------AA--------AAAA----AA------AA----------AA-------------AA---AAAAAAAAAA----------AA--AA------AA----AA--------AA------AA----------AA------------------------------AA------AAAAAAAAAA------AA----------AA------AA--AAAAAA--AA------AA--AA-----AAA--AA----------AA------AA--AA----------AA----------AA------AA--AA------AA------AA--------------AA--AA---AA-----AA----------AA------AA--AA----AAAA--AA------AA--AA----------AA--AA--AA--AA------AA----------AA------AA------AA------AA---AA----AA---AA--AA--AA----AA--AA--------AA--------AA-----------AA-------------AA---------AA-------------------------------------------AAAAAAAA--AA------AA--AA----------AA------AA--AAAAAAAAAA----AA---------AAAAAAAAA--AA------AA------AA--------------AA--AA---AA-----AA----------AA--AA--AA--AA------AA--AA------AA--AAAAAAAAA----AAAAAAAAA--AA-----------AAAAAAA------AA--------AA------AA--AA------AA--AA------AA------AA-------AAAAAAAAA-------AA---------AA----------AA----------AA-----------------',
+'-----------------AA------------------AAAAAAAAAA------AA--AA---AA---------AA---AA-AA-----------------AA------------AA------AAAAAAAA-------AA-----------AA------------------------------AA---------AAA-----AA------AA---------AA---------------AA--AAAAAAAAAA----------AA--AA------AA----AA--------AA------AA----------AA------------------AA-----------AA-----AAAAAAAAAA-----AA-----------AA------AA---AAAA---AA------AA--AA------AA--AA----------AA------AA--AA----------AA----------AA------AA--AA------AA------AA--------------AA--AA----AA----AA----------AA------AA--AA-----AAA--AA------AA--AA----------AA---AA-AA--AA------AA----------AA------AA------AA------AA---AA----AA---AA-AAAA-AA---AA----AA-------AA-------AA------------AA--------------AA--------AA------------------------------------------AAAAAAAAA--AA------AA--AA----------AA------AA--AAAAAAAAAA----AA----------AAAAAAAA--AA------AA------AA--------------AA--AA----AA----AA----------AA--AA--AA--AA------AA--AA------AA--AAAAAAAA------AAAAAAAA--AA------------AAAAAAA-----AA--------AA------AA--AA------AA--AA--AA--AA-----AAAA-------AAAAAAAA------AA----------AA----------AA----------AA-----------------',
+'---------------------------------------AA--AA----AAAAAAAAAA--AA-----AA---AA----AAA-------------------AA----------AA------AAA-AA-AAA------AA-----------AA-----------------------------AA----------AA------AA------AA--------AA--------AA------AA--------AA------------AA--AA------AA----AA--------AA------AA----------AA------AA----------AA------------AA------------------AA--------------------AA----------AA------AA--AA------AA--AA------AA--AA------AA--AA----------AA----------AA------AA--AA------AA------AA------AA------AA--AA-----AA---AA----------AA------AA--AA------AA--AA------AA--AA----------AA----AAA---AA------AA----------AA------AA------AA------AA----AA--AA----AAAA--AAAA--AA------AA------AA------AA-------------AA---------------AA-------AA-----------------------------------------AA------AA--AA------AA--AA------AA--AA------AA--AA------------AA----------------AA--AA------AA------AA------AA------AA--AA-----AA---AA----------AA------AA--AA------AA--AA------AA--AA------------------AA--AA------------------AA----AA----AA--AA------AA---AA----AA---AA--AA--AA----AA--AA------------AA-----AA-----------AA----------AA----------AA-----------------',
+'---------------------------------------AA--AA----AAAAAAAAA---------AAAA--AA----AAA-------------------AA----------AA------AA--AA--AA------AA-----------AA-----------------------------------------AA------AA------AA-------AA---------AA------AA--------AA------------AA--AA------AA----AA--------AA------AA----------AA------AA----------AA------------------------------------------------------AA----------AA------AA--AA------AA--AA------AA--AA------AA--AA----------AA----------AA------AA--AA------AA------AA------AA------AA--AA------AA--AA----------AA------AA--AA------AA--AA------AA--AA----------AA-----AA---AA------AA----------AA------AA------AA------AA----AA--AA----AAA----AAA--AA------AA------AA------AA-------------AA------------------------AA-----------------------------------------AA------AA--AA------AA--AA------AA--AA------AA--AA------------AA----------------AA--AA------AA------AA------AA------AA--AA------AA--AA----------AA------AA--AA------AA--AA------AA--AA------------------AA--AA------------------AA----AA----AA--AA------AA----AA--AA----AA-AAAA-AA---AA----AA-----------AA----AA------------AA----------AA----------AA-----------------',
+'-----------------AA--------------------AA--AA--------AA------------AAAA--AAAAAAA-AA-------------------AA--------AA-----------------------------------AA----------------------AA-------------------AAAAAAAA---AAAAAAAAAA--AAAAAAAAAA---AAAAAAAA---------AA----AAAAAAAAA----AAAAAAAA-----AA---------AAAAAAAA----AAAAAAAA------------------AA-----------------------------------------------AA-------AAAAAAA----AA------AA--AAAAAAAAA----AAAAAAAA---AAAAAAAAA---AAAAAAAAAA--AA-----------AAAAAAAA---AA------AA--AAAAAAAAAA---AAAAAAAA---AA------AA--AAAAAAAAAA--AA------AA--AA------AA---AAAAAAAA---AA-----------AAAAAAAAA--AA------AA--AAAAAAAAA-------AA-------AAAAAAAA------AAAA-----AA------AA--AA------AA------AA------AAAAAAAAAA-----AAAAA------------------AAAAA-----------------AAAAAAAAAA---------------AAAAAAAAA--AAAAAAAAA----AAAAAAAA----AAAAAAAAA---AAAAAAAAA----AA----------AAAAAAA---AA------AA--AAAAAAAAAA---AAAAAAAA---AA------AA---AAAAAAAAA--AA------AA--AA------AA---AAAAAAAA---AA------------------AA--AA----------AAAAAAAAA------AAAAAA----AAAAAAAAA-----AAAA------AAAAAAAA---AA------AA----AAAAAAA---AAAAAAAAAA-------AAAA-------AA-------AAAA------------------',
+'-----------------AA--------------------AA--AA--------AA-------------AA----AAAAA--AA--------------------AA------AA-----------------------------------AA-----------------------AA--------------------AAAAAA----AAAAAAAAAA--AAAAAAAAAA----AAAAAA----------AA----AAAAAAAA------AAAAAA------AA----------AAAAAA-----AAAAAAA------------------AA------------------------------------------------AA--------AAAAAA----AA------AA--AAAAAAAA------AAAAAA----AAAAAAAA----AAAAAAAAAA--AA------------AAAAAA----AA------AA--AAAAAAAAAA----AAAAAA----AA------AA--AAAAAAAAAA--AA------AA--AA------AA----AAAAAA----AA------------AAAAA-AA--AA------AA--AAAAAAAA--------AA--------AAAAAA--------AA------AA------AA--AA------AA------AA------AAAAAAAAAA-----AAAAA------------------AAAAA-----------------AAAAAAAAAA----------------AAAAAAAA--AAAAAAAA------AAAAAA------AAAAAAAA----AAAAAAAA----AA----------AAAAAA----AA------AA--AAAAAAAAAA----AAAAAA----AA------AA----AAAAAAAA--AA------AA--AA------AA----AAAAAA----AA------------------AA--AA----------AAAAAAAA--------AAAA------AAAAAAAA------AA--------AA--AA----AA------AA----AAAAAA----AAAAAAAAAA--------AAA-------AA-------AAA-------------------',
+'------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------',
+];
+x = Math.floor(x + size / 2);
+y = Math.floor(y + size / 2);
+z = Math.floor(z + size / 2);
+if (z>=(text.length*16)) return 1;
+if (y>=2) return 1;
+let i = Math.floor(x / 12);
+let j = Math.floor(z / 16);
+if (i+1>text[j].length) return 1;
+let c = text[j].charCodeAt(i);
+if (chars[z%16][(c-32)*12+(x-i*12)] === '-') return 1;
+return 0;`
+      },      
+      {
+        name: "HelloSVOX! (Big)",
+        size: 200,
+        formula: `let text = ["Hello", "SVOX!"];
+let chars = [
+'-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------',
+'------------------------AAA-----------AAA---AAA--------AAA---AAA-----------AAA---------AAAA--------------AAAAAAAA-------------AAA-----------------AAA--------AAA-------------------------------------------------------------------------------------------------------------------AAAAAAAAAAA----------AAA----------AAAAAAAAAAA------AAAAAAAAAAA-----------AAAAA-----AAAAAAAAAAAAAAA----AAAAAAAAAA-----AAAAAAAAAAAAAAA----AAAAAAAAAAA------AAAAAAAAAAA-------------------------------------------------------------------------------------------AAAAAAAAAAA------AAAAAAAAAAA------AAAAAAAAAAA----AAAAAAAAAAAAA------AAAAAAAAAAA----AAAAAAAAAAAAA----AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA----AAAAAAAAAAA----AAA---------AAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAA--------------AAA---------AAA--AAA---------AAA----AAAAAAAAAAA----AAAAAAAAAAAAA------AAAAAAAAAAA----AAAAAAAAAAAAA------AAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAAAAAAAAAAAAAA--------AAAAAA-------------------------AAAAAA---------------A-----------------------------AAA----------------------------AAA-------------------------------------------AAA------------------------AAAAAAA----------------------AAA--------------------AAA--------------------AAA--AAA--------------AAA----------------------------------------------------------------------------------------------------------------------------------------AAA-------------------------------------------------------------------------------------------------------------------------AAAA-----------AAA-----------AAAA--------------------------',
+'------------------------AAA-----------AAA---AAA--------AAA---AAA-----------AAA--------AAAAAA------------AAAAAAAAAA------------AAA----------------AAA----------AAA-----------------------------------------------------------------------------------------------------------------AAAAAAAAAAAAA---------AAA---------AAAAAAAAAAAAA----AAAAAAAAAAAAA---------AAAAAA-----AAAAAAAAAAAAAAA---AAAAAAAAAAA-----AAAAAAAAAAAAAAA---AAAAAAAAAAAAA----AAAAAAAAAAAAA-----------------------------------------------------------------------------------------AAAAAAAAAAAAA----AAAAAAAAAAAAA----AAAAAAAAAAAAA---AAAAAAAAAAAAAA----AAAAAAAAAAAAA---AAAAAAAAAAAAAA---AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA---AAAAAAAAAAAAA---AAA---------AAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAA--------------AAA---------AAA--AAA---------AAA---AAAAAAAAAAAAA---AAAAAAAAAAAAAA----AAAAAAAAAAAAA---AAAAAAAAAAAAAA----AAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAAAAAAAAAAAAAA--------AAAAAA-------------------------AAAAAA--------------AAA----------------------------AAA----------------------------AAA-------------------------------------------AAA-----------------------AAAAAAAA----------------------AAA--------------------AAA--------------------AAA--AAA--------------AAA----------------------------------------------------------------------------------------------------------------------------------------AAA------------------------------------------------------------------------------------------------------------------------AAAAA-----------AAA-----------AAAAA-------------------------',
+'------------------------AAA-----------AAA---AAA--------AAA---AAA-----------AAA--------AAAAAA-----------AAAAAAAAAAAA-----------AAA---------------AAA------------AAA---------------------------------------------------------------------------------------------------------------AAAAAAAAAAAAAAA-------AAAA--------AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA-------AAAAAAA-----AAAAAAAAAAAAAAA--AAAAAAAAAAAA-----AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA---------------------------------------------------------------------------------------AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAA--------------AAAA-------AAAA--AAA---------AAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAAAAAAAAAAAAAA--------AAAAAA-------------------------AAAAAA-------------AAAAA----------------------------AAA---------------------------AAA-------------------------------------------AAA----------------------AAAAAAAAA----------------------AAA--------------------AAA--------------------AAA--AAA--------------AAA----------------------------------------------------------------------------------------------------------------------------------------AAA-----------------------------------------------------------------------------------------------------------------------AAAAAA-----------AAA-----------AAAAAA------------------------',
+'------------------------AAA-----------AAA---AAA--------AAA---AAA-------AAAAAAAAAAAAA--AAAAAA------AAA--AAA------AAA-----------AAA--------------AAA--------------AAA--------AAA---AAA---AAA--------AAA-----------------------------------------------------------------------AAA--AAA---------AAA------AAAAA--------AAA---------AAA--AAA---------AAA------AAA--AAA-----AAA--------------AAA--------------------------AAA--AAA---------AAA--AAA---------AAA--------AAA--------------AAA------------------AA-------------------------AA------------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------AAA--------------AAA---------AAA--AAA---------AAA--------AAA--------------------AAA--AAA---------AAA--AAA--------------AAAAA-----AAAAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------------AAA--------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--------------AAA--------AAA--------AAA--------------------AAA------------AAA-AAA----------------------------AAA--------------------------AAA-------------------------------------------AAA----------------------AAA----------------------------AAA------------------------------------------------AAA--------------AAA----------------------------------------------------------------------------------------------------------------------------------------AAA-----------------------------------------------------------------------------------------------------------------------AAA--------------AAA--------------AAA------------------------',
+'------------------------AAA-----------AAA---AAA--------AAA---AAA------AAAAAAAAAAAAAA--AAAAAA------AAA--AAA------AAA-----------AAA-------------AAA----------------AAA-------AAAA--AAA--AAAA--------AAA-----------------------------------------------------------------------AAA--AAA---------AAA-----AAAAAA--------AAA---------AAA--AAA---------AAA-----AAA---AAA-----AAA--------------AAA--------------------------AAA--AAA---------AAA--AAA---------AAA--------AAA--------------AAA-----------------AAA-------------------------AAA-----------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------AAA--------------AAA---------AAA--AAA---------AAA--------AAA--------------------AAA--AAA---------AAA--AAA--------------AAAAAA---AAAAAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------------AAA--------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--------------AAA--------AAA--------AAA--------------------AAA-----------AAA---AAA----------------------------AAA-------------------------AAA-------------------------------------------AAA----------------------AAA----------------------------AAA------------------------------------------------AAA--------------AAA----------------------------------------------------------------------------------------------------------------------------------------AAA-----------------------------------------------------------------------------------------------------------------------AAA--------------AAA--------------AAA------------------------',
+'------------------------AAA-----------AAA---AAA--------AAA---AAA-----AAAAAAAAAAAAAAA---AAAA------AAA---AAA-----AAAA-----------AAA------------AAA------------------AAA------AAAAA-AAA-AAAAA--------AAA----------------------------------------------------------------------AAA---AAA--------AAAA----AAAAAAA--------AAA---------AAA--AAA---------AAA----AAA----AAA-----AAA--------------AAA-------------------------AAA---AAA---------AAA--AAA---------AAA--------AAA--------------AAA----------------AAA---------------------------AAA----------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------AAA--------------AAA---------AAA--AAA---------AAA--------AAA--------------------AAA--AAA--------AAA---AAA--------------AAAAAAA-AAAAAAA--AAAA--------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------------AAA--------AAA---------AAA--AAA---------AAA--AAA---------AAA---AA---------AA----AAA-------AAA--------------AAA---------AAA---------AAA-------------------AAA-----------AA-----AA----------------------------AAA-------------------------AAA-------------------------------------------AAA----------------------AAA----------------------------AAA------------------------------------------------AAA--------------AAA----------------------------------------------------------------------------------------------------------------------------------------AAA-----------------------------------------------------------------------------------------------------------------------AAA--------------AAA--------------AAA------------------------',
+'------------------------AAA-------------------------AAAAAAAAAAAAAAA--AAA---AAA------------------AAA----AAA----AAAA--------------------------AAA--------------------AAA------AAAAAAAAAAAAA---------AAA---------------------------------------------------------------------AAA----AAA-------AAAAA---AAA--AAA--------------------AAA--------------AAA---AAA-----AAA-----AAA--------------AAA------------------------AAA----AAA---------AAA--AAA---------AAA-------------------------------------------AAA-------AAAAAAAAAAAAAAA-------AAA---------AAA---------AAA--AAA----AAAAAAAA--AAA---------AAA--AAA---------AAA--AAA--------------AAA---------AAA--AAA--------------AAA--------------AAA--------------AAA---------AAA--------AAA--------------------AAA--AAA-------AAA----AAA--------------AAA--AAAAA--AAA--AAAAA-------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------------AAA--------AAA---------AAA--AAA---------AAA--AAA---------AAA----AAA-----AAA------AAA-----AAA--------------AAA----------AAA----------AAA------------------AAA--------------------------------------------------------------AAAAAAAAAA----AAAAAAAAAAAAA------AAAAAAAAAAA------AAAAAAAAAAAAA----AAAAAAAAAAA----AAAAAAAAAAAAAAA----AAAAAAAAAAAAA--AAAAAAAAAAAAA----AAAAAAAAA--------------AAAAAAAAA--AAA------AAA-----AAA--------------AAAAAA---AAAA----AAAAAAAAAAAAA------AAAAAAAAAAA----AAAAAAAAAAAAA------AAAAAAAAAAAAA--AAA----AAAAAA------AAAAAAAAAAAAA--AAAAAAAAAAAA-----AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAAAAAAAAAAAAAA--------AAA--------------AAA--------------AAA------------------------',
+'------------------------AAA-------------------------AAAAAAAAAAAAAAA--AAA---AAA-----------------AAA-----AAA---AAAA---------------------------AAA--------------------AAA-------AAAAAAAAAAA----------AAA--------------------------------------------------------------------AAA-----AAA------AAAAAA--AAA---AAA--------------------AAA--------------AAA--AAA------AAA-----AAA--------------AAA-----------------------AAA-----AAA---------AAA--AAA---------AAA------------------------------------------AAA--------AAAAAAAAAAAAAAA--------AAA--------AAA---------AAA--AAA---AAAAAAAAA--AAA---------AAA--AAA---------AAA--AAA--------------AAA---------AAA--AAA--------------AAA--------------AAA--------------AAA---------AAA--------AAA--------------------AAA--AAA------AAA-----AAA--------------AAA---AAA---AAA--AAAAAA------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------------AAA--------AAA---------AAA--AAA---------AAA--AAA---------AAA-----AAA---AAA--------AAA---AAA--------------AAA-----------AAA-----------AAA-----------------AAA--------------------------------------------------------------AAAAAAAAAAA---AAAAAAAAAAAAAA----AAAAAAAAAAAAA----AAAAAAAAAAAAAA---AAAAAAAAAAAAA---AAAAAAAAAAAAAAA---AAAAAAAAAAAAAA--AAAAAAAAAAAAAA---AAAAAAAAA--------------AAAAAAAAA--AAA------AAA-----AAA--------------AAAAAA---AAAAA---AAAAAAAAAAAAAA----AAAAAAAAAAAAA---AAAAAAAAAAAAAA----AAAAAAAAAAAAAA--AAA---AAAAAAAA----AAAAAAAAAAAAAA--AAAAAAAAAAAA-----AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAAAAAAAAAAAAAA--------AAA--------------AAA--------------AAA-----------AAA------AAA-',
+'------------------------AAA-------------------------AAAAAAAAAAAAAAA--AAA---AAA----------------AAA-------AAA-AAAA----------------------------AAA--------------------AAA--------AAAAAAAAA-----------AAA-------------------------------------------------------------------AAA------AAA-----AAA-AAA--AAA---AAA-------------------AAA--------------AAA---AAA------AAA-----AAA--------------AAA----------------------AAA-------AAA-------AAA---AAA---------AAA-----------------------------------------AAA---------AAAAAAAAAAAAAAA---------AAA-------AAA--------AAA---AAA---AAAAAAAAA--AAA---------AAA--AAA--------AAA---AAA--------------AAA---------AAA--AAA--------------AAA--------------AAA--------------AAA---------AAA--------AAA--------------------AAA--AAA-----AAA------AAA--------------AAA----A----AAA--AAA-AAA-----AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------AAA---AAA--------------------AAA--------AAA---------AAA--AAA---------AAA--AAA---------AAA------AAA-AAA----------AAA-AAA--------------AAA------------AAA------------AAA----------------AAA--------------------------------------------------------------AAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAA--------------AAAAAAAAA--AAA-----AAA------AAA--------------AAAAAAA-AAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAA--AAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAA-----AAA---------AAA--AAA---------AAA--AAA---------AAA---AAA-------AAA---AAA---------AAA--AAAAAAAAAAAAAAA-------AAA---------------AAA---------------AAA---------AAAAA----AAAA-',
+'------------------------AAA----------------------------AAA---AAA-----AAAAAAAAAAAAA-----------AAA---------AAAAAA-----------------------------AAA--------------------AAA-----AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA-------------------AAAAAAAAAAAAAAA--------------------------AAA-------AAA----AAA--AAA--------AAA------------------AAA----------AAAAAAA----AAAAAAAAAAAAAAA--AAAAAAAAAAAAA----AAAAAAAAAAAAA-----------AAA---------AAAAAAAAAAA----AAAAAAAAAAAAAAA----------------------------------------AAA-----------------------------------AAA----------------AAA----AAA---AAA---AAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAA----AAA--------------AAA---------AAA--AAAAAAAAAAAA-----AAAAAAAAAAAA-----AAA--------------AAAAAAAAAAAAAAA--------AAA--------------------AAA--AAAAAAAAAA-------AAA--------------AAA---------AAA--AAA--AAA----AAA--AAA---------AAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAAAAAAAAAAAA----AAAAAAAAAAAAA----------AAA--------AAA---------AAA--AAA---------AAA--AAA---------AAA-------AAAAA------------AAAAA--------------AAA-------------AAA-------------AAA---------------AAA-----------------------------------------------------------------------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA-----AAA-----------AAA---------AAA--AAA---------AAA--------AAA--------------------AAA--AAAAAAAAAA-------AAA--------------AAA--AAAAA--AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAAAAAA-----AAA--AAA-----------------AAA-----------AAA---------AAA--AAA---------AAA--AAA---------AAA----AAA-----AAA----AAA---------AAA------------AAA--------AAA----------------AAA----------------AAA------AAAA-AAAAAAAA---', 
+'------------------------AAA----------------------------AAA---AAA------AAAAAAAAAAAAA---------AAA-----------AAAA------------------------------AAA--------------------AAA-----AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA-------------------AAAAAAAAAAAAAAA-------------------------AAA--------AAA---AAA---AAA--------AAA-----------------AAA-----------AAAAAA-----AAAAAAAAAAAAAAA--AAAAAAAAAAAAAA---AAAAAAAAAAAAAA---------AAA-----------AAAAAAAAA------AAAAAAAAAAAAAA---------------------------------------AAA-------------------------------------AAA--------------AAA-----AAA---AAA---AAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAA-----AAA--------------AAA---------AAA--AAAAAAAAAAAA-----AAAAAAAAAAAA-----AAA--------------AAAAAAAAAAAAAAA--------AAA--------------------AAA--AAAAAAAAA--------AAA--------------AAA---------AAA--AAA---AAA---AAA--AAA---------AAA--AAAAAAAAAAAAAA---AAA---------AAA--AAAAAAAAAAAA------AAAAAAAAAAAAA---------AAA--------AAA---------AAA--AAA---------AAA--AAA---------AAA--------AAA--------------AAA--------------AAA--------------AAA--------------AAA--------------AAA-----------------------------------------------------------------------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA-----AAA-----------AAA---------AAA--AAA---------AAA--------AAA--------------------AAA--AAAAAAAAA--------AAA--------------AAA---AAA---AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAAAAA------AAA--AAA-----------------AAA-----------AAA---------AAA--AAA---------AAA--AAA---------AAA-----AAA---AAA-----AAA---------AAA-----------AAA--------AAA-----------------AAA-----------------AAA-----AAA---AAAAAA----', 
+'------------------------AAA----------------------------AAA---AAA-------AAAAAAAAAAAAA-------AAA-----------AAAAA------------------------------AAA--------------------AAA-----AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA-------------------AAAAAAAAAAAAAAA------------------------AAA---------AAA--AAA----AAA--------AAA----------------AAA------------AAAAAAA----AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA-------AAA-----------AAAAAAAAAAA------AAAAAAAAAAAAA----------------------------------------AAA-----------------------------------AAA--------------AAA------AAA---AAA---AAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAA----AAA--------------AAA---------AAA--AAAAAAAAAAAA-----AAAAAAAAAAAA-----AAA--------------AAAAAAAAAAAAAAA--------AAA--------------------AAA--AAAAAAAAAA-------AAA--------------AAA---------AAA--AAA----AAA--AAA--AAA---------AAA--AAAAAAAAAAAAA----AAA---------AAA--AAAAAAAAAAAAA------AAAAAAAAAAAAA--------AAA--------AAA---------AAA--AAA---------AAA--AAA---------AAA-------AAAAA-------------AAA-------------AAA---------------AAA---------------AAA-------------AAA-----------------------------------------------------------------------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA-----AAA-----------AAA---------AAA--AAA---------AAA--------AAA--------------------AAA--AAAAAAAAAA-------AAA--------------AAA---AAA---AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAAAA-------AAA--AAA-----------------AAA-----------AAA---------AAA--AAA---------AAA--AAA---------AAA------AAA-AAA------AAA---------AAA----------AAA----------AAA----------------AAA----------------AAA------AAA----AAAA-----', 
+'------------------------AAA-------------------------AAAAAAAAAAAAAAA--------AAA---AAA------AAA-----------AA--AAA----AAA----------------------AAA--------------------AAA--------AAAAAAAAA-----------AAA--------------AAA----------------------------------------------AAA----------AAA-AAA-----AAA--------AAA---------------AAA------------------AAA------------AAA-----------------AAA--AAA---------AAA------AAA-----------AAA-------AAA---------------AAA-------------------------AAA-------------AAA---------AAAAAAAAAAAAAAA---------AAA--------------AAA-------AAA---AAAAAAAAA--AAA---------AAA--AAA--------AAA---AAA--------------AAA---------AAA--AAA--------------AAA--------------AAA------AAAAAA--AAA---------AAA--------AAA--------------------AAA--AAA-----AAA------AAA--------------AAA---------AAA--AAA-----AAA-AAA--AAA---------AAA--AAA--------------AAA---AA----AAA--AAA--------AAA---------------AAA--------AAA--------AAA---------AAA--AAA---------AAA--AAA----A----AAA------AAA-AAA------------AAA------------AAA----------------AAA----------------AAA------------AAA-------------------------------------------------------------AAAAAAAAAAAAA--AAA---------AAA--AAA--------------AAA---------AAA--AAAAAAAAAAAAAAA-----AAA-----------AAAAAAAAAAAAAAA--AAA---------AAA--------AAA--------------------AAA--AAA-----AAA------AAA--------------AAA---AAA---AAA--AAA---------AAA--AAA---------AAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAA-------------AAAAAAAAAAAAA-------AAA-----------AAA---------AAA--AAA---------AAA--AAA---------AAA-------AAAAA-------AAAAAAAAAAAAAAA---------AAA------------AAA---------------AAA---------------AAA-----------------------', 
+'------------------------AAA-------------------------AAAAAAAAAAAAAAA--------AAA---AAA-----AAA-----------AAA---AAA---AAA----------------------AAA--------------------AAA-------AAAAAAAAAAA----------AAA--------------AAA---------------------------------------------AAA-----------AAAAAA------AAA--------AAA--------------AAA--------------------AAA-----------AAA-----------------AAA--AAA---------AAA-----AAA-----------AAA---------AAA--------------AAA-------------------------AAA--------------AAA--------AAAAAAAAAAAAAAA--------AAA--------------AAA--------AAA---AAAAAAAAA--AAA---------AAA--AAA---------AAA--AAA--------------AAA---------AAA--AAA--------------AAA--------------AAA------AAAAAA--AAA---------AAA--------AAA--------------------AAA--AAA------AAA-----AAA--------------AAA---------AAA--AAA------AAAAAA--AAA---------AAA--AAA--------------AAA---AAA---AAA--AAA---------AAA--------------AAA--------AAA--------AAA---------AAA--AAA---------AAA--AAA---AAA---AAA-----AAA---AAA-----------AAA-----------AAA-----------------AAA-----------------AAA-----------AAA------------------------------------------------------------AAAAAAAAAAAAAA--AAA---------AAA--AAA--------------AAA---------AAA--AAAAAAAAAAAAAAA-----AAA------------AAAAAAAAAAAAAA--AAA---------AAA--------AAA--------------------AAA--AAA------AAA-----AAA--------------AAA---AAA---AAA--AAA---------AAA--AAA---------AAA--AAAAAAAAAAAAAA----AAAAAAAAAAAAAA--AAA---------------AAAAAAAAAAAAA------AAA-----------AAA---------AAA--AAA---------AAA--AAA---------AAA--------AAA---------AAAAAAAAAAAAAA--------AAA--------------AAA--------------AAA--------------AAA------------------------', 
+'------------------------AAA-------------------------AAAAAAAAAAAAAAA--------AAA---AAA----AAA------------AAA----AAA-AAAA----------------------AAA--------------------AAA------AAAAAAAAAAAAA---------AAA--------------AAA--------------------------------------------AAA------------AAAAA-------AAA--------AAA-------------AAA---------------------AAA-----------AAA-----------------AAA--AAA---------AAA-----AAA-----------AAA---------AAA--------------AAA-------------------------AAA---------------AAA-------AAAAAAAAAAAAAAA-------AAA---------------AAA--------AAA----AAAAAAA---AAA---------AAA--AAA---------AAA--AAA--------------AAA---------AAA--AAA--------------AAA--------------AAA------AAAAAA--AAA---------AAA--------AAA--------------------AAA--AAA-------AAA----AAA--------------AAA---------AAA--AAA-------AAAAA--AAA---------AAA--AAA--------------AAA----AAA-AAA---AAA---------AAA--------------AAA--------AAA--------AAA---------AAA---AAA-------AAA---AAA--AAAAA--AAA----AAA-----AAA----------AAA----------AAA------------------AAA------------------AAA----------AAA-----------------------------------------------------------AAAAAAAAAAAAAAA--AAA---------AAA--AAA--------------AAA---------AAA--AAAAAAAAAAAAAAA-----AAA-------------AAAAAAAAAAAAA--AAA---------AAA--------AAA--------------------AAA--AAA-------AAA----AAA--------------AAA---AAA---AAA--AAA---------AAA--AAA---------AAA--AAAAAAAAAAAAA------AAAAAAAAAAAAA--AAA----------------AAAAAAAAAAAAA-----AAA-----------AAA---------AAA---AAA-------AAA---AAA---------AAA-------AAAAA---------AAAAAAAAAAAAA-------AAA---------------AAA--------------AAA--------------AAA------------------------', 
+'-------------------------------------------------------AAA---AAA-----AAAAAAAAAAAAAAA---AAA------AAAA---AAA-----AAAAA-------------------------AAA------------------AAA------AAAAA-AAA-AAAAA--------AAA--------------AAA-------------------------------------------AAA-------------AAAA--------AAA--------AAA------------AAA----------AAA---------AAA-----------AAA-----------------AAA--AAA---------AAA-----AAA-----------AAA---------AAA--------------AAA--------AAA--------------AAA----------------AAA---------------------------AAA---------------------------AAA--------------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------AAA--------------AAA---------AAA--AAA---------AAA--------AAA--------AAA---------AAA--AAA--------AAA---AAA--------------AAA---------AAA--AAA--------AAAA--AAA---------AAA--AAA--------------AAA-----AAAAA----AAA---------AAA--------------AAA--------AAA--------AAA---------AAA----AAA-----AAA----AAAAAAA-AAAAAAA--AAAA-------AAAA--------AAA---------AAA-------------------AAA-------------------AAA---------AAA-----------------------------------------------------------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA-----------------AAA-----------------------AAA--AAA---------AAA--------AAA--------AAA---------AAA--AAA--------AAA---AAA--------------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------------------AAA--AAA--------------------------AAA-----AAA------AAA--AAA---------AAA----AAA-----AAA----AAA---AAA---AAA------AAA-AAA------------------AAA------AAA----------------AAA--------------AAA--------------AAA------------------------',
+'-------------------------------------------------------AAA---AAA-----AAAAAAAAAAAAAA---AAA------AAAAAA--AAA------AAA---------------------------AAA----------------AAA-------AAAA--AAA--AAAA--------AAA--------------AAA------------------------------------------AAA--------------AAA---------AAA--------AAA-----------AAA-----------AAA---------AAA-----------AAA-----------------AAA--AAA---------AAA-----AAA-----------AAA---------AAA--------------AAA--------AAA--------------AAA-----------------AAA-------------------------AAA----------------------------AAA--------------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------AAA--------------AAA---------AAA--AAA---------AAA--------AAA--------AAA---------AAA--AAA---------AAA--AAA--------------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------AAA------AAA-----AAA---------AAA--------------AAA--------AAA--------AAA---------AAA-----AAA---AAA-----AAAAAA---AAAAAA--AAA---------AAA--------AAA--------AAA--------------------AAA--------------------AAA--------AAA-----------------------------------------------------------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA-----------------AAA-----------------------AAA--AAA---------AAA--------AAA--------AAA---------AAA--AAA---------AAA--AAA--------------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------------------AAA--AAA--------------------------AAA-----AAA------AAA--AAA---------AAA-----AAA---AAA-----AAA---AAA---AAA-----AAA---AAA-----------------AAA-----AAA-----------------AAA--------------AAA--------------AAA------------------------',
+'-------------------------------------------------------AAA---AAA-----AAAAAAAAAAAAA----AAA------AAAAAA--AAA------AAAA---------------------------AAA--------------AAA--------AAA---AAA---AAA--------AAA-------------AAAA------------------------------------------AAA--------------AAA---------AAA--------AAA----------AAA------------AAA---------AAA-----------AAA-----------------AAA--AAA---------AAA-----AAA-----------AAA---------AAA--------------AAA--------AAA-------------AAA-------------------AA-------------------------AA-----------------------------AAA--------------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------AAA--------------AAA---------AAA--AAA---------AAA--------AAA--------AAA---------AAA--AAA---------AAA--AAA--------------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------AAA-----AAAAA----AAA---------AAA--------------AAA--------AAA--------AAA---------AAA------AAA-AAA------AAAAA-----AAAAA--AAA---------AAA--------AAA--------AAA--------------------AAA--------------------AAA--------AAA-----------------------------------------------------------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA-----------------AAA-----------------------AAA--AAA---------AAA--------AAA--------AAA---------AAA--AAA---------AAA--AAA--------------AAA---------AAA--AAA---------AAA--AAA---------AAA--AAA--------------------------AAA--AAA--------------------------AAA-----AAA------AAA--AAA---------AAA------AAA-AAA-------AAA-AAAAA-AAA-----AAA-----AAA----------------AAA----AAA------------------AAA--------------AAA--------------AAA------------------------',
+'------------------------AAA----------------------------AAA---AAA-----------AAA-----------------AAAAAA--AAAAAAAAAA-AAA---------------------------AAA------------AAA-----------------------------------------------AAAA--------------------------------AAA-------------------------AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA-----------AAA-----AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA-----AAA-----------AAAAAAAAAAAAAAA-----AAAAAAAAAAAA-----------------------AAA-------------------------------------------------------------------AAA--------AAAAAAAAAAAA-----AAA---------AAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAA--------------AAAAAAAAAAAAAAA--AAA---------AAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAA---------AAA--AAAAAAAAAAAAAAA--AAA--------------AAAAAAAAAA-AAA---AAA---------AAA--AAAAAAAAAAAAAAA--------AAA--------AAAAAAAAAAAAAAA-------AAAAA-------AAAA-------AAAA--AAA---------AAA--------AAA--------AAAAAAAAAAAAAAA--------AAAAAA-------------------------AAAAAA-------------------------AAAAAAAAAAAAAAA-------------------AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA-----AAA--------------AAAAAAAAAAAA--AAA---------AAA--AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAA---------AAA--AAAAAAAAAAAAAAA--AAA--------------------------AAA--AAA--------------AAAAAAAAAAAAAAA-----AAAAAAAAAAAA--AAAAAAAAAAAAAAA-------AAAAA---------AAAAA-AAAAA-----AAA-------AAA------AAAAAAAAAAAA--AAAAAAAAAAAAAAA--------AAAAAA-----------AAA-----------AAAAAA------------------------', 
+'------------------------AAA----------------------------AAA---AAA-----------AAA-----------------AAAAAA---AAAAAAAA---AAA---------------------------AAA----------AAA-----------------------------------------------AAAA---------------------------------AAA--------------------------AAAAAAAAAAAAA---AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA---AAAAAAAAAAAAA------------AAA-----AAAAAAAAAAAAAA----AAAAAAAAAAAAA------AAA------------AAAAAAAAAAAAA------AAAAAAAAAAA-----------------------AAA--------------------------------------------------------------------AAA---------AAAAAAAAAAA-----AAA---------AAA--AAAAAAAAAAAAAA----AAAAAAAAAAAAA---AAAAAAAAAAAAAA---AAAAAAAAAAAAAAA--AAA---------------AAAAAAAAAAAAA---AAA---------AAA--AAAAAAAAAAAAAAA---AAAAAAAAAAAAA---AAA---------AAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAA---------AAA---AAAAAAAAAAAAA---AAA---------------AAAAAAAA---AAA--AAA---------AAA--AAAAAAAAAAAAAA---------AAA---------AAAAAAAAAAAAA---------AAA--------AAA---------AAA--AAA---------AAA--------AAA--------AAAAAAAAAAAAAAA--------AAAAAA-------------------------AAAAAA-------------------------AAAAAAAAAAAAAAA--------------------AAAAAAAAAAAAAA--AAAAAAAAAAAAAA----AAAAAAAAAAAAA----AAAAAAAAAAAAAA---AAAAAAAAAAAAAA-----AAA--------------AAAAAAAAAAA---AAA---------AAA--AAAAAAAAAAAAAAA---AAAAAAAAAAAAA---AAA---------AAA---AAAAAAAAAAAAAA--AAA---------AAA--AAA---------AAA---AAAAAAAAAAAAA---AAA--------------------------AAA--AAA--------------AAAAAAAAAAAAAA-------AAAAAAAAAA----AAAAAAAAAAAAAA--------AAA-----------AAA---AAA-----AAA---------AAA-----AAAAAAAAAAA---AAAAAAAAAAAAAAA---------AAAAA-----------AAA-----------AAAAA-------------------------', 
+'------------------------AAA----------------------------AAA---AAA-----------AAA------------------AAAA-----AAAAAA----AAA----------------------------AAA--------AAA------------------------------------------------AAA----------------------------------AAA---------------------------AAAAAAAAAAA----AAAAAAAAAAAAAAA--AAAAAAAAAAAAAAA----AAAAAAAAAAA-------------AAA-----AAAAAAAAAAAAA------AAAAAAAAAAA-------AAA-------------AAAAAAAAAAA-------AAAAAAAAAA------------------------AAA--------------------------------------------------------------------AAA----------AAAAAAAAAA-----AAA---------AAA--AAAAAAAAAAAAA------AAAAAAAAAAA----AAAAAAAAAAAAA----AAAAAAAAAAAAAAA--AAA----------------AAAAAAAAAAA----AAA---------AAA--AAAAAAAAAAAAAAA----AAAAAAAAAAA----AAA---------AAA--AAAAAAAAAAAAAAA--AAA---------AAA--AAA---------AAA----AAAAAAAAAAA----AAA----------------AAAAAA----AAA--AAA---------AAA--AAAAAAAAAAAAA----------AAA----------AAAAAAAAAAA-----------A---------AAA---------AAA--AAA---------AAA--------AAA--------AAAAAAAAAAAAAAA--------AAAAAA-------------------------AAAAAA-------------------------AAAAAAAAAAAAAAA---------------------AAAAAAAAAAAAA--AAAAAAAAAAAAA------AAAAAAAAAAA------AAAAAAAAAAAAA----AAAAAAAAAAAAA-----AAA--------------AAAAAAAAAA----AAA---------AAA--AAAAAAAAAAAAAAA----AAAAAAAAAAA----AAA---------AAA----AAAAAAAAAAAAA--AAA---------AAA--AAA---------AAA----AAAAAAAAAAA----AAA--------------------------AAA--AAA--------------AAAAAAAAAAAAA---------AAAAAAAA------AAAAAAAAAAAAA---------A-------------A-----A------AAA---------AAA-----AAAAAAAAAA----AAAAAAAAAAAAAAA----------AAAA-----------AAA-----------AAAA--------------------------', 
+'-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------' 
+];
+x = Math.floor(x + size / 2);
+y = Math.floor(y + size / 2);
+z = Math.floor(z + size / 2);
+if (z>=(text.length*23)) return 1;
+if (y>=3) return 1;
+let i = Math.floor(x / 17);
+let j = Math.floor(z / 23);
+if (i+1>text[j].length) return 1;
+let c = text[j].charCodeAt(i);
+if (chars[z%23][(c-32)*17+(x-i*17)] === '-') return 1;
+return 0;`
+      },
+      {
+        name: "Noise",
+        size: 30,
+        formula: `return Math.abs(noise(x/(size/4),y/(size/4),z/(size/4))) * 4;`        
+      },
+      {
+        name: 'Waves',
+        size: 30,
+        formula: `return Math.abs(noise(x/(size/4),0/(size/4),z/(size/4))) * size / 4 + y + size /4;`
+      },
+      {
+        name: "Fire",
+        size: 30,
+        formula: `return (y + size/2) * Math.random() / 3;`
+      },
+      {
+        name: "Moon",
+        size: 30,
+        formula: `return (Math.sqrt(x*x + y*y + z*z) / (size/2)) + Math.random()/2 * Math.abs(y / size);`
+      },
+      {
+        name: "Planet",
+        size: 40,
+        formula: `// This formula only works for size 30 - 40
+// Generate in Blue - White - In
+// Replace the generated material and colors with these 3 lines:
+// shape = sphere
+// material lighting = flat,   deform = 4, scatter = 0.25, roughness = 1, colors = A:#888
+// material lighting = smooth, deform = 4, scatter = 0.25, roughness = 1, colors = B:#482
+// material lighting = smooth, deform = 4, scatter = 0.1,  roughness = 0, colors = C:#04F
+
+let height = 2;
+let value = 0;
+let s = 1;
+for (let n=0; n < 4; n++) {
+  value += s * noise(x/(size/(2*n)), y/(size/(2*n)), z/(size/(2*n))); 
+  s /= 1.5;
+}
+return Math.max(Math.abs(x),Math.abs(y),Math.abs(z))/(size/2)
+       + Math.min(0.5, value + 0.4) / (size/4/height)`
+      },
+      {
+        name: "Lattice",
+        size: 50,
+        formula: `// Suggestion: add warp = 10 0.03 to the material
+x += size+1; y += size+1; z += size+1;
+return (x%10<2 && y%10<2) || (x%10<2 && z%10<2) || (y%10<2 && z%10<2) ? 0 : 1;`
+      },
+      {
+        name: "Hollow Lattice",
+        size: 35,
+        formula: `// Sizes that work: 15, 25, 35, 45, 55, ...
+x += size/2; y += size/2; z += size/2;
+if (!((x%10>=5 && y%10>=5) || (x%10>=5 && z%10>=5) || (y%10>=5 && z%10>=5))) return 1;
+x += 1; y += 1; z += 1;
+if ((x%10>=7 && y%10>=7) || (x%10>=7 && z%10>=7) || (y%10>=7 && z%10>=7)) return 1;
+return 0;`
+      },   
+      {
+        name: "Maze",
+        size: 17,
+      formula: `// Suggestion: render as voxels and add ao = 2 to the material (very slow on large sizes)
+x += size+1; y += size+1; z += size+1;
+return (x%2<1 && y%2<1 && z%2<1) ? 0 :
+       Math.random()<0.5 ? 1 : 
+       (x%2<1 && y%2<1) || (x%2<1 && z%2<1) || (y%2<1 && z%2<1) ? 0 : 1;`
+      },
+      {
+        name: "Menger Sponge",
+        size: 27,
+        formula: `// The Menger Sponge works best on sizes 3, 9, 27 and 81 
+x = Math.floor(x + size/2); 
+y = Math.floor(y + size/2); 
+z = Math.floor(z + size/2); 
+let scale = 3;
+let voxel = true;
+while (scale <= size) {
+  voxel = voxel &&  !(
+       (x%3 === 1 && y%3 === 1) ||
+       (x%3 === 1 && z%3 === 1) || 
+       (y%3 === 1 && z%3 === 1));
+  scale *= 3;
+  x = Math.floor(x/3);
+  y = Math.floor(y/3);
+  z = Math.floor(z/3);
+}
+return voxel ? 0 : 1;`
+      },
+      {
+        name: "Binary Cube",
+        size: 32,
+        formula: `return Math.abs(x)&15 & Math.abs(z)&15 & Math.abs(y)&15`
+      },
+      {
+        name: "Pretzel",
+        size: 40,
+        formula: `x /= 2; y /= 2; z /= 2;
+return -1 + Math.min(
+              Math.pow(Math.sqrt(Math.pow(Math.abs(z) - size/10,2) + y*y) - size/10,2) + x*x,
+              Math.pow(Math.sqrt(Math.pow(Math.abs(x) - size/10,2) + z*z) - size/10,2) + y*y,
+              Math.pow(Math.sqrt(Math.pow(Math.abs(y) - size/10,2) + x*x) - size/10,2) + z*z
+            );`
+      },
+      {
+        name: "Heart",
+        size: 15,
+        formula: `x /= size/2.5; y /= size/2.5, z /= size/10;
+return Math.max(1.0+(x*x+y*y-1)*(x*x+y*y-1)*(x*x+y*y-1)-x*x*y*y*y, Math.abs(z));`
+      },
+      {
+        name: "MetaBalls",
+        size: 20,
+        formula: `let t = Date.now() / 2000;
+if (!positions) {
+  var positions = [
+    { x:-7, y:-7, z:5, r:2 },
+    { x: 7, y:-7, z:5, r:2 },
+    { x: 7, y: 7, z:5, r:2 },
+    { x:-7, y: 7, z:5, r:2 },
+    { x:Math.sin(t)*7, y:Math.cos(t)*7, z:-5, r:2 }
+  ];
+}
+
+let value = 0;
+for(let p=0;p<positions.length;p++) {
+  let pos = positions [p];
+  value += 1 / (Math.sqrt((x-pos.x)*(x-pos.x) + (y-pos.y)*(y-pos.y) + (z-pos.z)*(z-pos.z)) / pos.r); 
+}
+
+return value > 1 ? 0 : 1;` 
+      },
+      {
+        name: "AlienEye",
+        size: 99,
+        formula: `// Signed distance functions from:
+// https://iquilezles.org/www/articles/distfunctions/distfunctions.htm
+// Recommended size 99
+// Change colors to: colors = A:#020 D:#060 B:#FEC C:#800
+
+let stem = sdRoundCone({x:x, y:y, z:z }, { x:0, y:0, z:0 }, { x:35, y:-35, z:0 }, 0, 15);
+let ball = sdSphere( {x:x, y:y, z:z }, 30);
+let combined = opSmoothUnion(stem, ball, 10);
+combined = opDisplace(combined, x, y, z);
+let hole = sdSphere( {x:x+20, y:y, z:z }, 20);
+
+let socket = opSmoothSubtraction(
+  combined,
+  hole,
+  10
+);
+
+let eye = sdSphere( {x:x+5, y:y, z:z }, 23);
+let pupil = sdSphere( {x:x+20, y:y, z:z }, 10);
+
+let d = displacement(x, y, z);
+
+if (stem <= -7.5) return (d>0) ? "A" : "D";
+if (socket <= 1) return (d>0) ? "A" : "D";
+if (pupil <= 1) return "C";
+if (eye <= 1) return "B";
+return "-"; 
+
+function sdSphere(position, size)
+{
+  return length(position)-size;
+}
+
+function sdTorus(position, t)
+{
+  let q = { x:length({ x:position.x, y:position.z, z:0})-t.x, y:position.y };
+  return length( {x:q.x, y:q.y, z:0} ) - t.y;
+}
+
+function sdRoundCone(vec3p, vec3a, vec3b, r1, r2)
+{
+    // sampling independent computations (only depend on shape)
+    let  ba = { x:vec3b.x - vec3a.x, y:vec3b.y - vec3a.y, z:vec3b.z - vec3a.z };
+    let l2 = dot(ba,ba);
+    let rr = r1 - r2;
+    let a2 = l2 - rr*rr;
+    let il2 = 1.0/l2;
+    
+    // sampling dependant computations
+    let pa = { x:vec3p.x - vec3a.x, y:vec3p.y - vec3a.y, z:vec3p.z - vec3a.z };
+    let y = dot(pa,ba);
+    let z = y - l2;
+    let x2 = dot2( { x:pa.x*l2 - ba.x*y, y:pa.y*l2 - ba.y*y, z:pa.z*l2 - ba.z*y} );
+    let y2 = y*y*l2;
+    let z2 = z*z*l2;
+    //console.log(pa, y, z, x2, y2, z2);
+
+    // single square root!
+    let k = Math.sign(rr)*rr*rr*x2;
+    if( Math.sign(z)*a2*z2 > k) 
+       return Math.sqrt(x2 + z2) * il2 - r2;
+    else if( Math.sign(y)*a2*y2 < k) 
+      return Math.sqrt(x2 + y2) * il2 - r1;
+    else 
+      return (Math.sqrt(x2*a2*il2)+y*rr) * il2 - r1;
+}
+
+function opDisplace(d, x, y, z)
+{
+    let dis = displacement(x, y, z); 
+    return d + dis;
+}
+
+function displacement(x, y, z) {
+  return 2*Math.sin(x/3)*Math.sin(y/3)*Math.sin(z/3) + Math.random() - 0.5;
+}
+
+function opSmoothUnion(d1, d2, k) {
+    let h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) - k*h*(1.0-h); 
+}
+
+function opSmoothSubtraction(d1, d2, k ) {
+    let h = clamp( 0.5 - 0.5*(d1+d2)/k, 0.0, 1.0 );
+    return mix( d1, -d2, h ) + k*h*(1.0-h); 
+}
+
+function opSmoothIntersection(d1, d2, k ) {
+    let h = clamp( 0.5 - 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) + k*h*(1.0-h); 
+}
+
+function clamp(value, lower, upper ) {
+  if (value > upper) return upper;
+  if (value < lower) return lower;
+  return value;
+}
+
+function mix(a, b, d) { 
+  return a*(1-d) + b*d;
+}
+
+function length(vec3) { return Math.sqrt(vec3.x*vec3.x + vec3.y*vec3.y + vec3.z*vec3.z); }
+
+function dot2(vec3) { return dot(vec3,vec3); }
+function dot2(vec3) { return dot(vec3,vec3); }
+function ndot(vec2a, vec2b) { return vec2a.x * vec2b.x - vec2a.y * vec2b.y; }
+function dot(vec3a, vec3b) { return vec3a.x * vec3b.x + vec3a.y * vec3b.y + vec3a.z * vec3b.z; }` 
+      }    
+    ];
+    
+    
+document.querySelector('a-scene').addEventListener('loaded', function() { 
+  
+    let parameters = [];
+    let temp = location.toString().split('?');
+    if (temp.length > 1) {
+      temp = temp[1].split('&');
+      for(i=0; i < temp.length;i++)
+      {
+        let param = temp[i].split('=');
+        parameters[param[0]] = param[1];
+      }
+    }
+    
+    if (parameters['m']) {
+
+      if (!parameters['f'] || parameters['f'] !== '1')
+        onExitFullScreen();     
+      if (parameters['a'] && parameters['a'] === '0')
+        toggleAutoRender();
+      if (parameters['d'] && parameters['d'] === '0')
+        toggleScene();
+      if (parameters['g'] && parameters['g'] === '0')
+        toggleBackground();
+      if (parameters['e'] && parameters['e'] === '0')
+        toggleEnvironment();
+      if (parameters['b'] && parameters['b'] === '0')
+        toggleBaseVisible()
+      if (parameters['l'] && parameters['l'] === '0')
+        toggleLights();
+      if (parameters['r'] && parameters['r'] === '0')
+        toggleRotate();
+      
+      let compressed = false;
+      if (parameters['c'] && parameters['c'] === '1')
+        compressed = true;
+      
+      document.getElementById('title').innerHTML = decodeURIComponent(parameters['t'] || "Smooth Voxels");        
+      let modelString = decodeURIComponent(parameters['m']);
+      
+      // Decompress the model
+      if (compressed) {
+        let model = ModelReader.readFromString(modelString);
+        modelString = ModelWriter.writeToString(model, false);
+      }
+      
+      // Note at startup day and night are reversed so !day
+      modelString = modelString.replace('%ENVIRONMENT%', !day ? environmentDaySmall : environmentNightSmall);
+      
+      editor.setValue(modelString,-1);
+      editor.gotoLine(1);
+  
+      renderModel();
+      
+      if (parameters['s'] && parameters['s'] === '0')
+        toggleShadow();
+    }
+    else {    
+      document.getElementById('title').innerHTML = "Smooth Voxel Playground";
+      let inactive = document.getElementsByClassName('inactive');
+      while (inactive.length > 0) {
+        inactive[0].classList.remove("inactive"); 
+      }
+      
+      onExitFullScreen();
+      fillPalettes();
+      fillFormulas();
+      onChooseFormula(false);
+      fillModels();
+      onChooseModel();      
+    }
+  
+    scene.addEventListener('exit-vr', function (event) {
+      resetOrbitCamera();
+    });
+
+    scene.addEventListener('enter-vr', function (event) {
+      resetFlyingCamera();
+    });
+
+    resetOrbitCamera();
+    toggleAutoRender();
+    toggleScene();
+    toggleBackground();
+    toggleEnvironment();
+    toggleLights();
+    toggleBaseVisible();
+    toggleRotate();
+    toggleShadow();
+    toggleFps();
+    toggleClampColors();
+
+});
+
+let renderTimer = null;
+function onModelChange() {
+  if (renderTimer)
+    clearTimeout(renderTimer);
+  if (autoRender) {
+    renderTimer = setTimeout(function() {
+      renderTimer = null;
+      if (autoRender)    
+        renderModel();
+    }, 500);
+  }
+}
+    
+function onEnterFullScreen() {
+  document.getElementById('enterfullscreen').classList.add('hide');
+  document.getElementById('exitfullscreen').classList.remove('hide');
+  document.getElementById('right').classList.add('displayfullscreen'); 
+  resetCameraAspectRatio();
+}
+    
+function onExitFullScreen() {
+  document.getElementById('enterfullscreen').classList.remove('hide');
+  document.getElementById('exitfullscreen').classList.add('hide');  
+  document.getElementById('right').classList.remove('displayfullscreen');  
+  resetCameraAspectRatio();
+}
+ 
+  </script>
+  
+</html>
