@@ -1,12 +1,9 @@
 class VertexLinker {
   
-  static linkVertices(model, face, faceOffset) {
-    const { faceSkipped, faceClamped, faceVertLinks } = model;
+  static linkVertices(model, face, faceIndex) {
+    const { faceClamped, faceVertIndices, faceVertLinkIndices } = model;
 
-    const skipped = faceSkipped.get(faceOffset);
-    if (skipped === 1) return;
-
-    const clamped = faceClamped.get(faceOffset);
+    const clamped = faceClamped.get(faceIndex);
 
     if (clamped === 1) {
       // Do not link clamped face vertices so the do not pull in the sides on deform.
@@ -15,16 +12,34 @@ class VertexLinker {
       // This, for instance, results in straight 45 degree roofs when clamping the sides.
       // This is the only difference in handling flatten vs clamp.
       for (let v = 0; v < 4; v++) {
-        faceVertLinks.set(faceOffset + v, 1); // Set to 1 is self link
+        const vertIndex = faceVertIndices[faceIndex * 4 + v];
+
+        for (let i = 0; i < 6; i++) {
+          if (faceVertLinkIndices[vertIndex * 6 + i] === 0) {
+            faceVertLinkIndices[vertIndex * 6 + i] = vertIndex + 1; // Add one b/c zero is empty
+            break;
+          }
+        }
       }
     } else {
       // Link each vertex with its neighbor and back (so not diagonally)
       for (let v = 0; v < 4; v++) {
-        const vTo = (v + 1) % 4;
+        const vertIndexFrom = faceVertIndices[faceIndex * 4 + v];
+        const vertIndexTo = faceVertIndices[faceIndex * 4 + (v + 1) % 4];
 
-        // Set to 2 is before/after neighbor link
-        faceVertLinks.get(faceOffset + v, 2);
-        faceVertLinks.get(faceOffset + vTo, 2);
+        for (let i = 0; i < 6; i++) {
+          if (faceVertLinkIndices[vertIndexFrom * 6 + i] === 0) {
+            faceVertLinkIndices[vertIndexFrom * 6 + i] = vertIndexTo + 1; // Add one b/c zero is empty
+            break;
+          }
+        }
+
+        for (let i = 0; i < 6; i++) {
+          if (faceVertLinkIndices[vertIndexTo * 6 + i] === 0) {
+            faceVertLinkIndices[vertIndexTo * 6 + i] = vertIndexFrom + 1; // Add one b/c zero is empty
+            break;
+          }
+        }
       }
     }
 
@@ -62,7 +77,7 @@ class VertexLinker {
   static fixClampedLinks(model) {
     const voxels = model.voxels;
 
-    const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertX, faceVertY, faceVertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials } = model;
+    const { faceNameIndices, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertX, faceVertY, faceVertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials } = model;
 
     // Clamped sides are ignored when deforming so the clamped side does not pull in the other sodes.
     // This results in the other sides ending up nice and peripendicular to the clamped sides.
@@ -70,12 +85,8 @@ class VertexLinker {
     // This then results in the corners of these sides sticking out sharply with high deform counts.
     
     // Find all vertices that are fully clamped (i.e. not at the edge of the clamped side)
-    for (let faceOffset = 0; faceOffset < model.faceCount; faceOffset++) {
-      // Compute face vertex normals
-      const skipped = faceSkipped.get(faceOffset);
-      if (skipped === 1) return;
-
-      const clamped = faceClamped.get(faceOffset);
+    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
+      const clamped = faceClamped.get(faceIndex);
       if (clamped === 0) return;
     }
 

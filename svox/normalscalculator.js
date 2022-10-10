@@ -161,9 +161,6 @@ class NormalsCalculator {
 
     // Use flat normals if as both normals for faces if both is not set or isn't smooth
     for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
-      const skipped = faceSkipped.get(faceIndex);
-      if (skipped === 1) return;
-
       const material = model.materials.materials[faceMaterials[faceIndex]];
 
       for (let i = 0; i < 4; i++) {

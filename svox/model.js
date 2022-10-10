@@ -100,15 +100,13 @@ class Model {
     const MAX_FACES = MAX_VERTS / 4;
     const MAX_FACE_BITS = Math.floor(MAX_FACES / 8);
 
-    this.faceSkipped = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
-
     this.faceFlattened = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
     this.faceClamped = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
     this.faceSmooth = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
     this.faceEquidistant = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
     this.faceNameIndices = new Uint8Array(MAX_FACES);
     this.faceMaterials = new Uint8Array(MAX_FACES);
-    this.faceVertIndices = new Uint8Array(MAX_VERTS);
+    this.faceVertIndices = new Uint32Array(MAX_VERTS);
 
     this.faceVertX = new Float32Array(MAX_VERTS);
     this.faceVertY = new Float32Array(MAX_VERTS);
@@ -131,13 +129,16 @@ class Model {
     this.faceVertClampedX = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
     this.faceVertClampedY = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
     this.faceVertClampedZ = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.faceVertLinks = Bits.create(new Uint8Array(Math.floor(MAX_VERTS / 4)).buffer, 2, 0);
+    this.faceVertLinkIndices = new Uint32Array(MAX_VERTS * 6);
     this.faceVertDeformCount = new Uint8Array(MAX_VERTS);
     this.faceVertDeformDamping = new Float32Array(MAX_VERTS);
     this.faceVertDeformStrength = new Float32Array(MAX_VERTS);
     this.faceVertWarpAmplitude = new Float32Array(MAX_VERTS);
     this.faceVertWarpFrequency = new Float32Array(MAX_VERTS);
     this.faceVertScatter = new Float32Array(MAX_VERTS);
+
+    // Need to zero on reset:
+    // face vert link indices
   }
    
   _setVertex(x, y, z, vertex) {
@@ -411,7 +412,6 @@ class Model {
 
       this.faceFlattened.set(this.faceCount, flattened ? 1 : 0);
       this.faceClamped.set(this.faceCount, clamped ? 1 : 0);
-      this.faceSkipped.set(this.faceCount, skipped ? 1 : 0);
       this.faceMaterials[this.faceCount] = voxel.materialListIndex;
       this.faceNameIndices[this.faceCount] = faceNameIndex;
 
@@ -546,7 +546,7 @@ class Model {
         this.faceVertScatter[vertexIndex] = material.scatter;
       }
     } else {
-      vertexIndex = this.vertexCount;
+      vertexIndex = this.vertCount;
       vertIndexLookup.set(key, vertexIndex);
 
       this.faceVertX[vertexIndex] = x;
@@ -575,7 +575,7 @@ class Model {
     this._setIsVertexPlanar(voxel, x, y, z, material._flatten, this._flatten, this.faceVertFlattenedX, this.faceVertFlattenedY, this.faceVertFlattenedZ, vertexIndex);
     this._setIsVertexPlanar(voxel, x, y, z, material._clamp, this._clamp, this.faceVertClampedX, this.faceVertClampedY, this.faceVertClampedZ, vertexIndex);
 
-    this.vertexCount++;
+    this.vertCount++;
 
     return vertexIndex;
   }
