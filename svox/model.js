@@ -95,43 +95,49 @@ class Model {
     this.faceCount = 0;
     this.vertCount = 0;
 
-    this.faceFlattened = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceClamped = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceSkipped = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceSmooth = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceEquidistant = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceNameIndices = new Uint8Array(1024 * 1024);
-    this.faceMaterials = new Uint8Array(1024 * 1024);
-    this.faceVertIndices = new Uint8Array(1024 * 1024);
+    const MAX_VERTS = 1024 * 1024;
+    const MAX_VERT_BITS = Math.floor(MAX_VERTS / 8);
+    const MAX_FACES = MAX_VERTS / 4;
+    const MAX_FACE_BITS = Math.floor(MAX_FACES / 8);
 
-    this.faceVertX = new Float32Array(1024 * 1024);
-    this.faceVertY = new Float32Array(1024 * 1024);
-    this.faceVertZ = new Float32Array(1024 * 1024);
-    this.faceVertNormalX = new Float32Array(1024 * 1024);
-    this.faceVertNormalY = new Float32Array(1024 * 1024);
-    this.faceVertNormalZ = new Float32Array(1024 * 1024);
-    this.faceVertFlatNormalX = new Float32Array(1024 * 1024);
-    this.faceVertFlatNormalY = new Float32Array(1024 * 1024);
-    this.faceVertFlatNormalZ = new Float32Array(1024 * 1024);
-    this.faceVertSmoothNormalX = new Float32Array(1024 * 1024);
-    this.faceVertSmoothNormalY = new Float32Array(1024 * 1024);
-    this.faceVertSmoothNormalZ = new Float32Array(1024 * 1024);
-    this.faceVertBothNormalX = new Float32Array(1024 * 1024);
-    this.faceVertBothNormalY = new Float32Array(1024 * 1024);
-    this.faceVertBothNormalZ = new Float32Array(1024 * 1024);
-    this.faceVertFlattenedX = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceVertFlattenedY = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceVertFlattenedZ = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceVertClampedX = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceVertClampedY = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceVertClampedZ = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceVertLinks = Bits.create(new Uint8Array(1024 * 1024).buffer, 2, 0);
-    this.faceVertDeformCount = new Uint8Array(1024 * 1024);
-    this.faceVertDeformDamping = new Float32Array(1024 * 1024);
-    this.faceVertDeformStrength = new Float32Array(1024 * 1024);
-    this.faceVertWarpAmplitude = new Float32Array(1024 * 1024);
-    this.faceVertWarpFrequency = new Float32Array(1024 * 1024);
-    this.faceVertScatter = new Float32Array(1024 * 1024);
+    this.faceSkipped = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
+
+    this.faceFlattened = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
+    this.faceClamped = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
+    this.faceSmooth = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
+    this.faceEquidistant = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
+    this.faceNameIndices = new Uint8Array(MAX_FACES);
+    this.faceMaterials = new Uint8Array(MAX_FACES);
+    this.faceVertIndices = new Uint8Array(MAX_VERTS);
+
+    this.faceVertX = new Float32Array(MAX_VERTS);
+    this.faceVertY = new Float32Array(MAX_VERTS);
+    this.faceVertZ = new Float32Array(MAX_VERTS);
+    this.faceVertNormalX = new Float32Array(MAX_VERTS);
+    this.faceVertNormalY = new Float32Array(MAX_VERTS);
+    this.faceVertNormalZ = new Float32Array(MAX_VERTS);
+    this.faceVertFlatNormalX = new Float32Array(MAX_VERTS);
+    this.faceVertFlatNormalY = new Float32Array(MAX_VERTS);
+    this.faceVertFlatNormalZ = new Float32Array(MAX_VERTS);
+    this.faceVertSmoothNormalX = new Float32Array(MAX_VERTS);
+    this.faceVertSmoothNormalY = new Float32Array(MAX_VERTS);
+    this.faceVertSmoothNormalZ = new Float32Array(MAX_VERTS);
+    this.faceVertBothNormalX = new Float32Array(MAX_VERTS);
+    this.faceVertBothNormalY = new Float32Array(MAX_VERTS);
+    this.faceVertBothNormalZ = new Float32Array(MAX_VERTS);
+    this.faceVertFlattenedX = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.faceVertFlattenedY = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.faceVertFlattenedZ = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.faceVertClampedX = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.faceVertClampedY = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.faceVertClampedZ = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.faceVertLinks = Bits.create(new Uint8Array(Math.floor(MAX_VERTS / 4)).buffer, 2, 0);
+    this.faceVertDeformCount = new Uint8Array(MAX_VERTS);
+    this.faceVertDeformDamping = new Float32Array(MAX_VERTS);
+    this.faceVertDeformStrength = new Float32Array(MAX_VERTS);
+    this.faceVertWarpAmplitude = new Float32Array(MAX_VERTS);
+    this.faceVertWarpFrequency = new Float32Array(MAX_VERTS);
+    this.faceVertScatter = new Float32Array(MAX_VERTS);
   }
    
   _setVertex(x, y, z, vertex) {
@@ -398,23 +404,23 @@ class Model {
         skipped,
       };
 
-      this.faceVertIndices[this.faceCount] = this._createInlineVertex(voxel, faceName, 0, flattened, clamped, vertIndexLookup);
-      this.faceVertIndices[this.faceCount + 1] = this._createInlineVertex(voxel, faceName, 1, flattened, clamped, vertIndexLookup);
-      this.faceVertIndices[this.faceCount + 2] = this._createInlineVertex(voxel, faceName, 2, flattened, clamped, vertIndexLookup);
-      this.faceVertIndices[this.faceCount + 3] = this._createInlineVertex(voxel, faceName, 3, flattened, clamped, vertIndexLookup);
+      this.faceVertIndices[this.faceCount * 4] = this._createInlineVertex(voxel, faceName, 0, flattened, clamped, vertIndexLookup);
+      this.faceVertIndices[this.faceCount * 4 + 1] = this._createInlineVertex(voxel, faceName, 1, flattened, clamped, vertIndexLookup);
+      this.faceVertIndices[this.faceCount * 4 + 2] = this._createInlineVertex(voxel, faceName, 2, flattened, clamped, vertIndexLookup);
+      this.faceVertIndices[this.faceCount * 4 + 3] = this._createInlineVertex(voxel, faceName, 3, flattened, clamped, vertIndexLookup);
+
+      this.faceFlattened.set(this.faceCount, flattened ? 1 : 0);
+      this.faceClamped.set(this.faceCount, clamped ? 1 : 0);
+      this.faceSkipped.set(this.faceCount, skipped ? 1 : 0);
+      this.faceMaterials[this.faceCount] = voxel.materialListIndex;
+      this.faceNameIndices[this.faceCount] = faceNameIndex;
+
+       // Link the vertices for deformation
+      if (linkVertices)
+        VertexLinker.linkVertices(model, face, this.faceCount);
+
+      this.faceCount++;
     }
-
-    this.faceFlattened.set(this.faceCount, flattened ? 1 : 0);
-    this.faceClamped.set(this.faceCount, clamped ? 1 : 0);
-    this.faceSkipped.set(this.faceCount, skipped ? 1 : 0);
-    this.faceMaterials[this.faceCount] = voxel.materialListIndex;
-    this.faceNameIndices[this.faceCount] = faceNameIndex;
-
-     // Link the vertices for deformation
-    if (linkVertices)
-      VertexLinker.linkVertices(model, face, this.faceCount);
-
-    this.faceCount++;
     
     return face;
   }
