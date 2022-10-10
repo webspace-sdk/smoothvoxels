@@ -1,6 +1,33 @@
 class VertexLinker {
   
-  static linkVertices(voxel, face, faceName) {
+  static linkVertices(model, face, faceOffset) {
+    const { faceSkipped, faceClamped, faceVertLinks } = model;
+
+    const skipped = faceSkipped.get(faceOffset);
+    if (skipped === 1) return;
+
+    const clamped = faceClamped.get(faceOffset);
+
+    if (clamped === 1) {
+      // Do not link clamped face vertices so the do not pull in the sides on deform.
+      // But now this leaves these vertices with only 3 links, which offsets the average.
+      // Add the vertex itself to compensate the average.
+      // This, for instance, results in straight 45 degree roofs when clamping the sides.
+      // This is the only difference in handling flatten vs clamp.
+      for (let v = 0; v < 4; v++) {
+        faceVertLinks.set(faceOffset + v, 1); // Set to 1 is self link
+      }
+    } else {
+      // Link each vertex with its neighbor and back (so not diagonally)
+      for (let v = 0; v < 4; v++) {
+        const vTo = (v + 1) % 4;
+
+        // Set to 2 is before/after neighbor link
+        faceVertLinks.get(faceOffset + v, 2);
+        faceVertLinks.get(faceOffset + vTo, 2);
+      }
+    }
+
     if (face.skipped)
       return;
     
@@ -32,7 +59,26 @@ class VertexLinker {
     }  
   }
   
-  static fixClampedLinks(voxels) {
+  static fixClampedLinks(model) {
+    const voxels = model.voxels;
+
+    const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertX, faceVertY, faceVertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials } = model;
+
+    // Clamped sides are ignored when deforming so the clamped side does not pull in the other sodes.
+    // This results in the other sides ending up nice and peripendicular to the clamped sides.
+    // However, this als makes all of the vertices of the clamped side not deform.
+    // This then results in the corners of these sides sticking out sharply with high deform counts.
+    
+    // Find all vertices that are fully clamped (i.e. not at the edge of the clamped side)
+    for (let faceOffset = 0; faceOffset < model.faceCount; faceOffset++) {
+      // Compute face vertex normals
+      const skipped = faceSkipped.get(faceOffset);
+      if (skipped === 1) return;
+
+      const clamped = faceClamped.get(faceOffset);
+      if (clamped === 0) return;
+    }
+
     // Clamped sides are ignored when deforming so the clamped side does not pull in the other sodes.
     // This results in the other sides ending up nice and peripendicular to the clamped sides.
     // However, this als makes all of the vertices of the clamped side not deform.

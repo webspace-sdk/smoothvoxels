@@ -8,14 +8,13 @@ class NormalsCalculator {
 
     for (let faceOffset = 0; faceOffset < model.faceCount; faceOffset++) {
       // Compute face vertex normals
-      const faceNameIndex = faceNameIndices[faceOffset];
-      const faceName = SVOX._FACES[faceNameIndex];
-      const skipped = faceSkipped[faceOffset];
-      if (skipped) return;
+      const skipped = faceSkipped.get(faceOffset);
+      if (skipped === 1) return;
 
+      const faceNameIndex = faceNameIndices[faceOffset];
       const equidistant = faceEquidistant[faceOffset];
-      const flattened = faceFlattened[faceOffset];
-      const clamped = faceClamped[faceOffset];
+      const flattened = faceFlattened.get(faceOffset);
+      const clamped = faceClamped.get(faceOffset);
 
       // equidistant || (!flattened && !clamped)
       const faceSmoothValue = equidistant | (1 - (flattened | clamped));
@@ -132,6 +131,9 @@ class NormalsCalculator {
 
     // Normalize the smooth + both vertex normals
     for (let faceOffset = 0; faceOffset < model.faceCount; faceOffset++) {
+      const skipped = faceSkipped.get(faceOffset);
+      if (skipped === 1) return;
+
       for (let i = 0; i < 4; i++) {
         const vertOffset = faceOffset + i;
         const smoothX = faceVertSmoothNormalX[vertOffset];
@@ -157,6 +159,9 @@ class NormalsCalculator {
 
     // Use flat normals if as both normals for faces if both is not set or isn't smooth
     for (let faceOffset = 0; faceOffset < model.faceCount; faceOffset++) {
+      const skipped = faceSkipped.get(faceOffset);
+      if (skipped === 1) return;
+
       const material = model.materials.materials[faceMaterials[faceOffset]];
 
       for (let i = 0; i < 4; i++) {
