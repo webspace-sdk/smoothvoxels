@@ -64,7 +64,7 @@ AFRAME.registerComponent('svox', {
   _generateModel: function(modelString, el, error) {
     let model;
     try {        
-        model = ModelReader.readFromString(modelString);
+        model = window.model = ModelReader.readFromString(modelString);
     }
     catch (ex) {
       this._logError(ex);
@@ -72,7 +72,6 @@ AFRAME.registerComponent('svox', {
       error = true;
     }
     
-    try {        
         //let meshGenerator = new MeshGenerator();
         //this.mesh = meshGenerator.generate(model);
 
@@ -94,10 +93,6 @@ AFRAME.registerComponent('svox', {
           statsEl.innerHTML = `Last render: ` + statsText; 
       
         el.setObject3D('mesh', this.mesh);
-    }
-    catch (error) {
-      this._logError(error);
-    }    
   },
   
   _generateModelInWorker: function(svoxmodel, el) {

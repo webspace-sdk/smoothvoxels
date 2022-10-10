@@ -21,3 +21,17 @@ face data structure {
 bytes per vertex = 12 + 1 + 16 + 2 + 2 + 2 = 37
 bytes per face = 4 * 37 + 16 + 8 + 1 = 201
 bytes per voxel = 6 * 201 = 1206
+
+
+check for use of voxels:
+- uvassigner, just faces and material
+- facealigner just faces
+- model, building face, just faces for bounds check
+- lightscalculator - material, faces
+- vertex transformer - faces
+- colorcombiner - material, faces
+- vertexlinker - faces
+- deformer - faces
+- meshgenerator - faces
+- normalscalculator - faces
+- aocalculator - faces

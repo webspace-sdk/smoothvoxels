@@ -91,6 +91,32 @@ class Model {
     this.triCount = 0;
     this.octCount = 0;
     this.octMissCount = 0;
+
+    this.faceCount = 0;
+    this.faceVertX = new Float32Array(1024 * 1024);
+    this.faceVertY = new Float32Array(1024 * 1024);
+    this.faceVertZ = new Float32Array(1024 * 1024);
+    this.faceVertFlatNormalX = new Float32Array(1024 * 1024);
+    this.faceVertFlatNormalY = new Float32Array(1024 * 1024);
+    this.faceVertFlatNormalZ = new Float32Array(1024 * 1024);
+    this.faceVertSmoothNormalX = new Float32Array(1024 * 1024);
+    this.faceVertSmoothNormalY = new Float32Array(1024 * 1024);
+    this.faceVertSmoothNormalZ = new Float32Array(1024 * 1024);
+    this.faceVertBothNormalX = new Float32Array(1024 * 1024);
+    this.faceVertBothNormalY = new Float32Array(1024 * 1024);
+    this.faceVertBothNormalZ = new Float32Array(1024 * 1024);
+    this.faceFlattened = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceClamped = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceSkipped = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceSmooth = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceEquidistant = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceNameIndices = new Uint8Array(1024 * 1024);
+    this.faceVertFlattenedX = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceVertFlattenedY = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceVertFlattenedZ = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceVertClampedX = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceVertClampedY = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceVertClampedZ = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
   }
    
   _setVertex(x, y, z, vertex) {
@@ -181,17 +207,20 @@ class Model {
 
     this.vertices = [];
   
+    let removeCount = 0;
+
     this.voxels.forEach(function createFaces(voxel) {
       let faceCount = 0;
       // Check which faces should be generated
       for (let f=0; f < SVOX._FACES.length; f++) {
         let faceName = SVOX._FACES[f];
         let neighbor = SVOX._NEIGHBORS[faceName];
-        let face = this._createFace(voxel, faceName, 
+        let face = this._createFace(voxel, faceName, f,
                                     this.voxels.getVoxel(voxel.x+neighbor.x, voxel.y+neighbor.y, voxel.z+neighbor.z),
                                     maximumDeformCount > 0);  // Only link the vertices when needed
         if (face) {
           voxel.faces[faceName] = face;
+          voxel.faceOffset = this.faceCount - 1;
           if (!face.skipped)
             voxel.color.count++;
           faceCount++;
@@ -205,27 +234,33 @@ class Model {
     
     //VertexLinker.logLinks(this.voxels);
 
-    Deformer.changeShape(this, this._shape);
-       
-    Deformer.deform(this, maximumDeformCount);
-    
-    Deformer.warpAndScatter(this);
+    //Deformer.changeShape(this, this._shape);
+    //   
+    //Deformer.deform(this, maximumDeformCount);
+    //
+    //Deformer.warpAndScatter(this);
     
     NormalsCalculator.calculateNormals(this);
     
     VertexTransformer.transformVertices(this);    
     
-    LightsCalculator.calculateLights(this);
+    //LightsCalculator.calculateLights(this);
     
-    AOCalculator.calculateAmbientOcclusion(this);
+    //AOCalculator.calculateAmbientOcclusion(this);
     
-    ColorCombiner.combineColors(this);
+    //ColorCombiner.combineColors(this);
 
-    UVAssigner.assignUVs(this);
+    //UVAssigner.assignUVs(this);
     
-     Simplifier.simplify(this);
+    Simplifier.simplify(this);
     
-    FaceAligner.alignFaceDiagonals(this);
+    //FaceAligner.alignFaceDiagonals(this);
+  }
+
+  forEachFaceOffset(func) {
+    for (let i = 0; i < this.faceCount; i++) {
+      func(i);
+    }
   }
      
   determineBoundsOffsetAndRescale(resize) {
@@ -296,7 +331,7 @@ class Model {
     return bos;
   }  
   
-  _createFace(voxel, faceName, neighbor, linkVertices) {
+  _createFace(voxel, faceName, faceNameIndex, neighbor, linkVertices) {
     
     if (!voxel || !voxel.material || voxel.material.opacity === 0) {
       // No voxel, so no face
@@ -315,8 +350,9 @@ class Model {
     else if (voxel.material.isTransparent && !voxel.material.wireframe && neighbor.material.wireframe) {
        // The voxel is transparent and the neighbor is wireframe, create the face 
     }
-    else
+    else {
       return null;
+    }
     
     let flattened = this._isFacePlanar(voxel, faceName, voxel.material._flatten, this._flatten);
     let clamped   = this._isFacePlanar(voxel, faceName, voxel.material._clamp, this._clamp);
@@ -339,6 +375,14 @@ class Model {
       clamped,
       skipped,
     };
+
+    this.faceFlattened.set(this.faceCount, flattened ? 1 : 0);
+    this.faceClamped.set(this.faceCount, clamped ? 1 : 0);
+    this.faceSkipped.set(this.faceCount, skipped ? 1 : 0);
+    this.faceNameIndices[this.faceCount] = faceNameIndex;
+
+    this.faceCount++;
+
   
      // Link the vertices for deformation
     if (linkVertices)
@@ -354,11 +398,19 @@ class Model {
     let y = voxel.y + vertexOffset.y;
     let z = voxel.z + vertexOffset.z;
     
+    this.faceVertX[this.faceCount * 4 + vi] = x;
+    this.faceVertY[this.faceCount * 4 + vi] = y;
+    this.faceVertZ[this.faceCount * 4 + vi] = z;
+
     // Retrieve the material of the voxel to set the different material properties for the vertex
     let material = voxel.material;
 
-    let flatten = this._isVertexPlanar(voxel, x, y, z, material._flatten, this._flatten);
-    let clamp   = this._isVertexPlanar(voxel, x, y, z, material._clamp, this._clamp);
+    // TODO remove
+    const flatten = this._isVertexPlanar(voxel, x, y, z, material._flatten, this._flatten, this.faceVertFlattenedX, this.faceVertFlattenedY, this.faceVertFlattenedZ, this.faceCount, vi);
+    const clamp = this._isVertexPlanar(voxel, x, y, z, material._clamp, this._clamp, this.faceVertClampedX, this.faceVertClampedY, this.faceVertClampedZ, this.faceCount, vi);
+
+    this._setIsVertexPlanar(voxel, x, y, z, material._flatten, this._flatten, this.faceVertFlattenedX, this.faceVertFlattenedY, this.faceVertFlattenedZ, this.faceCount, vi);
+    this._setIsVertexPlanar(voxel, x, y, z, material._clamp, this._clamp, this.faceVertClampedX, this.faceVertClampedY, this.faceVertClampedZ, this.faceCount, vi);
 
     // Create the vertex if it does not yet exist
     let vertex = this._getVertex(x, y, z);
@@ -449,7 +501,7 @@ class Model {
       default: return false;
     }
   }
-  
+
   _isVertexPlanar(voxel, vx, vy, vz, materialPlanar, modelPlanar) {
     let material = voxel.material;  
     
@@ -469,6 +521,24 @@ class Model {
     }
     
     return result;
+  }
+  
+  _setIsVertexPlanar(voxel, vx, vy, vz, materialPlanar, modelPlanar, arrX, arrY, arrZ, faceIndex, vertexIndex) {
+    let material = voxel.material;  
+    
+    let planar = materialPlanar;
+    let bounds = material.bounds;
+    if (!planar) {
+      planar = modelPlanar;
+      bounds = this.voxels.bounds;
+    }
+    
+    if (planar) {
+      // Note bounds are in voxel coordinates and vertices add from 0 0 0 to 1 1 1
+      arrX.set(faceIndex * 4 + vertexIndex, planar.x || (planar.nx && vx < bounds.minX + 0.5) || (planar.px && vx > bounds.maxX + 0.5 ? 1 : 0));
+      arrY.set(faceIndex * 4 + vertexIndex, planar.y || (planar.ny && vy < bounds.minY + 0.5) || (planar.py && vy > bounds.maxY + 0.5 ? 1 : 0));
+      arrZ.set(faceIndex * 4 + vertexIndex, planar.z || (planar.nz && vz < bounds.minZ + 0.5) || (planar.pz && vz > bounds.maxZ + 0.5 ? 1 : 0));
+    }
   }
     
   _normalize(vector) {

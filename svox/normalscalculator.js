@@ -3,9 +3,133 @@ class NormalsCalculator {
   static calculateNormals(model) {
     let tile = model.tile;
     let voxels = model.voxels;
-    
+
+    const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertX, faceVertY, faceVertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = model;
+
+    model.forEachFaceOffset(function (faceOffset) {
+      const faceNameIndex = faceNameIndices[faceOffset];
+      const faceName = SVOX._FACES[faceNameIndex];
+      const skipped = faceSkipped[faceOffset];
+      if (skipped) return;
+
+      const equidistant = faceEquidistant[faceOffset];
+      const flattened = faceFlattened[faceOffset];
+      const clamped = faceClamped[faceOffset];
+
+      // equidistant || (!flattened && !clamped)
+      const faceSmoothValue = equidistant | (1 - (flattened | clamped));
+      faceSmooth.set(faceOffset, faceSmoothValue);
+
+      const vmidX = (faceVertX[faceOffset] + faceVertX[faceOffset + 1] + faceVertX[faceOffset + 2] + faceVertZ[faceOffset + 3]) / 4;
+      const vmidY = (faceVertY[faceOffset] + faceVertY[faceOffset + 1] + faceVertY[faceOffset + 2] + faceVertY[faceOffset + 3]) / 4;
+      const vmidZ = (faceVertZ[faceOffset] + faceVertZ[faceOffset + 1] + faceVertZ[faceOffset + 2] + faceVertZ[faceOffset + 3]) / 4;
+
+      for (let v = 0; v < 4; v++) {
+        const vertX = faceVertX[faceOffset + v];
+        const vertXPrev = faceVertX[faceOffset + ((v + 3) % 4)];
+
+        const vertY = faceVertY[faceOffset + v];
+        const vertYPrev = faceVertY[faceOffset + ((v + 3) % 4)];
+
+        const vertZ = faceVertZ[faceOffset + v];
+        const vertZPrev = faceVertZ[faceOffset + ((v + 3) % 4)];
+
+        let smoothX = faceVertSmoothNormalX[faceOffset + v];
+        let smoothY = faceVertSmoothNormalY[faceOffset + v];
+        let smoothZ = faceVertSmoothNormalZ[faceOffset + v];
+
+        let bothX = faceVertBothNormalX[faceOffset + v];
+        let bothY = faceVertBothNormalY[faceOffset + v];
+        let bothZ = faceVertBothNormalZ[faceOffset + v];
+
+        // e1 is diff between two verts
+        let e1X = vertXPrev - vertX;
+        let e1Y = vertYPrev - vertY;
+        let e1Z = vertZPrev - vertZ;
+
+        // e2 is diff between vert and mid
+        let e2X = vmidX - vertX;
+        let e2Y = vmidY - vertY;
+        let e2Z = vmidZ - vertZ;
+
+        // Normalize e1 + e2
+        const e1l = Math.sqrt(e1X * e1X + e1Y * e1Y + e1Z * e1Z);
+        const e2l = Math.sqrt(e2X * e2X + e2Y * e2Y + e2Z * e2Z);
+        e1X /= e1l;
+        e1Y /= e1l;
+        e1Z /= e1l;
+        e2X /= e2l;
+        e2Y /= e2l;
+        e2Z /= e2l;
+
+        // Calculate cross product to start normal
+        let normalX = e1Y * e2Z - e1Z * e2Y;
+        let normalY = e1Z * e2X - e1X * e2Z;
+        let normalZ = e1X * e2Y - e1Y * e2X;
+
+        const voxMinXBuf = voxels.minX + 0.1;
+        const voxMaxXBuf = voxels.maxX + 0.9;
+        const voxMinYBuf = voxels.minY + 0.1;
+        const voxMaxYBuf = voxels.maxY + 0.9;
+        const voxMinZBuf = voxels.minZ + 0.1;
+        const voxMaxZBuf = voxels.maxZ + 0.9;
+
+        // In case of tiling, make normals peripendicular on edges
+        if (tile) {
+          if (((tile.nx && faceNameIndex === 0) || (tile.px && faceNameIndex === 1)) &&
+              (vertY < voxMinYBuf || vertY > voxMaxYBuf ||
+               vertZ < voxMinZBuf || vertZ > voxMaxZBuf)) { 
+            normalY = 0; normalZ = 0 
+          };
+          if (((tile.ny && faceNameIndex === 2) || (tile.py && faceNameIndex === 3)) &&
+              (vertX < voxMinXBuf || vertX > voxMaxXBuf ||
+               vertZ < voxMinZBuf || vertZ > voxMaxZBuf)) { 
+            normalX = 0; normalZ = 0 
+          };
+          if (((tile.nz && faceNameIndex === 4) || (tile.pz && faceNameIndex === 5)) &&
+              (vertex.x < voxMinXBuf || vertex.x > voxMaxXBuf ||
+               vertex.y < voxMinYBuf || vertex.y > voxMaxYBuf)) { 
+            normalX = 0; normalY = 0 
+          };
+        }
+        
+        // Normalize normal
+        const nl = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
+        normalX /= nl;
+        normalY /= nl;
+        normalZ /= nl;
+
+        // Store the normal for all 4 vertices (used for flat lighting)
+        faceVertFlatNormalX[faceOffset + v] = normalX;
+        faceVertFlatNormalY[faceOffset + v] = normalY;
+        faceVertFlatNormalZ[faceOffset + v] = normalZ;
+
+        // Average the normals weighed by angle (i.e. wide adjacent faces contribute more than narrow adjacent faces)
+        // Since we're using the mid point we can be wrong on strongly deformed quads, but not noticable
+        let mul = e1X * e2X + e1Y * e2Y + e1Z * e2Z;
+        let angle = Math.acos(mul);
+
+        // Always count towards the smoothNormal
+        smoothX += normalX * angle;
+        smoothY += normalY * angle;
+        smoothZ += normalZ * angle;
+
+        // But only add this normal to bothNormal when the face uses smooth lighting
+        bothX += faceSmoothValue * (normalX * angle);
+        bothY += faceSmoothValue * (normalY * angle);
+        bothZ += faceSmoothValue * (normalZ * angle);
+
+        faceVertSmoothNormalX[faceOffset + v] = smoothX;
+        faceVertSmoothNormalY[faceOffset + v] = smoothY;
+        faceVertSmoothNormalZ[faceOffset + v] = smoothZ;
+
+        faceVertBothNormalX[faceOffset + v] = bothX;
+        faceVertBothNormalY[faceOffset + v] = bothY;
+        faceVertBothNormalZ[faceOffset + v] = bothZ;
+      }
+    });
+
     voxels.forEach(function computeNormals(voxel) {
-      
       for (let faceName in voxel.faces) {
         let face = voxel.faces[faceName];
         if (face.skipped) 

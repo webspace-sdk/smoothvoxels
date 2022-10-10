@@ -133,6 +133,7 @@ class VoxelMatrix {
     }
   }
   
+  // WS UNNEEDED
   forEachInBoundary(func, thisArg) {
     let param = [];
     for (let z = this.bounds.minZ; z <= this.bounds.maxZ; z++) {
@@ -152,6 +153,7 @@ class VoxelMatrix {
     
     this.forEach(function overwriteVoxel(voxel) {
       // Overrwite all voxels to recalulate the bounding box, count the voxels and counts the colors
+      // TODO JEL
       this.setVoxel(voxel.x, voxel.y, voxel.z, voxel);
     }, this);  
   }
