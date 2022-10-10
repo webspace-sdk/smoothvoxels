@@ -4,9 +4,10 @@ class NormalsCalculator {
     let tile = model.tile;
     let voxels = model.voxels;
 
-    const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertX, faceVertY, faceVertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = model;
+    const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertX, faceVertY, faceVertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials } = model;
 
-    model.forEachFaceOffset(function (faceOffset) {
+    for (let faceOffset = 0; faceOffset < model.faceCount; faceOffset++) {
+      // Compute face vertex normals
       const faceNameIndex = faceNameIndices[faceOffset];
       const faceName = SVOX._FACES[faceNameIndex];
       const skipped = faceSkipped[faceOffset];
@@ -127,7 +128,62 @@ class NormalsCalculator {
         faceVertBothNormalY[faceOffset + v] = bothY;
         faceVertBothNormalZ[faceOffset + v] = bothZ;
       }
-    });
+    }
+
+    // Normalize the smooth + both vertex normals
+    for (let faceOffset = 0; faceOffset < model.faceCount; faceOffset++) {
+      for (let i = 0; i < 4; i++) {
+        const vertOffset = faceOffset + i;
+        const smoothX = faceVertSmoothNormalX[vertOffset];
+        const smoothY = faceVertSmoothNormalY[vertOffset];
+        const smoothZ = faceVertSmoothNormalZ[vertOffset];
+
+        const bothX = faceVertBothNormalX[vertOffset];
+        const bothY = faceVertBothNormalY[vertOffset];
+        const bothZ = faceVertBothNormalZ[vertOffset];
+
+        const sl = Math.sqrt(smoothX * smoothX + smoothY * smoothY + smoothZ * smoothZ);
+        const bl = Math.sqrt(bothX * bothX + bothY * bothY + bothZ * bothZ);
+
+        faceVertSmoothNormalX[vertOffset] = smoothX / sl;
+        faceVertSmoothNormalY[vertOffset] = smoothY / sl;
+        faceVertSmoothNormalZ[vertOffset] = smoothZ / sl;
+
+        faceVertBothNormalX[vertOffset] = bothX / bl;
+        faceVertBothNormalY[vertOffset] = bothY / bl;
+        faceVertBothNormalZ[vertOffset] = bothZ / bl;
+      }
+    }
+
+    // Use flat normals if as both normals for faces if both is not set or isn't smooth
+    for (let faceOffset = 0; faceOffset < model.faceCount; faceOffset++) {
+      const material = model.materials.materials[faceMaterials[faceOffset]];
+
+      for (let i = 0; i < 4; i++) {
+        const vertOffset = faceOffset + i;
+      faceVertBothNormalX[vertOffset] = faceVertBothNormalX[vertOffset] === 0 ? faceVertFlatNormalX[vertOffset] : faceVertBothNormalX[vertOffset];
+      faceVertBothNormalY[vertOffset] = faceVertBothNormalY[vertOffset] === 0 ? faceVertFlatNormalY[vertOffset] : faceVertBothNormalY[vertOffset];
+      faceVertBothNormalZ[vertOffset] = faceVertBothNormalZ[vertOffset] === 0 ? faceVertFlatNormalZ[vertOffset] : faceVertBothNormalZ[vertOffset];
+
+        switch (material.lighting) {
+          case SVOX.SMOOTH:
+            faceVertNormalX[vertOffset] = faceVertSmoothNormalX[vertOffset];
+            faceVertNormalY[vertOffset] = faceVertSmoothNormalY[vertOffset];
+            faceVertNormalZ[vertOffset] = faceVertSmoothNormalZ[vertOffset];
+            break;
+          case SVOX.BOTH:
+            faceVertNormalX[vertOffset] = faceVertBothNormalX[vertOffset];
+            faceVertNormalY[vertOffset] = faceVertBothNormalY[vertOffset];
+            faceVertNormalZ[vertOffset] = faceVertBothNormalZ[vertOffset];
+            break;
+          default:
+            faceVertNormalX[vertOffset] = faceVertFlatNormalX[vertOffset];
+            faceVertNormalY[vertOffset] = faceVertFlatNormalY[vertOffset];
+            faceVertNormalZ[vertOffset] = faceVertFlatNormalZ[vertOffset];
+            break;
+        }
+      }
+    }
 
     voxels.forEach(function computeNormals(voxel) {
       for (let faceName in voxel.faces) {

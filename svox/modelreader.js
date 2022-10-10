@@ -712,7 +712,7 @@ class ModelReader {
     static _setVoxels(model, color, count, context) {
         while (count-- > 0) {
             if (color) 
-              model.voxels.setVoxel(context.x, context.y, context.z, new Voxel(color));
+              model.voxels.setVoxel(context.x, context.y, context.z, new Voxel(color, model.materials));
             else if(!model.resize) // Keep the empty voxels except when resize is set (to model or bounds)
               model.voxels.clearVoxel(context.x, context.y, context.z);
             context.x++;

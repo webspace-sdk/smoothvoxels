@@ -3435,7 +3435,7 @@ function convertMagicaVoxel(vox, model) {
       svoxcol.exId = cId;
     }
     
-    model.voxels.setVoxel(v.x, v.z, -v.y, new Voxel(svoxcol));
+    model.voxels.setVoxel(v.x, v.z, -v.y, new Voxel(svoxcol, model.materials));
   });
   
   //let scale = 1 / Math.max(model.voxels.bounds.size.x, model.voxels.bounds.size.y, model.voxels.bounds.size.z);
@@ -3517,7 +3517,7 @@ function convertImage() {
           material.addColor(color);
         }
 
-        model.voxels.setVoxel(x, 0, z, new Voxel(color));
+        model.voxels.setVoxel(x, 0, z, new Voxel(color, model.materials));
       }
       pixel += 4;
     }

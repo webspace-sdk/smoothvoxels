@@ -93,9 +93,21 @@ class Model {
     this.octMissCount = 0;
 
     this.faceCount = 0;
+
+    this.faceFlattened = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceClamped = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceSkipped = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceSmooth = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceEquidistant = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
+    this.faceNameIndices = new Uint8Array(1024 * 1024);
+    this.faceMaterials = new Uint8Array(1024 * 1024);
+
     this.faceVertX = new Float32Array(1024 * 1024);
     this.faceVertY = new Float32Array(1024 * 1024);
     this.faceVertZ = new Float32Array(1024 * 1024);
+    this.faceVertNormalX = new Float32Array(1024 * 1024);
+    this.faceVertNormalY = new Float32Array(1024 * 1024);
+    this.faceVertNormalZ = new Float32Array(1024 * 1024);
     this.faceVertFlatNormalX = new Float32Array(1024 * 1024);
     this.faceVertFlatNormalY = new Float32Array(1024 * 1024);
     this.faceVertFlatNormalZ = new Float32Array(1024 * 1024);
@@ -105,12 +117,6 @@ class Model {
     this.faceVertBothNormalX = new Float32Array(1024 * 1024);
     this.faceVertBothNormalY = new Float32Array(1024 * 1024);
     this.faceVertBothNormalZ = new Float32Array(1024 * 1024);
-    this.faceFlattened = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceClamped = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceSkipped = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceSmooth = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceEquidistant = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
-    this.faceNameIndices = new Uint8Array(1024 * 1024);
     this.faceVertFlattenedX = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
     this.faceVertFlattenedY = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
     this.faceVertFlattenedZ = Bits.create(new Uint8Array(1024 * 1024).buffer, 1, 0);
@@ -257,12 +263,6 @@ class Model {
     //FaceAligner.alignFaceDiagonals(this);
   }
 
-  forEachFaceOffset(func) {
-    for (let i = 0; i < this.faceCount; i++) {
-      func(i);
-    }
-  }
-     
   determineBoundsOffsetAndRescale(resize) {
     let bos = { bounds:null, offset:null, rescale:1 };
     
@@ -379,6 +379,7 @@ class Model {
     this.faceFlattened.set(this.faceCount, flattened ? 1 : 0);
     this.faceClamped.set(this.faceCount, clamped ? 1 : 0);
     this.faceSkipped.set(this.faceCount, skipped ? 1 : 0);
+    this.faceMaterials[this.faceCount] = voxel.materialListIndex;
     this.faceNameIndices[this.faceCount] = faceNameIndex;
 
     this.faceCount++;

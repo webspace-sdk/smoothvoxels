@@ -1,9 +1,10 @@
 /* Note, voxels only supports hexadecimal colors like #FFF or #FFFFFF*/
 class Voxel {
   
-  constructor(color) {
+  constructor(color, materialList) {
     this.color = color;
     this.material = color.material;
+    this.materialListIndex = materialList.getMaterialListIndex(color.material);
     this.faces = { };
     this.visible = true;
   }

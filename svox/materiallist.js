@@ -516,5 +516,8 @@ class MaterialList {
       
       return color;
     }
-  
+
+    getMaterialListIndex(material) {
+      return this.materials.indexOf(material);
+    }
 }
