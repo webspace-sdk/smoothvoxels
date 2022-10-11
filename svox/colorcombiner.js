@@ -1,7 +1,7 @@
 class ColorCombiner {
   
   static combineColors(model) {
-    const { vertColorR, vertColorG, vertColorB, vertColorCount, faceVertColorR, faceVertColorG, faceVertColorB, faceVertIndices } = model;
+    const { vertColorR, vertColorG, vertColorB, vertColorCount, faceVertColorR, faceVertColorG, faceVertColorB, faceVertIndices, faceMaterials } = model;
     const materials = model.materials.materials;
 
     // No need to fade colors when there is no material with fade
@@ -15,18 +15,20 @@ class ColorCombiner {
       }
     }
 
-    for (let faceIndex = 0; faceIndex < model.facesCount; faceIndex++) {
+    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
       let fadeFace = fadeMaterials[faceMaterials[faceIndex]];
 
       if (!fadeFace) {
-        // Copy material colors
-        for (let v = 0; v < 3; v++) {
-          faceVertColorR[faceIndex * 4 + v] = vertColorR[faceIndex];
-          faceVertColorG[faceIndex * 4 + v] = vertColorG[faceIndex];
-          faceVertColorB[faceIndex * 4 + v] = vertColorB[faceIndex];
+        // Copy vertex colors
+        for (let v = 0; v < 4; v++) {
+          const vertIndex = faceVertIndices[faceIndex];
+
+          faceVertColorR[faceIndex * 4 + v] = vertColorR[vertIndex];
+          faceVertColorG[faceIndex * 4 + v] = vertColorG[vertIndex];
+          faceVertColorB[faceIndex * 4 + v] = vertColorB[vertIndex];
         }
       } else {
-        // Fade colors
+        // Fade vertex colors
         for (let v = 0; v < 4; v++) {
           let r = 0;
           let g = 0;

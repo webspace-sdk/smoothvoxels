@@ -13,7 +13,8 @@ class SvoxMeshGenerator {
       positionIndex: 0,
       normals: new Float32Array(model.faceCount * 18),
       normalIndex: 0,
-      colors: [],
+      colors: new Float32Array(model.faceCount * 18),
+      colorIndex: 0,
       uvs: null,
       data: null
     };
@@ -336,7 +337,7 @@ class SvoxMeshGenerator {
     let uv0, uv1, uv2, uv3;
     let id = '';
 
-    const { faceVertIndices, faceVertNormalX, faceVertNormalY, faceVertNormalZ, vertX, vertY, vertZ } = model;
+    const { faceVertIndices, faceVertNormalX, faceVertNormalY, faceVertNormalZ, vertX, vertY, vertZ, faceVertColorR, faceVertColorG, faceVertColorB } = model;
 
     const vert0Index = faceVertIndices[faceIndex * 4];
     const vert1Index = faceVertIndices[faceIndex * 4 + 1];
@@ -369,13 +370,19 @@ class SvoxMeshGenerator {
     const norm3Y = faceVertNormalY[faceIndex * 4 + 3];
     const norm3Z = faceVertNormalZ[faceIndex * 4 + 3];
 
-    if (face.vertexColors) {
-      col0 = face.vertexColors[0];
-      col1 = face.vertexColors[1];
-      col2 = face.vertexColors[2];
-      col3 = face.vertexColors[3];
-    }
-    
+    let col0R = faceVertColorR[faceIndex * 4];
+    let col0G = faceVertColorG[faceIndex * 4];
+    let col0B = faceVertColorB[faceIndex * 4];
+    let col1R = faceVertColorR[faceIndex * 4 + 1];
+    let col1G = faceVertColorG[faceIndex * 4 + 1];
+    let col1B = faceVertColorB[faceIndex * 4 + 1];
+    let col2R = faceVertColorR[faceIndex * 4 + 2];
+    let col2G = faceVertColorG[faceIndex * 4 + 2];
+    let col2B = faceVertColorB[faceIndex * 4 + 2];
+    let col3R = faceVertColorR[faceIndex * 4 + 3];
+    let col3G = faceVertColorG[faceIndex * 4 + 3];
+    let col3B = faceVertColorB[faceIndex * 4 + 3];
+
     if (mesh.uvs) {
       uv0 = face.uv[0] || { u:0, v:0 };
       uv1 = face.uv[1] || { u:0, v:0 };
@@ -394,7 +401,10 @@ class SvoxMeshGenerator {
       norm0X = norm2X; norm0Y = norm2Y; norm0Z = norm2Z;
       norm2X = swapX; norm2Y = swapY; norm2Z = swapZ;
 
-      swap =  col0;  col0 =  col2;  col2 = swap;
+      swapX = color0R; swapY = color0G; swapZ = color0B;
+      color0R = color2R; color0G = color2G; color0B = color2B;
+      color2R = swapX; color2G = swapY; color2B = swapZ;
+
       swap =   uv0;   uv0 =   uv2;   uv2 = swap;
     }
         
@@ -502,41 +512,66 @@ class SvoxMeshGenerator {
     }
 
     mesh.normalIndex += 18;
-    
-    if (face.vertexColors) {     
 
-      // TODO: move to prepare for render, now it is done multiple times
-      if (SVOX.clampColors) {
-        col0 = col0.normalize();
-        col1 = col1.normalize();
-        col2 = col2.normalize();
-        col3 = col3.normalize();
+    const colIdx = mesh.colorIndex;
+    const colors = mesh.colors;
+
+    if (SVOX.clampColors) {
+      // Normalize colors
+      const col0Length = Math.sqrt(col0R*col0R + col0G*col0G + col0B*col0B);
+      const col1Length = Math.sqrt(col1R*col1R + col1G*col1G + col1B*col1B);
+      const col2Length = Math.sqrt(col2R*col2R + col2G*col2G + col2B*col2B);
+      const col3Length = Math.sqrt(col3R*col3R + col3G*col3G + col3B*col3B);
+
+      if (col0Length > 0) {
+        col0R /= col0Length;
+        col0G /= col0Length;
+        col0B /= col0Length;
       }
-      
-      // Face 1
-      mesh.colors.push(col2.r, col2.g, col2.b); 
-      mesh.colors.push(col1.r, col1.g, col1.b); 
-      mesh.colors.push(col0.r, col0.g, col0.b); 
 
-      // Face 2
-      mesh.colors.push(col0.r, col0.g, col0.b); 
-      mesh.colors.push(col3.r, col3.g, col3.b); 
-      mesh.colors.push(col2.r, col2.g, col2.b); 
+      if (col1Length > 0) {
+        col1R /= col1Length;
+        col1G /= col1Length;
+        col1B /= col1Length;
+      }
+
+      if (col2Length > 0) {
+        col2R /= col2Length;
+        col2G /= col2Length;
+        col2B /= col2Length;
+      }
+
+      if (col3Length > 0) {
+        col3R /= col3Length;
+        col3G /= col3Length;
+        col3B /= col3Length;
+      }
     }
-    else if (face.color) {
-        // Face colors, so all vertices for both faces are the same color
-        for (let v=0; v<6; v++) {
-          mesh.colors.push(face.color.r, face.color.g, face.color.b);
-        }
-    }
-    else {
-        // Material colors
-        let color = voxel.color;
-        for (let v=0; v<6; v++) {
-          mesh.colors.push(color.r, color.g, color.b);
-        }
-    }
-      
+
+    // Face 1
+    colors[colIdx] = col2R;
+    colors[colIdx+1] = col2G;
+    colors[colIdx+2] = col2B;
+    colors[colIdx+3] = col1R;
+    colors[colIdx+4] = col1G;
+    colors[colIdx+5] = col1B;
+    colors[colIdx+6] = col0R;
+    colors[colIdx+7] = col0G;
+    colors[colIdx+8] = col0B;
+
+    // Face 2
+    colors[colIdx+9] = col0R;
+    colors[colIdx+10] = col0G;
+    colors[colIdx+11] = col0B;
+    colors[colIdx+12] = col3R;
+    colors[colIdx+13] = col3G;
+    colors[colIdx+14] = col3B;
+    colors[colIdx+15] = col2R;
+    colors[colIdx+16] = col2G;
+    colors[colIdx+17] = col2B;
+
+    mesh.colorIndex += 18;
+
     if (mesh.uvs) {
      
       // Face 1
