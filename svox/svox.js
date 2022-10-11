@@ -116,3 +116,11 @@ SVOX._FACEUVS = {
   nz: {u:'x', v:'y', order:[3,2,1,0], ud:-1, vd: 1, uo:1.00, vo:0.00 },  
   pz: {u:'x', v:'y', order:[0,1,2,3], ud: 1, vd: 1, uo:0.25, vo:0.00 }  
 };
+SVOX._FACEINDEXUVS = [
+  {u:'z', v:'y', order:[0,1,2,3], ud: 1, vd: 1, uo:0.00, vo:0.00 },
+  {u:'z', v:'y', order:[3,2,1,0], ud:-1, vd: 1, uo:0.75, vo:0.00 },
+  {u:'x', v:'z', order:[0,1,2,3], ud: 1, vd: 1, uo:0.75, vo:0.50 },
+  {u:'x', v:'z', order:[1,0,3,2], ud: 1, vd:-1, uo:0.25, vo:1.00 }, 
+  {u:'x', v:'y', order:[3,2,1,0], ud:-1, vd: 1, uo:1.00, vo:0.00 },  
+  {u:'x', v:'y', order:[0,1,2,3], ud: 1, vd: 1, uo:0.25, vo:0.00 }  
+];

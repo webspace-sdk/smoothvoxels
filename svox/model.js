@@ -157,6 +157,8 @@ class Model {
     this.faceVertColorR = new Float32Array(MAX_FACE_VERTS);
     this.faceVertColorG = new Float32Array(MAX_FACE_VERTS);
     this.faceVertColorB = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertUs = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertVs = new Float32Array(MAX_FACE_VERTS);
 
     // Need to zero on reset:
     // face vert link counts, color counts
@@ -295,7 +297,7 @@ class Model {
     
     ColorCombiner.combineColors(this);
 
-    //UVAssigner.assignUVs(this);
+    UVAssigner.assignUVs(this);
     
     //Simplifier.simplify(this);
     
@@ -436,6 +438,13 @@ class Model {
       this.faceClamped.set(this.faceCount, clamped ? 1 : 0);
       this.faceMaterials[this.faceCount] = voxel.materialListIndex;
       this.faceNameIndices[this.faceCount] = faceNameIndex;
+
+      // See UVAssigner, we fill in the proper x, y, z value from the voxel for the UV mapping to be resolved later
+      const faceUVs = SVOX._FACEINDEXUVS[faceNameIndex];
+      for (let i = 0; i < 4; i++) {
+        this.faceVertUs[this.faceCount * 4 + i] = voxel[faceUVs.u];
+        this.faceVertVs[this.faceCount * 4 + i] = voxel[faceUVs.v];
+      }
 
        // Link the vertices for deformation
       if (linkVertices)
