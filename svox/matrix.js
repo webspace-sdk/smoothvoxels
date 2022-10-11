@@ -38,6 +38,21 @@ class Matrix {
     v.z = z;
   }
 
+  transformPointInline(xs, ys, zs, index) {
+    const vx = xs[index];
+    const vy = ys[index];
+    const vz = zs[index];
+
+    let m = this.m;
+    let div = m[12] * vx + m[13] * vy + m[14] * vz + m[15];
+    let x = ( m[0] * vx + m[1] * vy + m[2] * vz + m[3] ) / div;
+    let y = ( m[4] * vx + m[5] * vy + m[6] * vz + m[7] ) / div;
+    let z = ( m[8] * vx + m[9] * vy + m[10] * vz + m[11] ) / div;
+    xs[index] = x;
+    ys[index] = y;
+    zs[index] = z;
+  }
+
   // ### .transformVector(vector)
   //
   // Transforms the vector as a vector with a w coordinate of 0. This
@@ -50,6 +65,20 @@ class Matrix {
     v.x = x;
     v.y = y;
     v.z = z;
+  }
+
+  transformVectorInline(xs, ys, zx, index) {
+    const vx = xs[index];
+    const vy = ys[index];
+    const vz = zs[index];
+
+    let m = this.m;
+    let x = ( m[0] * vx + m[1] * vy + m[2] * vz );
+    let y = ( m[4] * vx + m[5] * vy + m[6] * vz );
+    let z = ( m[8] * vx + m[9] * vy + m[10] * vz );
+    xs[index] = x;
+    ys[index] = y;
+    zs[index] = z;
   }
 
   // ### Matrix.identity([result])

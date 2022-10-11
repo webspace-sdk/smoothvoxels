@@ -19,6 +19,41 @@ class VertexTransformer {
     normalTransform = Matrix.transpose(normalTransform);
 
     // Now move all vertices to their new position and transform the average normals
+    for (let vertIndex = 0; vertIndex < model.vertCount; vertIndex++) {
+      vertexTransform.transformPointInline(model.faceVertX, model.faceVertY, model.faceVertZ, vertIndex);
+    }
+
+    const normalXs = [model.faceVertNormalX, model.faceVertFlatNormalX, model.faceVertSmoothNormalX, model.faceVertBothNormalX];
+    const normalYs = [model.faceVertNormalY, model.faceVertFlatNormalY, model.faceVertSmoothNormalY, model.faceVertBothNormalY];
+    const normalZs = [model.faceVertNormalZ, model.faceVertFlatNormalZ, model.faceVertSmoothNormalZ, model.faceVertBothNormalZ];
+
+    // Transform all normals
+    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
+      for (let normalIndex = 0; normalIndex < 4; normalIndex++) {
+        for (let normalType = 0; normalType < normalXs.length; normalType++) {
+          const xs = normalXs[normalType];
+          const ys = normalYs[normalType];
+          const zs = normalZs[normalType];
+
+          normalTransform.transformPointInline(xs, ys, zs, faceIndex * 4 + normalIndex);
+
+          // Normalize
+          const normalX = xs[faceIndex * 4 + normalIndex];
+          const normalY = ys[faceIndex * 4 + normalIndex];
+          const normalZ = zs[faceIndex * 4 + normalIndex];
+
+          let normalLength = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
+
+          if (normalLength > 0) {
+            xs[faceIndex * 4 + normalIndex] = normalX / normalLength;
+            ys[faceIndex * 4 + normalIndex] = normalY / normalLength;
+            zs[faceIndex * 4 + normalIndex] = normalZ / normalLength;
+          }
+        }
+      }
+    }
+
+    // Now move all vertices to their new position and transform the average normals
     model.forEachVertex(function(vertex) {      
       vertexTransform.transformPoint(vertex)
     }, this); 

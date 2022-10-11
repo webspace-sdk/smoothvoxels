@@ -1,10 +1,19 @@
+function almostEqual(x, y) {
+  return Math.abs(x - y) < 0.0001;
+}
+
+function assertAlmostEqual(x, y) {
+  if (!almostEqual(x, y))
+    throw new Error("Assertion failed: " + x + " != " + y);
+}
+
 class NormalsCalculator {
  
   static calculateNormals(model) {
     let tile = model.tile;
     let voxels = model.voxels;
 
-    const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertX, faceVertY, faceVertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices } = model;
+    const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertX, faceVertY, faceVertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertSmoothNormalX, vertSmoothNormalY, vertSmoothNormalZ, vertBothNormalX, vertBothNormalY, vertBothNormalZ } = model;
 
     for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
       // Compute face vertex normals
@@ -39,13 +48,13 @@ class NormalsCalculator {
         const vertZ = faceVertZ[vertIndex];
         const vertZPrev = faceVertZ[prevVertIndex];
 
-        let smoothX = faceVertSmoothNormalX[faceIndex + v];
-        let smoothY = faceVertSmoothNormalY[faceIndex + v];
-        let smoothZ = faceVertSmoothNormalZ[faceIndex + v];
+        let smoothX = vertSmoothNormalX[vertIndex];
+        let smoothY = vertSmoothNormalY[vertIndex];
+        let smoothZ = vertSmoothNormalZ[vertIndex];
 
-        let bothX = faceVertBothNormalX[faceIndex + v];
-        let bothY = faceVertBothNormalY[faceIndex + v];
-        let bothZ = faceVertBothNormalZ[faceIndex + v];
+        let bothX = vertBothNormalX[vertIndex];
+        let bothY = vertBothNormalY[vertIndex];
+        let bothZ = vertBothNormalZ[vertIndex];
 
         // e1 is diff between two verts
         let e1X = vertXPrev - vertX;
@@ -58,8 +67,11 @@ class NormalsCalculator {
         let e2Z = vmidZ - vertZ;
 
         // Normalize e1 + e2
-        const e1l = Math.sqrt(e1X * e1X + e1Y * e1Y + e1Z * e1Z);
-        const e2l = Math.sqrt(e2X * e2X + e2Y * e2Y + e2Z * e2Z);
+        let e1l = Math.sqrt(e1X * e1X + e1Y * e1Y + e1Z * e1Z);
+        let e2l = Math.sqrt(e2X * e2X + e2Y * e2Y + e2Z * e2Z);
+        e1l = e1l === 0 ? 1 : e1l;
+        e2l = e2l === 0 ? 1 : e2l;
+
         e1X /= e1l;
         e1Y /= e1l;
         e1Z /= e1l;
@@ -99,15 +111,17 @@ class NormalsCalculator {
         }
         
         // Normalize normal
-        const nl = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
+        let nl = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
+        nl = nl === 0 ? 1 : nl;
+
         normalX /= nl;
         normalY /= nl;
         normalZ /= nl;
 
         // Store the normal for all 4 vertices (used for flat lighting)
-        faceVertFlatNormalX[faceIndex + v] = normalX;
-        faceVertFlatNormalY[faceIndex + v] = normalY;
-        faceVertFlatNormalZ[faceIndex + v] = normalZ;
+        faceVertFlatNormalX[faceIndex * 4 + v] = normalX;
+        faceVertFlatNormalY[faceIndex * 4 + v] = normalY;
+        faceVertFlatNormalZ[faceIndex * 4 + v] = normalZ;
 
         // Average the normals weighed by angle (i.e. wide adjacent faces contribute more than narrow adjacent faces)
         // Since we're using the mid point we can be wrong on strongly deformed quads, but not noticable
@@ -124,68 +138,13 @@ class NormalsCalculator {
         bothY += faceSmoothValue * (normalY * angle);
         bothZ += faceSmoothValue * (normalZ * angle);
 
-        faceVertSmoothNormalX[faceIndex + v] = smoothX;
-        faceVertSmoothNormalY[faceIndex + v] = smoothY;
-        faceVertSmoothNormalZ[faceIndex + v] = smoothZ;
+        vertSmoothNormalX[vertIndex] = smoothX;
+        vertSmoothNormalY[vertIndex] = smoothY;
+        vertSmoothNormalZ[vertIndex] = smoothZ;
 
-        faceVertBothNormalX[faceIndex + v] = bothX;
-        faceVertBothNormalY[faceIndex + v] = bothY;
-        faceVertBothNormalZ[faceIndex + v] = bothZ;
-      }
-    }
-
-    // Normalize the smooth + both vertex normals
-    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
-      for (let i = 0; i < 4; i++) {
-        const vertOffset = faceIndex + i;
-        const smoothX = faceVertSmoothNormalX[vertOffset];
-        const smoothY = faceVertSmoothNormalY[vertOffset];
-        const smoothZ = faceVertSmoothNormalZ[vertOffset];
-
-        const bothX = faceVertBothNormalX[vertOffset];
-        const bothY = faceVertBothNormalY[vertOffset];
-        const bothZ = faceVertBothNormalZ[vertOffset];
-
-        const sl = Math.sqrt(smoothX * smoothX + smoothY * smoothY + smoothZ * smoothZ);
-        const bl = Math.sqrt(bothX * bothX + bothY * bothY + bothZ * bothZ);
-
-        faceVertSmoothNormalX[vertOffset] = smoothX / sl;
-        faceVertSmoothNormalY[vertOffset] = smoothY / sl;
-        faceVertSmoothNormalZ[vertOffset] = smoothZ / sl;
-
-        faceVertBothNormalX[vertOffset] = bothX / bl;
-        faceVertBothNormalY[vertOffset] = bothY / bl;
-        faceVertBothNormalZ[vertOffset] = bothZ / bl;
-      }
-    }
-
-    // Use flat normals if as both normals for faces if both is not set or isn't smooth
-    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
-      const material = model.materials.materials[faceMaterials[faceIndex]];
-
-      for (let i = 0; i < 4; i++) {
-        const vertOffset = faceIndex + i;
-      faceVertBothNormalX[vertOffset] = faceVertBothNormalX[vertOffset] === 0 ? faceVertFlatNormalX[vertOffset] : faceVertBothNormalX[vertOffset];
-      faceVertBothNormalY[vertOffset] = faceVertBothNormalY[vertOffset] === 0 ? faceVertFlatNormalY[vertOffset] : faceVertBothNormalY[vertOffset];
-      faceVertBothNormalZ[vertOffset] = faceVertBothNormalZ[vertOffset] === 0 ? faceVertFlatNormalZ[vertOffset] : faceVertBothNormalZ[vertOffset];
-
-        switch (material.lighting) {
-          case SVOX.SMOOTH:
-            faceVertNormalX[vertOffset] = faceVertSmoothNormalX[vertOffset];
-            faceVertNormalY[vertOffset] = faceVertSmoothNormalY[vertOffset];
-            faceVertNormalZ[vertOffset] = faceVertSmoothNormalZ[vertOffset];
-            break;
-          case SVOX.BOTH:
-            faceVertNormalX[vertOffset] = faceVertBothNormalX[vertOffset];
-            faceVertNormalY[vertOffset] = faceVertBothNormalY[vertOffset];
-            faceVertNormalZ[vertOffset] = faceVertBothNormalZ[vertOffset];
-            break;
-          default:
-            faceVertNormalX[vertOffset] = faceVertFlatNormalX[vertOffset];
-            faceVertNormalY[vertOffset] = faceVertFlatNormalY[vertOffset];
-            faceVertNormalZ[vertOffset] = faceVertFlatNormalZ[vertOffset];
-            break;
-        }
+        vertBothNormalX[vertIndex] = bothX;
+        vertBothNormalY[vertIndex] = bothY;
+        vertBothNormalZ[vertIndex] = bothZ;
       }
     }
 
@@ -211,7 +170,7 @@ class NormalsCalculator {
         for (let v = 0; v < 4; v++) {
           let vertex = face.vertices[v];
           let vprev = face.vertices[(v+3) % 4];
-          
+
           vertex.smoothNormal = vertex.smoothNormal || { x:0, y:0, z:0 };
           vertex.bothNormal   = vertex.bothNormal   || { x:0, y:0, z:0 };
           
@@ -273,7 +232,68 @@ class NormalsCalculator {
         }
       }
     }, this, true);
-      
+
+    // Normalize the smooth + both vertex normals
+    for (let vertIndex = 0; vertIndex < model.vertCount; vertIndex++) {
+      const smoothX = vertSmoothNormalX[vertIndex];
+      const smoothY = vertSmoothNormalY[vertIndex];
+      const smoothZ = vertSmoothNormalZ[vertIndex];
+
+      const bothX = vertBothNormalX[vertIndex];
+      const bothY = vertBothNormalY[vertIndex];
+      const bothZ = vertBothNormalZ[vertIndex];
+
+      let sl = Math.sqrt(smoothX * smoothX + smoothY * smoothY + smoothZ * smoothZ);
+      let bl = Math.sqrt(bothX * bothX + bothY * bothY + bothZ * bothZ);
+
+      if (sl !== 0) {
+        vertSmoothNormalX[vertIndex] = smoothX / sl;
+        vertSmoothNormalY[vertIndex] = smoothY / sl;
+        vertSmoothNormalZ[vertIndex] = smoothZ / sl;
+      }
+
+      if (bl !== 0) {
+        vertBothNormalX[vertIndex] = bothX / bl;
+        vertBothNormalY[vertIndex] = bothY / bl;
+        vertBothNormalZ[vertIndex] = bothZ / bl;
+      }
+    }
+
+    // Use flat normals if as both normals for faces if both is not set or isn't smooth
+    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
+      const material = model.materials.materials[faceMaterials[faceIndex]];
+
+      for (let i = 0; i < 4; i++) {
+        const faceVertNormalIndex = faceIndex * 4 + i;
+        const vertIndex = faceVertIndices[faceIndex * 4 + i];
+        faceVertSmoothNormalX[faceVertNormalIndex] = vertSmoothNormalX[vertIndex];
+        faceVertSmoothNormalY[faceVertNormalIndex] = vertSmoothNormalY[vertIndex];
+        faceVertSmoothNormalZ[faceVertNormalIndex] = vertSmoothNormalZ[vertIndex];
+
+        faceVertBothNormalX[faceVertNormalIndex] = vertBothNormalX[vertIndex] === 0 ? faceVertFlatNormalX[faceVertNormalIndex] : vertBothNormalX[vertIndex];
+        faceVertBothNormalY[faceVertNormalIndex] = vertBothNormalY[vertIndex] === 0 ? faceVertFlatNormalY[faceVertNormalIndex] : vertBothNormalY[vertIndex];
+        faceVertBothNormalZ[faceVertNormalIndex] = vertBothNormalZ[vertIndex] === 0 ? faceVertFlatNormalZ[faceVertNormalIndex] : vertBothNormalZ[vertIndex];
+
+        switch (material.lighting) {
+          case SVOX.SMOOTH:
+            faceVertNormalX[faceVertNormalIndex] = faceVertSmoothNormalX[faceVertNormalIndex];
+            faceVertNormalY[faceVertNormalIndex] = faceVertSmoothNormalY[faceVertNormalIndex];
+            faceVertNormalZ[faceVertNormalIndex] = faceVertSmoothNormalZ[faceVertNormalIndex];
+            break;
+          case SVOX.BOTH:
+            faceVertNormalX[faceVertNormalIndex] = faceVertBothNormalX[faceVertNormalIndex];
+            faceVertNormalY[faceVertNormalIndex] = faceVertBothNormalY[faceVertNormalIndex];
+            faceVertNormalZ[faceVertNormalIndex] = faceVertBothNormalZ[faceVertNormalIndex];
+            break;
+          default:
+            faceVertNormalX[faceVertNormalIndex] = faceVertFlatNormalX[faceVertNormalIndex];
+            faceVertNormalY[faceVertNormalIndex] = faceVertFlatNormalY[faceVertNormalIndex];
+            faceVertNormalZ[faceVertNormalIndex] = faceVertFlatNormalZ[faceVertNormalIndex];
+            break;
+        }
+      }
+    }
+
     // Normalize the vertex normals
     model.forEachVertex(function normalizeNormals(vertex) {   
       model._normalize(vertex.smoothNormal);      
@@ -281,7 +301,6 @@ class NormalsCalculator {
     }, this);    
     
     model.voxels.forEach(function calculateNormals(voxel) {
-      
       for (let faceName in voxel.faces) {
         let face = voxel.faces[faceName];
         if (face.skipped) 

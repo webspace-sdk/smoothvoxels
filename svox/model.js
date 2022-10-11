@@ -1,3 +1,12 @@
+function almostEqual(x, y) {
+  return Math.abs(x - y) < 0.0001;
+}
+
+function assertAlmostEqual(x, y) {
+  if (!almostEqual(x, y))
+    throw new Error("Assertion failed: " + x + " != " + y);
+}
+
 class Light {
   constructor(color, strength, direction, position, distance, size, detail) {
     this.color = color;
@@ -120,9 +129,15 @@ class Model {
     this.faceVertFlatNormalX = new Float32Array(MAX_VERTS);
     this.faceVertFlatNormalY = new Float32Array(MAX_VERTS);
     this.faceVertFlatNormalZ = new Float32Array(MAX_VERTS);
+    this.vertSmoothNormalX = new Float32Array(MAX_VERTS);
+    this.vertSmoothNormalY = new Float32Array(MAX_VERTS);
+    this.vertSmoothNormalZ = new Float32Array(MAX_VERTS);
     this.faceVertSmoothNormalX = new Float32Array(MAX_VERTS);
     this.faceVertSmoothNormalY = new Float32Array(MAX_VERTS);
     this.faceVertSmoothNormalZ = new Float32Array(MAX_VERTS);
+    this.vertBothNormalX = new Float32Array(MAX_VERTS);
+    this.vertBothNormalY = new Float32Array(MAX_VERTS);
+    this.vertBothNormalZ = new Float32Array(MAX_VERTS);
     this.faceVertBothNormalX = new Float32Array(MAX_VERTS);
     this.faceVertBothNormalY = new Float32Array(MAX_VERTS);
     this.faceVertBothNormalZ = new Float32Array(MAX_VERTS);
@@ -261,9 +276,9 @@ class Model {
     
     //VertexLinker.logLinks(this.voxels);
 
-    Deformer.changeShape(this, this._shape);
+    //Deformer.changeShape(this, this._shape);
        
-    Deformer.deform(this, maximumDeformCount);
+    //Deformer.deform(this, maximumDeformCount);
     //
     //Deformer.warpAndScatter(this);
     
@@ -406,6 +421,7 @@ class Model {
         flattened,
         clamped,
         skipped,
+        faceIndex: this.faceCount
       };
 
       this.faceVertIndices[this.faceCount * 4] = this._createInlineVertex(voxel, faceName, 0, flattened, clamped, vertIndexLookup);
@@ -444,6 +460,11 @@ class Model {
 
     // Create the vertex if it does not yet exist
     let vertex = this._getVertex(x, y, z);
+
+    if (x === 0 && y === 1 && z === 1) {
+      console.log("add to ", this.faceCount, vi);
+    }
+
     if (!vertex) {
       vertex = { x, y, z,
                  newPos: { x: 0, y:0, z: 0, set: false },
@@ -514,6 +535,10 @@ class Model {
     let key = (x << 20) | (y << 10) | z;
 
     if (vertIndexLookup.has(key)) {
+      if (key === 1025) {
+        console.log("FOUND", vertexOffset, x, y, z, this.faceCount);
+      }
+
       vertexIndex = vertIndexLookup.get(key);
 
       // Favour less deformation over more deformation
@@ -549,6 +574,10 @@ class Model {
         this.faceVertScatter[vertexIndex] = material.scatter;
       }
     } else {
+      if (key === 1025) {
+        console.log("FOUND NEW", x, y, z, this.faceCount);
+      }
+
       vertexIndex = this.vertCount;
       vertIndexLookup.set(key, vertexIndex);
 

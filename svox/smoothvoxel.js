@@ -76,10 +76,10 @@ AFRAME.registerComponent('svox', {
         //this.mesh = meshGenerator.generate(model);
 
         let t0 = performance.now();
-      for (let i = 0; i < 5; i++) {
-        SvoxMeshGenerator.generate(model);
-        //SvoxToThreeMeshConverter.generate(svoxmesh);
-      }
+      //for (let i = 0; i < 100; i++) {
+      //  SvoxMeshGenerator.generate(model);
+      //  //SvoxToThreeMeshConverter.generate(svoxmesh);
+      //}
 
         let svoxmesh = SvoxMeshGenerator.generate(model);
         this.mesh = SvoxToThreeMeshConverter.generate(svoxmesh);
