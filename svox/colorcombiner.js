@@ -18,16 +18,7 @@ class ColorCombiner {
     for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
       let fadeFace = fadeMaterials[faceMaterials[faceIndex]];
 
-      if (!fadeFace) {
-        // Copy vertex colors
-        for (let v = 0; v < 4; v++) {
-          const vertIndex = faceVertIndices[faceIndex];
-
-          faceVertColorR[faceIndex * 4 + v] = vertColorR[vertIndex];
-          faceVertColorG[faceIndex * 4 + v] = vertColorG[vertIndex];
-          faceVertColorB[faceIndex * 4 + v] = vertColorB[vertIndex];
-        }
-      } else {
+      if (fadeFace) {
         // Fade vertex colors
         for (let v = 0; v < 4; v++) {
           let r = 0;
@@ -39,9 +30,9 @@ class ColorCombiner {
           const vertColorCount = vertColorCount[vertIndex];
 
           for (let c = 0; c < vertColorCount; c++) {
-            r += vertColorR[vertIndex * 4 + c];
-            g += vertColorG[vertIndex * 4 + c];
-            b += vertColorB[vertIndex * 4 + c];
+            r += vertColorR[vertIndex * 5 + c];
+            g += vertColorG[vertIndex * 5 + c];
+            b += vertColorB[vertIndex * 5 + c];
             count++;
           }
 
@@ -49,6 +40,8 @@ class ColorCombiner {
           faceVertColorG[faceIndex * 4 + v] = g / count;
           faceVertColorB[faceIndex * 4 + v] = b / count;
         }
+      } else {
+        // Face colors are already set to voxel color during model load
       }
     }
 

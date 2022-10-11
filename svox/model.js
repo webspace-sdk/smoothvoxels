@@ -433,6 +433,11 @@ class Model {
       this.faceVertIndices[this.faceCount * 4 + 1] = this._createInlineVertex(voxel, faceName, 1, flattened, clamped, vertIndexLookup);
       this.faceVertIndices[this.faceCount * 4 + 2] = this._createInlineVertex(voxel, faceName, 2, flattened, clamped, vertIndexLookup);
       this.faceVertIndices[this.faceCount * 4 + 3] = this._createInlineVertex(voxel, faceName, 3, flattened, clamped, vertIndexLookup);
+      for (let v = 0; v < 4; v++) {
+        this.faceVertColorR[this.faceCount * 4 + v] = voxel.color.r;
+        this.faceVertColorG[this.faceCount * 4 + v] = voxel.color.g;
+        this.faceVertColorB[this.faceCount * 4 + v] = voxel.color.b;
+      }
 
       this.faceFlattened.set(this.faceCount, flattened ? 1 : 0);
       this.faceClamped.set(this.faceCount, clamped ? 1 : 0);
@@ -538,82 +543,82 @@ class Model {
     const material = voxel.material;
 
     // Key is bit shifted x, y, z values as ints
-    let vertexIndex;
+    let vertIndex;
 
     let key = (x << 20) | (y << 10) | z;
 
     if (vertIndexLookup.has(key)) {
-      vertexIndex = vertIndexLookup.get(key);
+      vertIndex = vertIndexLookup.get(key);
 
       // Favour less deformation over more deformation
       if (!material.deform) {
-        this.vertDeformCount[vertexIndex] = 0;
-        this.vertDeformDamping[vertexIndex] = 0;
-        this.vertDeformStrength[vertexIndex] = 0;
+        this.vertDeformCount[vertIndex] = 0;
+        this.vertDeformDamping[vertIndex] = 0;
+        this.vertDeformStrength[vertIndex] = 0;
       }
-      else if (this.vertDeformCount[vertexIndex] !== 0 &&
-               (this._getDeformIntegral(material.deform) < this._getDeformIntegralAtVertex(vertexIndex))) {
-        this.vertDeformStrength[vertexIndex] = material.deform.strength;
-        this.vertDeformDamping[vertexIndex] = material.deform.damping;
-        this.vertDeformCount[vertexIndex] = material.deform.count;
+      else if (this.vertDeformCount[vertIndex] !== 0 &&
+               (this._getDeformIntegral(material.deform) < this._getDeformIntegralAtVertex(vertIndex))) {
+        this.vertDeformStrength[vertIndex] = material.deform.strength;
+        this.vertDeformDamping[vertIndex] = material.deform.damping;
+        this.vertDeformCount[vertIndex] = material.deform.count;
       }
 
       // Favour less / less requent warp over more warp
       if (!material.warp) {
-        this.vertWarpAmplitude[vertexIndex] = 0;
-        this.vertWarpFrequency[vertexIndex] = 0;
+        this.vertWarpAmplitude[vertIndex] = 0;
+        this.vertWarpFrequency[vertIndex] = 0;
       }
-      else if (this.vertWarpAmplitude[vertexIndex] !== 0 &&
-               ((material.warp.amplitude < this.vertWarpAmplitude[vertexIndex]) ||
-                (material.warp.amplitude === this.vertWarpAmplitude[vertexIndex] && material.warp.frequency > this.vertWarpFrequency[vertexIndex]))) {
-        this.vertWarpAmplitude[vertexIndex] = material.warp.amplitude;
-        this.vertWarpFrequency[vertexIndex] = material.warp.frequency;
+      else if (this.vertWarpAmplitude[vertIndex] !== 0 &&
+               ((material.warp.amplitude < this.vertWarpAmplitude[vertIndex]) ||
+                (material.warp.amplitude === this.vertWarpAmplitude[vertIndex] && material.warp.frequency > this.vertWarpFrequency[vertIndex]))) {
+        this.vertWarpAmplitude[vertIndex] = material.warp.amplitude;
+        this.vertWarpFrequency[vertIndex] = material.warp.frequency;
       }
 
       // Favour less scatter over more scatter
       if (!material.scatter)
-        this.vertScatter[vertexIndex] = 0;
-      else if (vertex.scatter &&
-               Math.abs(material.scatter) < Math.abs(this.vertScatter[vertexIndex].scatter)) {
-        this.vertScatter[vertexIndex] = material.scatter;
+        this.vertScatter[vertIndex] = 0;
+      else if (this.vertScatter[vertIndex] !== 0 &&
+               Math.abs(material.scatter) < Math.abs(this.vertScatter[vertIndex])) {
+        this.vertScatter[vertIndex] = material.scatter;
       }
     } else {
-      vertexIndex = this.vertCount;
-      vertIndexLookup.set(key, vertexIndex);
+      vertIndex = this.vertCount;
+      vertIndexLookup.set(key, vertIndex);
 
-      this.vertX[vertexIndex] = x;
-      this.vertY[vertexIndex] = y;
-      this.vertZ[vertexIndex] = z;
+      this.vertX[vertIndex] = x;
+      this.vertY[vertIndex] = y;
+      this.vertZ[vertIndex] = z;
 
       if (material.deform) {
-        this.vertDeformDamping[vertexIndex] = material.deform.damping;
-        this.vertDeformCount[vertexIndex] = material.deform.count;
-        this.vertDeformStrength[vertexIndex] = material.deform.strength;
+        this.vertDeformDamping[vertIndex] = material.deform.damping;
+        this.vertDeformCount[vertIndex] = material.deform.count;
+        this.vertDeformStrength[vertIndex] = material.deform.strength;
       }
 
       if (material.warp) {
-        this.vertWarpAmplitude[vertexIndex] = material.warp.amplitude;
-        this.vertWarpFrequency[vertexIndex] = material.warp.frequency;
+        this.vertWarpAmplitude[vertIndex] = material.warp.amplitude;
+        this.vertWarpFrequency[vertIndex] = material.warp.frequency;
       }
 
       if (material.scatter) {
-        this.vertScatter[vertexIndex] = material.scatter;
+        this.vertScatter[vertIndex] = material.scatter;
       }
     }
 
     // This will || the planar values
-    this._setIsVertexPlanar(voxel, x, y, z, material._flatten, this._flatten, this.vertFlattenedX, this.vertFlattenedY, this.vertFlattenedZ, vertexIndex);
-    this._setIsVertexPlanar(voxel, x, y, z, material._clamp, this._clamp, this.vertClampedX, this.vertClampedY, this.vertClampedZ, vertexIndex);
+    this._setIsVertexPlanar(voxel, x, y, z, material._flatten, this._flatten, this.vertFlattenedX, this.vertFlattenedY, this.vertFlattenedZ, vertIndex);
+    this._setIsVertexPlanar(voxel, x, y, z, material._clamp, this._clamp, this.vertClampedX, this.vertClampedY, this.vertClampedZ, vertIndex);
 
-    const vertColorIndex = this.vertColorCount[vertexIndex];
-    this.vertColorR[vertexIndex] = voxel.color.r;
-    this.vertColorG[vertexIndex] = voxel.color.g;
-    this.vertColorB[vertexIndex] = voxel.color.b;
-    this.vertColorCount[vertexIndex] = vertColorIndex + 1;
+    const vertColorIndex = this.vertColorCount[vertIndex];
+    this.vertColorR[vertIndex * 5 + vertColorIndex] = voxel.color.r;
+    this.vertColorG[vertIndex * 5 + vertColorIndex] = voxel.color.g;
+    this.vertColorB[vertIndex * 5 + vertColorIndex] = voxel.color.b;
+    this.vertColorCount[vertIndex] = vertColorIndex + 1;
 
     this.vertCount++;
 
-    return vertexIndex;
+    return vertIndex;
   }
   
   _getDeformIntegral(deform) {
@@ -623,10 +628,10 @@ class Model {
        : (deform.strength*(1-Math.pow(deform.damping,deform.count+1)))/(1-deform.damping);
   }
 
-  _getDeformIntegralAtVertex(vertexIndex) {
-    const damping = this.vertDeformDamping[vertexIndex];
-    const count = this.vertDeformCount[vertexIndex];
-    const strength = this.vertDeformStrength[vertexIndex];
+  _getDeformIntegralAtVertex(vertIndex) {
+    const damping = this.vertDeformDamping[vertIndex];
+    const count = this.vertDeformCount[vertIndex];
+    const strength = this.vertDeformStrength[vertIndex];
 
     // Returns the total amount of deforming done by caluclating the integral
     return (damping === 1)
@@ -681,7 +686,7 @@ class Model {
     return result;
   }
   
-  _setIsVertexPlanar(voxel, vx, vy, vz, materialPlanar, modelPlanar, arrX, arrY, arrZ, vertexIndex) {
+  _setIsVertexPlanar(voxel, vx, vy, vz, materialPlanar, modelPlanar, arrX, arrY, arrZ, vertIndex) {
     let material = voxel.material;  
     
     let planar = materialPlanar;
@@ -692,15 +697,15 @@ class Model {
     }
     
     if (planar) {
-      if (arrX.get(vertexIndex) === 0) {
+      if (arrX.get(vertIndex) === 0) {
         // Note bounds are in voxel coordinates and vertices add from 0 0 0 to 1 1 1
-        arrX.set(vertexIndex, planar.x || (planar.nx && vx < bounds.minX + 0.5) || (planar.px && vx > bounds.maxX + 0.5 ? 1 : 0));
+        arrX.set(vertIndex, planar.x || (planar.nx && vx < bounds.minX + 0.5) || (planar.px && vx > bounds.maxX + 0.5 ? 1 : 0));
       }
-      if (arrY.get(vertexIndex) === 0) {
-        arrY.set(vertexIndex, planar.y || (planar.ny && vy < bounds.minY + 0.5) || (planar.py && vy > bounds.maxY + 0.5 ? 1 : 0));
+      if (arrY.get(vertIndex) === 0) {
+        arrY.set(vertIndex, planar.y || (planar.ny && vy < bounds.minY + 0.5) || (planar.py && vy > bounds.maxY + 0.5 ? 1 : 0));
       }
-      if (arrZ.get(vertexIndex) === 0) {
-        arrZ.set(vertexIndex, planar.z || (planar.nz && vz < bounds.minZ + 0.5) || (planar.pz && vz > bounds.maxZ + 0.5 ? 1 : 0));
+      if (arrZ.get(vertIndex) === 0) {
+        arrZ.set(vertIndex, planar.z || (planar.nz && vz < bounds.minZ + 0.5) || (planar.pz && vz > bounds.maxZ + 0.5 ? 1 : 0));
       }
     }
   }
