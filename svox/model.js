@@ -1,12 +1,3 @@
-function almostEqual(x, y) {
-  return Math.abs(x - y) < 0.0001;
-}
-
-function assertAlmostEqual(x, y) {
-  if (!almostEqual(x, y))
-    throw new Error("Assertion failed: " + x + " != " + y);
-}
-
 class Light {
   constructor(color, strength, direction, position, distance, size, detail) {
     this.color = color;
@@ -461,10 +452,6 @@ class Model {
     // Create the vertex if it does not yet exist
     let vertex = this._getVertex(x, y, z);
 
-    if (x === 0 && y === 1 && z === 1) {
-      console.log("add to ", this.faceCount, vi);
-    }
-
     if (!vertex) {
       vertex = { x, y, z,
                  newPos: { x: 0, y:0, z: 0, set: false },
@@ -535,10 +522,6 @@ class Model {
     let key = (x << 20) | (y << 10) | z;
 
     if (vertIndexLookup.has(key)) {
-      if (key === 1025) {
-        console.log("FOUND", vertexOffset, x, y, z, this.faceCount);
-      }
-
       vertexIndex = vertIndexLookup.get(key);
 
       // Favour less deformation over more deformation
@@ -574,10 +557,6 @@ class Model {
         this.faceVertScatter[vertexIndex] = material.scatter;
       }
     } else {
-      if (key === 1025) {
-        console.log("FOUND NEW", x, y, z, this.faceCount);
-      }
-
       vertexIndex = this.vertCount;
       vertIndexLookup.set(key, vertexIndex);
 

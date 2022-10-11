@@ -1,12 +1,3 @@
-function almostEqual(x, y) {
-  return Math.abs(x - y) < 0.0001;
-}
-
-function assertAlmostEqual(x, y) {
-  if (!almostEqual(x, y))
-    throw new Error("Assertion failed: " + x + " != " + y);
-}
-
 class NormalsCalculator {
  
   static calculateNormals(model) {
@@ -341,26 +332,6 @@ class NormalsCalculator {
       }
     }, this, true);
 
-    model.voxels.forEach(function calculateNormals(voxel) {
-      for (let faceName in voxel.faces) {
-        let face = voxel.faces[faceName];
-        if (face.skipped) 
-          continue;
-
-        for (let v = 0; v < 4; v++) {
-          assertAlmostEqual(face.smoothNormals[v].x, faceVertSmoothNormalX[face.faceIndex * 4 + v]);
-          assertAlmostEqual(face.smoothNormals[v].y, faceVertSmoothNormalY[face.faceIndex * 4 + v]);
-          assertAlmostEqual(face.smoothNormals[v].z, faceVertSmoothNormalZ[face.faceIndex * 4 + v]);
-          assertAlmostEqual(face.flatNormals[v].x, faceVertFlatNormalX[face.faceIndex * 4 + v]);
-          assertAlmostEqual(face.flatNormals[v].y, faceVertFlatNormalY[face.faceIndex * 4 + v]);
-          assertAlmostEqual(face.flatNormals[v].z, faceVertFlatNormalZ[face.faceIndex * 4 + v]);
-          assertAlmostEqual(face.bothNormals[v].x, faceVertBothNormalX[face.faceIndex * 4 + v]);
-          assertAlmostEqual(face.bothNormals[v].y, faceVertBothNormalY[face.faceIndex * 4 + v]);
-          assertAlmostEqual(face.bothNormals[v].z, faceVertBothNormalZ[face.faceIndex * 4 + v]);
-        }
-      }
-    });
-    
     // Cleanup the vertex normals which are no longer used
     model.forEachVertex(function deleteUnusedNormals(vertex) { 
       delete vertex.smoothNormal;      
