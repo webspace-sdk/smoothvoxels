@@ -262,6 +262,7 @@ class NormalsCalculator {
     // Use flat normals if as both normals for faces if both is not set or isn't smooth
     for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
       const material = model.materials.materials[faceMaterials[faceIndex]];
+      const isSmooth = faceSmooth.get(faceIndex) === 1;
 
       for (let i = 0; i < 4; i++) {
         const faceVertNormalIndex = faceIndex * 4 + i;
@@ -270,9 +271,9 @@ class NormalsCalculator {
         faceVertSmoothNormalY[faceVertNormalIndex] = vertSmoothNormalY[vertIndex];
         faceVertSmoothNormalZ[faceVertNormalIndex] = vertSmoothNormalZ[vertIndex];
 
-        faceVertBothNormalX[faceVertNormalIndex] = vertBothNormalX[vertIndex] === 0 ? faceVertFlatNormalX[faceVertNormalIndex] : vertBothNormalX[vertIndex];
-        faceVertBothNormalY[faceVertNormalIndex] = vertBothNormalY[vertIndex] === 0 ? faceVertFlatNormalY[faceVertNormalIndex] : vertBothNormalY[vertIndex];
-        faceVertBothNormalZ[faceVertNormalIndex] = vertBothNormalZ[vertIndex] === 0 ? faceVertFlatNormalZ[faceVertNormalIndex] : vertBothNormalZ[vertIndex];
+        faceVertBothNormalX[faceVertNormalIndex] = !isSmooth || vertBothNormalX[vertIndex] === 0 ? faceVertFlatNormalX[faceVertNormalIndex] : vertBothNormalX[vertIndex];
+        faceVertBothNormalY[faceVertNormalIndex] = !isSmooth || vertBothNormalY[vertIndex] === 0 ? faceVertFlatNormalY[faceVertNormalIndex] : vertBothNormalY[vertIndex];
+        faceVertBothNormalZ[faceVertNormalIndex] = !isSmooth || vertBothNormalZ[vertIndex] === 0 ? faceVertFlatNormalZ[faceVertNormalIndex] : vertBothNormalZ[vertIndex];
 
         switch (material.lighting) {
           case SVOX.SMOOTH:
@@ -339,6 +340,26 @@ class NormalsCalculator {
         
       }
     }, this, true);
+
+    model.voxels.forEach(function calculateNormals(voxel) {
+      for (let faceName in voxel.faces) {
+        let face = voxel.faces[faceName];
+        if (face.skipped) 
+          continue;
+
+        for (let v = 0; v < 4; v++) {
+          assertAlmostEqual(face.smoothNormals[v].x, faceVertSmoothNormalX[face.faceIndex * 4 + v]);
+          assertAlmostEqual(face.smoothNormals[v].y, faceVertSmoothNormalY[face.faceIndex * 4 + v]);
+          assertAlmostEqual(face.smoothNormals[v].z, faceVertSmoothNormalZ[face.faceIndex * 4 + v]);
+          assertAlmostEqual(face.flatNormals[v].x, faceVertFlatNormalX[face.faceIndex * 4 + v]);
+          assertAlmostEqual(face.flatNormals[v].y, faceVertFlatNormalY[face.faceIndex * 4 + v]);
+          assertAlmostEqual(face.flatNormals[v].z, faceVertFlatNormalZ[face.faceIndex * 4 + v]);
+          assertAlmostEqual(face.bothNormals[v].x, faceVertBothNormalX[face.faceIndex * 4 + v]);
+          assertAlmostEqual(face.bothNormals[v].y, faceVertBothNormalY[face.faceIndex * 4 + v]);
+          assertAlmostEqual(face.bothNormals[v].z, faceVertBothNormalZ[face.faceIndex * 4 + v]);
+        }
+      }
+    });
     
     // Cleanup the vertex normals which are no longer used
     model.forEachVertex(function deleteUnusedNormals(vertex) { 
