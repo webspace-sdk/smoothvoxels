@@ -166,7 +166,7 @@ class BaseMaterial {
     this.transparent = transparent ? true : false;
     this.refractionRatio = typeof refractionRatio === 'number' ? refractionRatio : 0.9;
     this.wireframe = wireframe ? true : false;
-    this.side = side ? side : 'front';
+    this.side = side ? side : SVOX.FRONT;
     if (![SVOX.FRONT, SVOX.BACK, SVOX.DOUBLE].includes(this.side))
       this.side = SVOX.FRONT;
     this.setEmissive(emissiveColor, emissiveIntensity);  
