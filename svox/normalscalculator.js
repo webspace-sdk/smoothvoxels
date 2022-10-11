@@ -250,10 +250,12 @@ class NormalsCalculator {
       }
     }
 
+    const materials = model.materials.materials;
+
     // Use flat normals if as both normals for faces if both is not set or isn't smooth
     for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
-      const material = model.materials.materials[faceMaterials[faceIndex]];
       const isSmooth = faceSmooth.get(faceIndex) === 1;
+      const material = materials[faceMaterials[faceIndex]];
 
       for (let i = 0; i < 4; i++) {
         const faceVertNormalIndex = faceIndex * 4 + i;

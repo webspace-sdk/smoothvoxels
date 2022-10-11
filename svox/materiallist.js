@@ -88,9 +88,6 @@ class Color {
         
         // Populate .r .g and .b
         let value = parseInt(color, 16);
-        this.ri = ((value >> 16) & 255);
-        this.gi = ((value >> 8) & 255);
-        this.bi = (value & 255);
         this.r = ((value >> 16) & 255) / 255;
         this.g = ((value >> 8) & 255) / 255;
         this.b = (value & 255) / 255;

@@ -1,11 +1,57 @@
 class ColorCombiner {
   
   static combineColors(model) {
+    const { vertColorR, vertColorG, vertColorB, vertColorCount, faceVertColorR, faceVertColorG, faceVertColorB, faceVertIndices } = model;
+    const materials = model.materials.materials;
+
     // No need to fade colors when there is no material with fade
-    let fade = model.materials.find(m => m.colors.length > 1 && m.fade) ? true : false;
-    
+    let fadeAny = model.materials.find(m => m.colors.length > 1 && m.fade) ? true : false;
+
+    const fadeMaterials = Array(materials.length).fill(false);
+
+    for (let m = 0; m < materials.length; m++) {
+      if (fadeAny && materials[m].colors.length > 1 && materials[m].fade) {
+        fadeMaterials[m] = true;
+      }
+    }
+
+    for (let faceIndex = 0; faceIndex < model.facesCount; faceIndex++) {
+      let fadeFace = fadeMaterials[faceMaterials[faceIndex]];
+
+      if (!fadeFace) {
+        // Copy material colors
+        for (let v = 0; v < 3; v++) {
+          faceVertColorR[faceIndex * 4 + v] = vertColorR[faceIndex];
+          faceVertColorG[faceIndex * 4 + v] = vertColorG[faceIndex];
+          faceVertColorB[faceIndex * 4 + v] = vertColorB[faceIndex];
+        }
+      } else {
+        // Fade colors
+        for (let v = 0; v < 4; v++) {
+          let r = 0;
+          let g = 0;
+          let b = 0;
+          let count = 0;
+
+          const vertIndex = faceVertIndices[faceIndex * 4 + v];
+          const vertColorCount = vertColorCount[vertIndex];
+
+          for (let c = 0; c < vertColorCount; c++) {
+            r += vertColorR[vertIndex * 4 + c];
+            g += vertColorG[vertIndex * 4 + c];
+            b += vertColorB[vertIndex * 4 + c];
+            count++;
+          }
+
+          faceVertColorR[faceIndex * 4 + v] = r / count;
+          faceVertColorG[faceIndex * 4 + v] = g / count;
+          faceVertColorB[faceIndex * 4 + v] = b / count;
+        }
+      }
+    }
+
     model.voxels.forEach(function combine(voxel) {
-      let fadeVoxel = (fade && voxel.material.fade && voxel.material.colors.length > 1);
+      let fadeVoxel = (fadeAny && voxel.material.fade && voxel.material.colors.length > 1);
 
       for (let faceName in voxel.faces) {
         let face = voxel.faces[faceName];
@@ -21,6 +67,7 @@ class ColorCombiner {
           }   
           
           // Combine AO + Lights + Face color(s)
+          // TODO JEL inline
           this._combineFaceColors(model, voxel, face);                   
         }  
       }

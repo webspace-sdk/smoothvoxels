@@ -99,15 +99,16 @@ class Model {
     const MAX_VERT_BITS = Math.floor(MAX_VERTS / 8);
     const MAX_FACES = MAX_VERTS / 4;
     const MAX_FACE_BITS = Math.floor(MAX_FACES / 8);
+    const MAX_FACE_VERTS = MAX_FACES * 4;
 
     this.vertX = new Float32Array(MAX_VERTS);
     this.vertY = new Float32Array(MAX_VERTS);
     this.vertZ = new Float32Array(MAX_VERTS);
 
     // Verts can have up to 5 colors, given it will belong to at most 5 visible faces (a corner on a flat part)
-    this.vertColorR = new Uint8Array(MAX_VERTS * 5);
-    this.vertColorG = new Uint8Array(MAX_VERTS * 5);
-    this.vertColorB = new Uint8Array(MAX_VERTS * 5);
+    this.vertColorR = new Float32Array(MAX_VERTS * 5);
+    this.vertColorG = new Float32Array(MAX_VERTS * 5);
+    this.vertColorB = new Float32Array(MAX_VERTS * 5);
     this.vertColorCount = new Uint8Array(MAX_VERTS);
 
     this.vertSmoothNormalX = new Float32Array(MAX_VERTS);
@@ -129,6 +130,8 @@ class Model {
     this.vertWarpAmplitude = new Float32Array(MAX_VERTS);
     this.vertWarpFrequency = new Float32Array(MAX_VERTS);
     this.vertScatter = new Float32Array(MAX_VERTS);
+    this.vertLinkCounts = new Uint8Array(MAX_VERTS); // A vert can be linked to up to 6 other verts
+    this.vertLinkIndices = new Uint32Array(MAX_VERTS * 6);
 
     this.faceFlattened = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
     this.faceClamped = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
@@ -137,23 +140,23 @@ class Model {
     this.faceNameIndices = new Uint8Array(MAX_FACES);
     this.faceMaterials = new Uint8Array(MAX_FACES);
     this.faceNrOfClampedLinks = new Uint8Array(MAX_FACES);
-    this.faceVertIndices = new Uint32Array(MAX_VERTS);
-    this.faceVertLinkCounts = new Uint8Array(MAX_VERTS);
 
-    // A vert can be linked to up to 6 other vers
-    this.faceVertLinkIndices = new Uint32Array(MAX_VERTS * 6);
-    this.faceVertNormalX = new Float32Array(MAX_VERTS);
-    this.faceVertNormalY = new Float32Array(MAX_VERTS);
-    this.faceVertNormalZ = new Float32Array(MAX_VERTS);
-    this.faceVertFlatNormalX = new Float32Array(MAX_VERTS);
-    this.faceVertFlatNormalY = new Float32Array(MAX_VERTS);
-    this.faceVertFlatNormalZ = new Float32Array(MAX_VERTS);
-    this.faceVertSmoothNormalX = new Float32Array(MAX_VERTS);
-    this.faceVertSmoothNormalY = new Float32Array(MAX_VERTS);
-    this.faceVertSmoothNormalZ = new Float32Array(MAX_VERTS);
-    this.faceVertBothNormalX = new Float32Array(MAX_VERTS);
-    this.faceVertBothNormalY = new Float32Array(MAX_VERTS);
-    this.faceVertBothNormalZ = new Float32Array(MAX_VERTS);
+    this.faceVertIndices = new Uint32Array(MAX_FACE_VERTS);
+    this.faceVertNormalX = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertNormalY = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertNormalZ = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertFlatNormalX = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertFlatNormalY = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertFlatNormalZ = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertSmoothNormalX = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertSmoothNormalY = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertSmoothNormalZ = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertBothNormalX = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertBothNormalY = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertBothNormalZ = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertColorR = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertColorG = new Float32Array(MAX_FACE_VERTS);
+    this.faceVertColorB = new Float32Array(MAX_FACE_VERTS);
 
     // Need to zero on reset:
     // face vert link counts, color counts
@@ -290,7 +293,7 @@ class Model {
     
     //AOCalculator.calculateAmbientOcclusion(this);
     
-    //ColorCombiner.combineColors(this);
+    ColorCombiner.combineColors(this);
 
     //UVAssigner.assignUVs(this);
     
@@ -594,9 +597,9 @@ class Model {
     this._setIsVertexPlanar(voxel, x, y, z, material._clamp, this._clamp, this.vertClampedX, this.vertClampedY, this.vertClampedZ, vertexIndex);
 
     const vertColorIndex = this.vertColorCount[vertexIndex];
-    this.vertColorR[vertexIndex] = voxel.color.ri;
-    this.vertColorG[vertexIndex] = voxel.color.gi;
-    this.vertColorB[vertexIndex] = voxel.color.bi;
+    this.vertColorR[vertexIndex] = voxel.color.r;
+    this.vertColorG[vertexIndex] = voxel.color.g;
+    this.vertColorB[vertexIndex] = voxel.color.b;
     this.vertColorCount[vertexIndex] = vertColorIndex + 1;
 
     this.vertCount++;

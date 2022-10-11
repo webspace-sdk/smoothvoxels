@@ -11,7 +11,7 @@ function assertAlmostEqual(x, y) {
 class VertexLinker {
   
   static linkVertices(model, face, faceIndex) {
-    const { faceClamped, faceNrOfClampedLinks, faceVertIndices, faceVertLinkIndices, faceVertLinkCounts } = model;
+    const { faceClamped, faceNrOfClampedLinks, faceVertIndices, vertLinkIndices, vertLinkCounts } = model;
 
     const clamped = faceClamped.get(faceIndex);
 
@@ -26,19 +26,19 @@ class VertexLinker {
 
         let hasSelfLink = false;
 
-        for (let l = 0, c = faceVertLinkCounts[vertIndex]; l < c; l++) {
-          if (faceVertLinkIndices[vertIndex * 6 + l] === vertIndex) {
+        for (let l = 0, c = vertLinkCounts[vertIndex]; l < c; l++) {
+          if (vertLinkIndices[vertIndex * 6 + l] === vertIndex) {
             hasSelfLink = true;
             break;
           }
         }
 
         if (!hasSelfLink) {
-          faceVertLinkIndices[vertIndex * 6 + faceVertLinkCounts[vertIndex]] = vertIndex;
-          faceVertLinkCounts[vertIndex]++;
+          vertLinkIndices[vertIndex * 6 + vertLinkCounts[vertIndex]] = vertIndex;
+          vertLinkCounts[vertIndex]++;
         }
 
-        faceVertLinkCounts[vertIndex]++;
+        vertLinkCounts[vertIndex]++;
       }
     } else {
       // Link each vertex with its neighbor and back (so not diagonally)
@@ -48,30 +48,30 @@ class VertexLinker {
 
         let hasForwardLink = false;
 
-        for (let l = 0, c = faceVertLinkCounts[vertIndexFrom]; l < c; l++) {
-          if (faceVertLinkIndices[vertIndexFrom * 6 + l] === vertIndexTo) {
+        for (let l = 0, c = vertLinkCounts[vertIndexFrom]; l < c; l++) {
+          if (vertLinkIndices[vertIndexFrom * 6 + l] === vertIndexTo) {
             hasForwardLink = true;
             break;
           }
         }
 
         if (!hasForwardLink) {
-          faceVertLinkIndices[vertIndexFrom * 6 + faceVertLinkCounts[vertIndexFrom]] = vertIndexTo;
-          faceVertLinkCounts[vertIndexFrom]++;
+          vertLinkIndices[vertIndexFrom * 6 + vertLinkCounts[vertIndexFrom]] = vertIndexTo;
+          vertLinkCounts[vertIndexFrom]++;
         }
 
         let hasBackwardLink = false;
 
-        for (let l = 0, c = faceVertLinkCounts[vertIndexTo]; l < c; l++) {
-          if (faceVertLinkIndices[vertIndexTo * 6 + l] === vertIndexFrom) {
+        for (let l = 0, c = vertLinkCounts[vertIndexTo]; l < c; l++) {
+          if (vertLinkIndices[vertIndexTo * 6 + l] === vertIndexFrom) {
             hasBackwardLink = true;
             break;
           }
         }
 
         if (!hasBackwardLink) {
-          faceVertLinkIndices[vertIndexTo * 6 + faceVertLinkCounts[vertIndexTo]] = vertIndexFrom;
-          faceVertLinkCounts[vertIndexTo]++;
+          vertLinkIndices[vertIndexTo * 6 + vertLinkCounts[vertIndexTo]] = vertIndexFrom;
+          vertLinkCounts[vertIndexTo]++;
         }
       }
     }
@@ -114,8 +114,8 @@ class VertexLinker {
 
         for (let v = 0; v < 4; v++) {
           const vertFrom = face.vertices[v];
-          if (vertFrom.links.length !== faceVertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]]) {
-            assertAlmostEqual(vertFrom.links.length, faceVertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]]);
+          if (vertFrom.links.length !== vertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]]) {
+            assertAlmostEqual(vertFrom.links.length, vertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]]);
           }
         }
       }
@@ -142,11 +142,11 @@ class VertexLinker {
         const vertIndexTo = faceVertIndices[faceIndex * 4 + (v + 1) % 4];
 
         const nrOfClampedLinks = faceNrOfClampedLinks[vertIndex];
-        const linkCount = faceVertLinkCounts[vertIndex];
+        const linkCount = vertLinkCounts[vertIndex];
 
         if (nrOfClampedLinks === linkCount) {
           vertFullyClamped.set(vertIndex, 1);
-          faceVertLinkCounts[vertIndex] = 0; // Leave link vert indices dangling.
+          vertLinkCounts[vertIndex] = 0; // Leave link vert indices dangling.
         }
       }
     }
@@ -166,32 +166,32 @@ class VertexLinker {
         if (vertFullyClamped.get(vertIndexFrom) === 1) {
           let hasForwardLink = false;
 
-          for (let l = 0; l < faceVertLinkCounts[vertIndexFrom]; l++) {
-            if (faceVertLinkIndices[vertIndexFrom * 6 + l] === vertIndexTo) {
+          for (let l = 0; l < vertLinkCounts[vertIndexFrom]; l++) {
+            if (vertLinkIndices[vertIndexFrom * 6 + l] === vertIndexTo) {
               hasForwardLink = true;
               break;
             }
           }
 
           if (!hasForwardLink) {
-            faceVertLinkIndices[vertIndexFrom * 6 + faceVertLinkCounts[vertIndexFrom]] = vertIndexTo;
-            faceVertLinkCounts[vertIndexFrom]++;
+            vertLinkIndices[vertIndexFrom * 6 + vertLinkCounts[vertIndexFrom]] = vertIndexTo;
+            vertLinkCounts[vertIndexFrom]++;
           }
         }
 
         if (vertFullyClamped.get(vertIndexTo) === 1) {
           let hasBackwardLink = false;
 
-          for (let l = 0; l < faceVertLinkCounts[vertIndexTo]; l++) {
-            if (faceVertLinkIndices[vertIndexTo * 6 + l] === vertIndexFrom) {
+          for (let l = 0; l < vertLinkCounts[vertIndexTo]; l++) {
+            if (vertLinkIndices[vertIndexTo * 6 + l] === vertIndexFrom) {
               hasBackwardLink = true;
               break;
             }
           }
 
           if (!hasBackwardLink) {
-            faceVertLinkIndices[vertIndexTo * 6 + faceVertLinkCounts[vertIndexTo]] = vertIndexFrom;
-            faceVertLinkCounts[vertIndexTo]++;
+            vertLinkIndices[vertIndexTo * 6 + vertLinkCounts[vertIndexTo]] = vertIndexFrom;
+            vertLinkCounts[vertIndexTo]++;
           }
         }
       }
