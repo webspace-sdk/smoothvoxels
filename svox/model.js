@@ -106,7 +106,10 @@ class Model {
     this.faceEquidistant = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
     this.faceNameIndices = new Uint8Array(MAX_FACES);
     this.faceMaterials = new Uint8Array(MAX_FACES);
+    this.faceNrOfClampedLinks = new Uint8Array(MAX_FACES);
     this.faceVertIndices = new Uint32Array(MAX_VERTS);
+    this.faceVertLinkCounts = new Uint8Array(MAX_VERTS);
+    this.faceVertLinkIndices = new Uint32Array(MAX_VERTS * 6);
 
     this.faceVertX = new Float32Array(MAX_VERTS);
     this.faceVertY = new Float32Array(MAX_VERTS);
@@ -129,7 +132,7 @@ class Model {
     this.faceVertClampedX = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
     this.faceVertClampedY = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
     this.faceVertClampedZ = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.faceVertLinkIndices = new Uint32Array(MAX_VERTS * 6);
+    this.faceVertFullyClamped = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
     this.faceVertDeformCount = new Uint8Array(MAX_VERTS);
     this.faceVertDeformDamping = new Float32Array(MAX_VERTS);
     this.faceVertDeformStrength = new Float32Array(MAX_VERTS);
@@ -138,7 +141,7 @@ class Model {
     this.faceVertScatter = new Float32Array(MAX_VERTS);
 
     // Need to zero on reset:
-    // face vert link indices
+    // face vert link counts
   }
    
   _setVertex(x, y, z, vertex) {
@@ -276,7 +279,7 @@ class Model {
 
     //UVAssigner.assignUVs(this);
     
-    Simplifier.simplify(this);
+    //Simplifier.simplify(this);
     
     //FaceAligner.alignFaceDiagonals(this);
   }

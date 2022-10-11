@@ -1,7 +1,7 @@
 class VertexLinker {
   
   static linkVertices(model, face, faceIndex) {
-    const { faceClamped, faceVertIndices, faceVertLinkIndices } = model;
+    const { faceClamped, faceNrOfClampedLinks, faceVertIndices, faceVertLinkIndices, faceVertLinkCounts } = model;
 
     const clamped = faceClamped.get(faceIndex);
 
@@ -14,12 +14,21 @@ class VertexLinker {
       for (let v = 0; v < 4; v++) {
         const vertIndex = faceVertIndices[faceIndex * 4 + v];
 
-        for (let i = 0; i < 6; i++) {
-          if (faceVertLinkIndices[vertIndex * 6 + i] === 0) {
-            faceVertLinkIndices[vertIndex * 6 + i] = vertIndex + 1; // Add one b/c zero is empty
+        let hasSelfLink = false;
+
+        for (let l = 0; l < faceVertLinkCounts[vertIndex]; l++) {
+          if (faceVertLinkIndices[vertIndex * 4 + l] === vertIndex) {
+            hasSelfLink = true;
             break;
           }
         }
+
+        if (!hasSelfLink) {
+          faceVertLinkIndices[vertIndex * 4 + faceVertLinkCounts[vertIndex]] = vertIndex;
+          faceVertLinkCounts[vertIndex]++;
+        }
+
+        faceVertLinkCounts[vertIndex]++;
       }
     } else {
       // Link each vertex with its neighbor and back (so not diagonally)
@@ -27,18 +36,32 @@ class VertexLinker {
         const vertIndexFrom = faceVertIndices[faceIndex * 4 + v];
         const vertIndexTo = faceVertIndices[faceIndex * 4 + (v + 1) % 4];
 
-        for (let i = 0; i < 6; i++) {
-          if (faceVertLinkIndices[vertIndexFrom * 6 + i] === 0) {
-            faceVertLinkIndices[vertIndexFrom * 6 + i] = vertIndexTo + 1; // Add one b/c zero is empty
+        let hasForwardLink = false;
+
+        for (let l = 0; l < faceVertLinkCounts[vertIndexFrom]; l++) {
+          if (faceVertLinkIndices[vertIndexFrom * 4 + l] === vertIndexTo) {
+            hasForwardLink = true;
             break;
           }
         }
 
-        for (let i = 0; i < 6; i++) {
-          if (faceVertLinkIndices[vertIndexTo * 6 + i] === 0) {
-            faceVertLinkIndices[vertIndexTo * 6 + i] = vertIndexFrom + 1; // Add one b/c zero is empty
+        if (!hasForwardLink) {
+          faceVertLinkIndices[vertIndexFrom * 4 + faceVertLinkCounts[vertIndexFrom]] = vertIndexTo;
+          faceVertLinkCounts[vertIndexFrom]++;
+        }
+
+        let hasBackwardLink = false;
+
+        for (let l = 0; l < faceVertLinkCounts[vertIndexTo]; l++) {
+          if (faceVertLinkIndices[vertIndexTo * 4 + l] === vertIndexFrom) {
+            hasBackwardLink = true;
             break;
           }
+        }
+
+        if (!hasBackwardLink) {
+          faceVertLinkIndices[vertIndexTo * 4 + faceVertLinkCounts[vertIndexTo]] = vertIndexFrom;
+          faceVertLinkCounts[vertIndexTo]++;
         }
       }
     }
@@ -77,7 +100,7 @@ class VertexLinker {
   static fixClampedLinks(model) {
     const voxels = model.voxels;
 
-    const { faceNameIndices, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertX, faceVertY, faceVertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials } = model;
+    const { faceNameIndices, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertX, faceVertY, faceVertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, faceNrOfClampedLinks, faceVertFullyClamped } = model;
 
     // Clamped sides are ignored when deforming so the clamped side does not pull in the other sodes.
     // This results in the other sides ending up nice and peripendicular to the clamped sides.
@@ -88,6 +111,65 @@ class VertexLinker {
     for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
       const clamped = faceClamped.get(faceIndex);
       if (clamped === 0) return;
+
+      for (let v = 0; v < 4; v++) {
+        const vertIndexFrom = faceVertIndices[faceIndex * 4 + v];
+        const vertIndexTo = faceVertIndices[faceIndex * 4 + (v + 1) % 4];
+
+        const nrOfClampedLinks = faceNrOfClampedLinks[vertIndex];
+        const linkCount = faceVertLinkCounts[vertIndex];
+
+        if (nrOfClampedLinks === linkCount) {
+          faceVertFullyClamped.set(vertIndex, 1);
+          faceVertLinkCounts[vertIndex] = 0; // Leave link vert indices dangling.
+        }
+      }
+    }
+
+    // For these fully clamped vertices add links for normal deforming
+    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
+      const clamped = faceClamped.get(faceIndex);
+      if (clamped === 0) return;
+
+      for (let v = 0; v < 4; v++) {
+        const vertIndex = faceVertIndices[faceIndex * 4 + v];
+        if (faceVertFullyClamped.get(vertIndex) === 1) continue;
+
+        const vertIndexFrom = faceVertIndices[faceIndex * 4 + v];
+        const vertIndexTo = faceVertIndices[faceIndex * 4 + (v + 1) % 4];
+
+        if (faceVertFullyClamped.get(vertIndexFrom) === 1) {
+          let hasForwardLink = false;
+
+          for (let l = 0; l < faceVertLinkCounts[vertIndexFrom]; l++) {
+            if (faceVertLinkIndices[vertIndexFrom * 4 + l] === vertIndexTo) {
+              hasForwardLink = true;
+              break;
+            }
+          }
+
+          if (!hasForwardLink) {
+            faceVertLinkIndices[vertIndexFrom * 4 + faceVertLinkCounts[vertIndexFrom]] = vertIndexTo;
+            faceVertLinkCounts[vertIndexFrom]++;
+          }
+        }
+
+        if (faceVertFullyClamped.get(vertIndexTo) === 1) {
+          let hasBackwardLink = false;
+
+          for (let l = 0; l < faceVertLinkCounts[vertIndexTo]; l++) {
+            if (faceVertLinkIndices[vertIndexTo * 4 + l] === vertIndexFrom) {
+              hasBackwardLink = true;
+              break;
+            }
+          }
+
+          if (!hasBackwardLink) {
+            faceVertLinkIndices[vertIndexTo * 4 + faceVertLinkCounts[vertIndexTo]] = vertIndexFrom;
+            faceVertLinkCounts[vertIndexTo]++;
+          }
+        }
+      }
     }
 
     // Clamped sides are ignored when deforming so the clamped side does not pull in the other sodes.
