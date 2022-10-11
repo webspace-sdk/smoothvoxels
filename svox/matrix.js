@@ -67,7 +67,7 @@ class Matrix {
     v.z = z;
   }
 
-  transformVectorInline(xs, ys, zx, index) {
+  transformVectorInline(xs, ys, zs, index) {
     const vx = xs[index];
     const vy = ys[index];
     const vz = zs[index];

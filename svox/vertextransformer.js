@@ -1,3 +1,12 @@
+function almostEqual(x, y) {
+  return Math.abs(x - y) < 0.0001;
+}
+
+function assertAlmostEqual(x, y) {
+  if (!almostEqual(x, y))
+    throw new Error("Assertion failed: " + x + " != " + y);
+}
+
 class VertexTransformer {
          
   static transformVertices(model) {
@@ -35,19 +44,20 @@ class VertexTransformer {
           const ys = normalYs[normalType];
           const zs = normalZs[normalType];
 
-          normalTransform.transformPointInline(xs, ys, zs, faceIndex * 4 + normalIndex);
+          const idx = faceIndex * 4 + normalIndex;
+          normalTransform.transformVectorInline(xs, ys, zs, idx);
 
           // Normalize
-          const normalX = xs[faceIndex * 4 + normalIndex];
-          const normalY = ys[faceIndex * 4 + normalIndex];
-          const normalZ = zs[faceIndex * 4 + normalIndex];
+          const normalX = xs[idx];
+          const normalY = ys[idx];
+          const normalZ = zs[idx];
 
           let normalLength = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
 
           if (normalLength > 0) {
-            xs[faceIndex * 4 + normalIndex] = normalX / normalLength;
-            ys[faceIndex * 4 + normalIndex] = normalY / normalLength;
-            zs[faceIndex * 4 + normalIndex] = normalZ / normalLength;
+            xs[idx] = normalX / normalLength;
+            ys[idx] = normalY / normalLength;
+            zs[idx] = normalZ / normalLength;
           }
         }
       }
@@ -84,5 +94,4 @@ class VertexTransformer {
       }
     }, this, true);
   }
-  
 }
