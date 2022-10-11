@@ -336,25 +336,25 @@ class SvoxMeshGenerator {
     let uv0, uv1, uv2, uv3;
     let id = '';
 
-    const { faceVertIndices, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceVertX, faceVertY, faceVertZ } = model;
+    const { faceVertIndices, faceVertNormalX, faceVertNormalY, faceVertNormalZ, vertX, vertY, vertZ } = model;
 
     const vert0Index = faceVertIndices[faceIndex * 4];
     const vert1Index = faceVertIndices[faceIndex * 4 + 1];
     const vert2Index = faceVertIndices[faceIndex * 4 + 2];
     const vert3Index = faceVertIndices[faceIndex * 4 + 3];
 
-    let vert0X = faceVertX[vert0Index];
-    let vert0Y = faceVertY[vert0Index];
-    let vert0Z = faceVertZ[vert0Index];
-    const vert1X = faceVertX[vert1Index];
-    const vert1Y = faceVertY[vert1Index];
-    const vert1Z = faceVertZ[vert1Index];
-    let vert2X = faceVertX[vert2Index];
-    let vert2Y = faceVertY[vert2Index];
-    let vert2Z = faceVertZ[vert2Index];
-    const vert3X = faceVertX[vert3Index];
-    const vert3Y = faceVertY[vert3Index];
-    const vert3Z = faceVertZ[vert3Index];
+    let vert0X = vertX[vert0Index];
+    let vert0Y = vertY[vert0Index];
+    let vert0Z = vertZ[vert0Index];
+    const vert1X = vertX[vert1Index];
+    const vert1Y = vertY[vert1Index];
+    const vert1Z = vertZ[vert1Index];
+    let vert2X = vertX[vert2Index];
+    let vert2Y = vertY[vert2Index];
+    let vert2Z = vertZ[vert2Index];
+    const vert3X = vertX[vert3Index];
+    const vert3Y = vertY[vert3Index];
+    const vert3Z = vertZ[vert3Index];
 
     let norm0X = faceVertNormalX[faceIndex * 4];
     let norm0Y = faceVertNormalY[faceIndex * 4];

@@ -4,7 +4,7 @@ class NormalsCalculator {
     let tile = model.tile;
     let voxels = model.voxels;
 
-    const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertX, faceVertY, faceVertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertSmoothNormalX, vertSmoothNormalY, vertSmoothNormalZ, vertBothNormalX, vertBothNormalY, vertBothNormalZ } = model;
+    const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, vertX, vertY, vertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertSmoothNormalX, vertSmoothNormalY, vertSmoothNormalZ, vertBothNormalX, vertBothNormalY, vertBothNormalZ } = model;
 
     for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
       // Compute face vertex normals
@@ -22,22 +22,22 @@ class NormalsCalculator {
       const vert3Index = faceVertIndices[faceIndex * 4 + 2];
       const vert4Index = faceVertIndices[faceIndex * 4 + 3];
 
-      const vmidX = (faceVertX[vert1Index] + faceVertX[vert2Index] + faceVertX[vert3Index] + faceVertX[vert4Index]) / 4;
-      const vmidY = (faceVertY[vert1Index] + faceVertY[vert2Index] + faceVertY[vert3Index] + faceVertY[vert4Index]) / 4;
-      const vmidZ = (faceVertZ[vert1Index] + faceVertZ[vert2Index] + faceVertZ[vert3Index] + faceVertZ[vert4Index]) / 4;
+      const vmidX = (vertX[vert1Index] + vertX[vert2Index] + vertX[vert3Index] + vertX[vert4Index]) / 4;
+      const vmidY = (vertY[vert1Index] + vertY[vert2Index] + vertY[vert3Index] + vertY[vert4Index]) / 4;
+      const vmidZ = (vertZ[vert1Index] + vertZ[vert2Index] + vertZ[vert3Index] + vertZ[vert4Index]) / 4;
 
       for (let v = 0; v < 4; v++) {
         const vertIndex = faceVertIndices[faceIndex * 4 + v];
         const prevVertIndex = faceVertIndices[faceIndex * 4 + ((v + 3) % 4)];
 
-        const vertX = faceVertX[vertIndex];
-        const vertXPrev = faceVertX[prevVertIndex];
+        const vX = vertX[vertIndex];
+        const vXPrev = vertX[prevVertIndex];
 
-        const vertY = faceVertY[vertIndex];
-        const vertYPrev = faceVertY[prevVertIndex];
+        const vY = vertY[vertIndex];
+        const vYPrev = vertY[prevVertIndex];
 
-        const vertZ = faceVertZ[vertIndex];
-        const vertZPrev = faceVertZ[prevVertIndex];
+        const vZ = vertZ[vertIndex];
+        const vZPrev = vertZ[prevVertIndex];
 
         let smoothX = vertSmoothNormalX[vertIndex];
         let smoothY = vertSmoothNormalY[vertIndex];
@@ -48,14 +48,14 @@ class NormalsCalculator {
         let bothZ = vertBothNormalZ[vertIndex];
 
         // e1 is diff between two verts
-        let e1X = vertXPrev - vertX;
-        let e1Y = vertYPrev - vertY;
-        let e1Z = vertZPrev - vertZ;
+        let e1X = vXPrev - vX;
+        let e1Y = vYPrev - vY;
+        let e1Z = vZPrev - vZ;
 
         // e2 is diff between vert and mid
-        let e2X = vmidX - vertX;
-        let e2Y = vmidY - vertY;
-        let e2Z = vmidZ - vertZ;
+        let e2X = vmidX - vX;
+        let e2Y = vmidY - vY;
+        let e2Z = vmidZ - vZ;
 
         // Normalize e1 + e2
         let e1l = Math.sqrt(e1X * e1X + e1Y * e1Y + e1Z * e1Z);
@@ -85,13 +85,13 @@ class NormalsCalculator {
         // In case of tiling, make normals peripendicular on edges
         if (tile) {
           if (((tile.nx && faceNameIndex === 0) || (tile.px && faceNameIndex === 1)) &&
-              (vertY < voxMinYBuf || vertY > voxMaxYBuf ||
-               vertZ < voxMinZBuf || vertZ > voxMaxZBuf)) { 
+              (vY < voxMinYBuf || vY > voxMaxYBuf ||
+               vZ < voxMinZBuf || vZ > voxMaxZBuf)) { 
             normalY = 0; normalZ = 0 
           };
           if (((tile.ny && faceNameIndex === 2) || (tile.py && faceNameIndex === 3)) &&
-              (vertX < voxMinXBuf || vertX > voxMaxXBuf ||
-               vertZ < voxMinZBuf || vertZ > voxMaxZBuf)) { 
+              (vX < voxMinXBuf || vX > voxMaxXBuf ||
+               vZ < voxMinZBuf || vZ > voxMaxZBuf)) { 
             normalX = 0; normalZ = 0 
           };
           if (((tile.nz && faceNameIndex === 4) || (tile.pz && faceNameIndex === 5)) &&

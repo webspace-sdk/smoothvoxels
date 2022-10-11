@@ -125,7 +125,7 @@ class VertexLinker {
   static fixClampedLinks(model) {
     const voxels = model.voxels;
 
-    const { faceNameIndices, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertX, faceVertY, faceVertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, faceNrOfClampedLinks, faceVertFullyClamped } = model;
+    const { faceNameIndices, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, faceNrOfClampedLinks, vertFullyClamped } = model;
 
     // Clamped sides are ignored when deforming so the clamped side does not pull in the other sodes.
     // This results in the other sides ending up nice and peripendicular to the clamped sides.
@@ -145,7 +145,7 @@ class VertexLinker {
         const linkCount = faceVertLinkCounts[vertIndex];
 
         if (nrOfClampedLinks === linkCount) {
-          faceVertFullyClamped.set(vertIndex, 1);
+          vertFullyClamped.set(vertIndex, 1);
           faceVertLinkCounts[vertIndex] = 0; // Leave link vert indices dangling.
         }
       }
@@ -158,12 +158,12 @@ class VertexLinker {
 
       for (let v = 0; v < 4; v++) {
         const vertIndex = faceVertIndices[faceIndex * 4 + v];
-        if (faceVertFullyClamped.get(vertIndex) === 1) continue;
+        if (vertFullyClamped.get(vertIndex) === 1) continue;
 
         const vertIndexFrom = faceVertIndices[faceIndex * 4 + v];
         const vertIndexTo = faceVertIndices[faceIndex * 4 + (v + 1) % 4];
 
-        if (faceVertFullyClamped.get(vertIndexFrom) === 1) {
+        if (vertFullyClamped.get(vertIndexFrom) === 1) {
           let hasForwardLink = false;
 
           for (let l = 0; l < faceVertLinkCounts[vertIndexFrom]; l++) {
@@ -179,7 +179,7 @@ class VertexLinker {
           }
         }
 
-        if (faceVertFullyClamped.get(vertIndexTo) === 1) {
+        if (vertFullyClamped.get(vertIndexTo) === 1) {
           let hasBackwardLink = false;
 
           for (let l = 0; l < faceVertLinkCounts[vertIndexTo]; l++) {

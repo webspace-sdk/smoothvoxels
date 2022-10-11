@@ -100,6 +100,36 @@ class Model {
     const MAX_FACES = MAX_VERTS / 4;
     const MAX_FACE_BITS = Math.floor(MAX_FACES / 8);
 
+    this.vertX = new Float32Array(MAX_VERTS);
+    this.vertY = new Float32Array(MAX_VERTS);
+    this.vertZ = new Float32Array(MAX_VERTS);
+
+    // Verts can have up to 5 colors, given it will belong to at most 5 visible faces (a corner on a flat part)
+    this.vertColorR = new Uint8Array(MAX_VERTS * 5);
+    this.vertColorG = new Uint8Array(MAX_VERTS * 5);
+    this.vertColorB = new Uint8Array(MAX_VERTS * 5);
+    this.vertColorCount = new Uint8Array(MAX_VERTS);
+
+    this.vertSmoothNormalX = new Float32Array(MAX_VERTS);
+    this.vertSmoothNormalY = new Float32Array(MAX_VERTS);
+    this.vertSmoothNormalZ = new Float32Array(MAX_VERTS);
+    this.vertBothNormalX = new Float32Array(MAX_VERTS);
+    this.vertBothNormalY = new Float32Array(MAX_VERTS);
+    this.vertBothNormalZ = new Float32Array(MAX_VERTS);
+    this.vertFlattenedX = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.vertFlattenedY = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.vertFlattenedZ = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.vertClampedX = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.vertClampedY = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.vertClampedZ = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.vertFullyClamped = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+    this.vertDeformCount = new Uint8Array(MAX_VERTS);
+    this.vertDeformDamping = new Float32Array(MAX_VERTS);
+    this.vertDeformStrength = new Float32Array(MAX_VERTS);
+    this.vertWarpAmplitude = new Float32Array(MAX_VERTS);
+    this.vertWarpFrequency = new Float32Array(MAX_VERTS);
+    this.vertScatter = new Float32Array(MAX_VERTS);
+
     this.faceFlattened = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
     this.faceClamped = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
     this.faceSmooth = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
@@ -109,45 +139,24 @@ class Model {
     this.faceNrOfClampedLinks = new Uint8Array(MAX_FACES);
     this.faceVertIndices = new Uint32Array(MAX_VERTS);
     this.faceVertLinkCounts = new Uint8Array(MAX_VERTS);
-    this.faceVertLinkIndices = new Uint32Array(MAX_VERTS * 6);
 
-    this.faceVertX = new Float32Array(MAX_VERTS);
-    this.faceVertY = new Float32Array(MAX_VERTS);
-    this.faceVertZ = new Float32Array(MAX_VERTS);
+    // A vert can be linked to up to 6 other vers
+    this.faceVertLinkIndices = new Uint32Array(MAX_VERTS * 6);
     this.faceVertNormalX = new Float32Array(MAX_VERTS);
     this.faceVertNormalY = new Float32Array(MAX_VERTS);
     this.faceVertNormalZ = new Float32Array(MAX_VERTS);
     this.faceVertFlatNormalX = new Float32Array(MAX_VERTS);
     this.faceVertFlatNormalY = new Float32Array(MAX_VERTS);
     this.faceVertFlatNormalZ = new Float32Array(MAX_VERTS);
-    this.vertSmoothNormalX = new Float32Array(MAX_VERTS);
-    this.vertSmoothNormalY = new Float32Array(MAX_VERTS);
-    this.vertSmoothNormalZ = new Float32Array(MAX_VERTS);
     this.faceVertSmoothNormalX = new Float32Array(MAX_VERTS);
     this.faceVertSmoothNormalY = new Float32Array(MAX_VERTS);
     this.faceVertSmoothNormalZ = new Float32Array(MAX_VERTS);
-    this.vertBothNormalX = new Float32Array(MAX_VERTS);
-    this.vertBothNormalY = new Float32Array(MAX_VERTS);
-    this.vertBothNormalZ = new Float32Array(MAX_VERTS);
     this.faceVertBothNormalX = new Float32Array(MAX_VERTS);
     this.faceVertBothNormalY = new Float32Array(MAX_VERTS);
     this.faceVertBothNormalZ = new Float32Array(MAX_VERTS);
-    this.faceVertFlattenedX = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.faceVertFlattenedY = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.faceVertFlattenedZ = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.faceVertClampedX = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.faceVertClampedY = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.faceVertClampedZ = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.faceVertFullyClamped = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.faceVertDeformCount = new Uint8Array(MAX_VERTS);
-    this.faceVertDeformDamping = new Float32Array(MAX_VERTS);
-    this.faceVertDeformStrength = new Float32Array(MAX_VERTS);
-    this.faceVertWarpAmplitude = new Float32Array(MAX_VERTS);
-    this.faceVertWarpFrequency = new Float32Array(MAX_VERTS);
-    this.faceVertScatter = new Float32Array(MAX_VERTS);
 
     // Need to zero on reset:
-    // face vert link counts
+    // face vert link counts, color counts
   }
    
   _setVertex(x, y, z, vertex) {
@@ -526,65 +535,69 @@ class Model {
 
       // Favour less deformation over more deformation
       if (!material.deform) {
-        this.faceVertDeformCount[vertexIndex] = 0;
-        this.faceVertDeformDamping[vertexIndex] = 0;
-        this.faceVertDeformStrength[vertexIndex] = 0;
+        this.vertDeformCount[vertexIndex] = 0;
+        this.vertDeformDamping[vertexIndex] = 0;
+        this.vertDeformStrength[vertexIndex] = 0;
       }
-      else if (this.faceVertDeformCount[vertexIndex] !== 0 &&
+      else if (this.vertDeformCount[vertexIndex] !== 0 &&
                (this._getDeformIntegral(material.deform) < this._getDeformIntegralAtVertex(vertexIndex))) {
-        this.faceVertDeformStrength[vertexIndex] = material.deform.strength;
-        this.faceVertDeformDamping[vertexIndex] = material.deform.damping;
-        this.faceVertDeformCount[vertexIndex] = material.deform.count;
+        this.vertDeformStrength[vertexIndex] = material.deform.strength;
+        this.vertDeformDamping[vertexIndex] = material.deform.damping;
+        this.vertDeformCount[vertexIndex] = material.deform.count;
       }
 
       // Favour less / less requent warp over more warp
       if (!material.warp) {
-        this.faceVertWarpAmplitude[vertexIndex] = 0;
-        this.faceVertWarpFrequency[vertexIndex] = 0;
+        this.vertWarpAmplitude[vertexIndex] = 0;
+        this.vertWarpFrequency[vertexIndex] = 0;
       }
-      else if (this.faceVertWarpAmplitude[vertexIndex] !== 0 &&
-               ((material.warp.amplitude < this.faceVertWarpAmplitude[vertexIndex]) ||
-                (material.warp.amplitude === this.faceVertWarpAmplitude[vertexIndex] && material.warp.frequency > this.faceVertWarpFrequency[vertexIndex]))) {
-        this.faceVertWarpAmplitude[vertexIndex] = material.warp.amplitude;
-        this.faceVertWarpFrequency[vertexIndex] = material.warp.frequency;
+      else if (this.vertWarpAmplitude[vertexIndex] !== 0 &&
+               ((material.warp.amplitude < this.vertWarpAmplitude[vertexIndex]) ||
+                (material.warp.amplitude === this.vertWarpAmplitude[vertexIndex] && material.warp.frequency > this.vertWarpFrequency[vertexIndex]))) {
+        this.vertWarpAmplitude[vertexIndex] = material.warp.amplitude;
+        this.vertWarpFrequency[vertexIndex] = material.warp.frequency;
       }
 
       // Favour less scatter over more scatter
       if (!material.scatter)
-        this.faceVertScatter[vertexIndex] = 0;
+        this.vertScatter[vertexIndex] = 0;
       else if (vertex.scatter &&
-               Math.abs(material.scatter) < Math.abs(this.faceVertScatter[vertexIndex].scatter)) {
-        this.faceVertScatter[vertexIndex] = material.scatter;
+               Math.abs(material.scatter) < Math.abs(this.vertScatter[vertexIndex].scatter)) {
+        this.vertScatter[vertexIndex] = material.scatter;
       }
     } else {
       vertexIndex = this.vertCount;
       vertIndexLookup.set(key, vertexIndex);
 
-      this.faceVertX[vertexIndex] = x;
-      this.faceVertY[vertexIndex] = y;
-      this.faceVertZ[vertexIndex] = z;
+      this.vertX[vertexIndex] = x;
+      this.vertY[vertexIndex] = y;
+      this.vertZ[vertexIndex] = z;
 
       if (material.deform) {
-        this.faceVertDeformDamping[vertexIndex] = material.deform.damping;
-        this.faceVertDeformCount[vertexIndex] = material.deform.count;
-        this.faceVertDeformStrength[vertexIndex] = material.deform.strength;
+        this.vertDeformDamping[vertexIndex] = material.deform.damping;
+        this.vertDeformCount[vertexIndex] = material.deform.count;
+        this.vertDeformStrength[vertexIndex] = material.deform.strength;
       }
 
       if (material.warp) {
-        this.faceVertWarpAmplitude[vertexIndex] = material.warp.amplitude;
-        this.faceVertWarpFrequency[vertexIndex] = material.warp.frequency;
+        this.vertWarpAmplitude[vertexIndex] = material.warp.amplitude;
+        this.vertWarpFrequency[vertexIndex] = material.warp.frequency;
       }
 
       if (material.scatter) {
-        this.faceVertScatter[vertexIndex] = material.scatter;
+        this.vertScatter[vertexIndex] = material.scatter;
       }
-
-      // TODO color
     }
 
     // This will || the planar values
-    this._setIsVertexPlanar(voxel, x, y, z, material._flatten, this._flatten, this.faceVertFlattenedX, this.faceVertFlattenedY, this.faceVertFlattenedZ, vertexIndex);
-    this._setIsVertexPlanar(voxel, x, y, z, material._clamp, this._clamp, this.faceVertClampedX, this.faceVertClampedY, this.faceVertClampedZ, vertexIndex);
+    this._setIsVertexPlanar(voxel, x, y, z, material._flatten, this._flatten, this.vertFlattenedX, this.vertFlattenedY, this.vertFlattenedZ, vertexIndex);
+    this._setIsVertexPlanar(voxel, x, y, z, material._clamp, this._clamp, this.vertClampedX, this.vertClampedY, this.vertClampedZ, vertexIndex);
+
+    const vertColorIndex = this.vertColorCount[vertexIndex];
+    this.vertColorR[vertexIndex] = voxel.color.ri;
+    this.vertColorG[vertexIndex] = voxel.color.gi;
+    this.vertColorB[vertexIndex] = voxel.color.bi;
+    this.vertColorCount[vertexIndex] = vertColorIndex + 1;
 
     this.vertCount++;
 
@@ -599,9 +612,9 @@ class Model {
   }
 
   _getDeformIntegralAtVertex(vertexIndex) {
-    const damping = this.faceVertDeformDamping[vertexIndex];
-    const count = this.faceVertDeformCount[vertexIndex];
-    const strength = this.faceVertDeformStrength[vertexIndex];
+    const damping = this.vertDeformDamping[vertexIndex];
+    const count = this.vertDeformCount[vertexIndex];
+    const strength = this.vertDeformStrength[vertexIndex];
 
     // Returns the total amount of deforming done by caluclating the integral
     return (damping === 1)

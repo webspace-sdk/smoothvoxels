@@ -29,7 +29,7 @@ class VertexTransformer {
 
     // Now move all vertices to their new position and transform the average normals
     for (let vertIndex = 0; vertIndex < model.vertCount; vertIndex++) {
-      vertexTransform.transformPointInline(model.faceVertX, model.faceVertY, model.faceVertZ, vertIndex);
+      vertexTransform.transformPointInline(model.vertX, model.vertY, model.vertZ, vertIndex);
     }
 
     const normalXs = [model.faceVertNormalX, model.faceVertFlatNormalX, model.faceVertSmoothNormalX, model.faceVertBothNormalX];
