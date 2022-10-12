@@ -1,3 +1,5 @@
+const EPS = 0.0001;
+
 class AOCalculator {
   
   static calculateAmbientOcclusion(model) {
@@ -280,11 +282,11 @@ class AOCalculator {
         return false;
     if (Math.abs(cz) > ez + adz)
         return false;
-    if (Math.abs(dy * cz - dz * cy) > ey * adz + ez * ady + Number.EPSILON)
+    if (Math.abs(dy * cz - dz * cy) > ey * adz + ez * ady + EPS)
         return false;
-    if (Math.abs(dz * cx - dx * cz) > ez * adx + ex * adz + Number.EPSILON)
+    if (Math.abs(dz * cx - dx * cz) > ez * adx + ex * adz + EPS)
         return false;
-    if (Math.abs(dx * cy - dy * cx) > ex * ady + ey * adx + Number.EPSILON) 
+    if (Math.abs(dx * cy - dy * cx) > ex * ady + ey * adx + EPS) 
        return false;        
     
     return true;
@@ -332,7 +334,7 @@ class AOCalculator {
     
     // a = dotProduct(edge1, h)
     let a = edge1x * h0 + edge1y * h1 + edge1z * h2;
-    if (a < Number.EPSILON)
+    if (a < EPS)
         return null;    // This ray is parallel to this triangle.
     
     let f = 1.0/a;
@@ -358,7 +360,7 @@ class AOCalculator {
     // At this stage we can compute t to find out where the intersection point is on the line.
     // t = f * dotProduct(edge2, q)
     let t = f * (edge2x * q0 + edge2y * q1 + edge2z * q2);
-    if (t <= Number.EPSILON) 
+    if (t <= EPS) 
         return null;  // This means that there is a line intersection but not a ray intersection.
       
     // Ray intersection is at:

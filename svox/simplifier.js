@@ -1,3 +1,5 @@
+const EPS = 0.0001;
+
 class Simplifier {
   
   // Combine all faces which are coplanar, have the same normals, colors, etc.
@@ -58,37 +60,37 @@ class Simplifier {
     const { faceMaterials, faceCulled, faceNameIndices, vertX, vertY, vertZ } = model;
 
     // Combine nx, px, nz and pz faces vertical up
-    //for (let i = model.voxelXZYFaceIndices.length - model.faceCount ; i < model.voxelXZYFaceIndices.length - 1; i++) {
-    //  const key = model.voxelXZYFaceIndices[i]
-    //  const faceIndex = Number(key) & 0xFFFFFFFF;
-    //  if (faceCulled.get(faceIndex)) continue;
+    for (let i = model.voxelXZYFaceIndices.length - model.faceCount ; i < model.voxelXZYFaceIndices.length; i++) {
+      const key = model.voxelXZYFaceIndices[i]
+      const faceIndex = Number(key) & 0xFFFFFFFF;
+      if (faceCulled.get(faceIndex)) continue;
 
-    //  const x = Number(key >> 48n) & 0xFF;
-    //  const z = Number(key >> 40n) & 0xFF;
-    //  const y = Number(key >> 32n) & 0xFF;
-    //  const faceNameIndex = faceNameIndices[faceIndex];
-    //  const material = materials[faceMaterials[faceIndex]];
+      const x = Number(key >> 48n) & 0xFF;
+      const z = Number(key >> 40n) & 0xFF;
+      const y = Number(key >> 32n) & 0xFF;
+      const faceNameIndex = faceNameIndices[faceIndex];
+      const material = materials[faceMaterials[faceIndex]];
 
-    //  switch (faceNameIndex) {
-    //    case 0: // nx
-    //        this._mergeFacesInline(material, model, contexti1, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
-    //        break;
-    //    case 1: // px
-    //        this._mergeFacesInline(material, model, contexti2, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
-    //        break;
-    //    case 4: // nz
-    //        this._mergeFacesInline(material, model, contexti3, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
-    //        break;
-    //    case 5: // pz
-    //        this._mergeFacesInline(material, model, contexti4, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
-    //        break;
-    //  }
-    //}
+      switch (faceNameIndex) {
+        case 0: // nx
+            this._mergeFacesInline(material, model, contexti1, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            break;
+        case 1: // px
+            this._mergeFacesInline(material, model, contexti2, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            break;
+        case 4: // nz
+            this._mergeFacesInline(material, model, contexti3, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            break;
+        case 5: // pz
+            this._mergeFacesInline(material, model, contexti4, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            break;
+      }
+    }
 
     clearContexts();
 
     // Combine nx, px, ny and py faces from back to front
-    for (let i = model.voxelXYZFaceIndices.length - model.faceCount ; i < model.voxelXYZFaceIndices.length - 1; i++) {
+    for (let i = model.voxelXYZFaceIndices.length - model.faceCount ; i < model.voxelXYZFaceIndices.length; i++) {
       const key = model.voxelXYZFaceIndices[i]
       const faceIndex = Number(key) & 0xFFFFFFFF;
       if (faceCulled.get(faceIndex)) continue;
@@ -117,35 +119,35 @@ class Simplifier {
 
     clearContexts();
 
-    //// Combine ny, py, nz and pz faces from left to right
-    //for (let i = model.voxelYZXFaceIndices.length - model.faceCount ; i < model.voxelYZXFaceIndices.length - 1; i++) {
-    //  const key = model.voxelYZXFaceIndices[i]
-    //  const faceIndex = Number(key) & 0xFFFFFFFF;
-    //  if (faceCulled.get(faceIndex)) continue;
+    // Combine ny, py, nz and pz faces from left to right
+    for (let i = model.voxelYZXFaceIndices.length - model.faceCount ; i < model.voxelYZXFaceIndices.length; i++) {
+      const key = model.voxelYZXFaceIndices[i]
+      const faceIndex = Number(key) & 0xFFFFFFFF;
+      if (faceCulled.get(faceIndex)) continue;
 
-    //  const y = Number(key >> 48n) & 0xFF;
-    //  const z = Number(key >> 40n) & 0xFF;
-    //  const x = Number(key >> 32n) & 0xFF;
-    //  const faceNameIndex = faceNameIndices[faceIndex];
-    //  const material = materials[faceMaterials[faceIndex]];
+      const y = Number(key >> 48n) & 0xFF;
+      const z = Number(key >> 40n) & 0xFF;
+      const x = Number(key >> 32n) & 0xFF;
+      const faceNameIndex = faceNameIndices[faceIndex];
+      const material = materials[faceMaterials[faceIndex]];
 
-    //  switch (faceNameIndex) {
-    //    case 2: // ny
-    //        this._mergeFacesInline(material, model, contexti1, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
-    //        break;
-    //    case 3: // py
-    //        this._mergeFacesInline(material, model, contexti2, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
-    //        break;
-    //    case 4: // nz
-    //        this._mergeFacesInline(material, model, contexti3, faceIndex, y, z, x, vertY, vertZ, vertX, 3, 0, 1, 2);
-    //        break;
-    //    case 5: // pz
-    //        this._mergeFacesInline(material, model, contexti4, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
-    //        break;
-    //  }
-    //}
+      switch (faceNameIndex) {
+        case 2: // ny
+            this._mergeFacesInline(material, model, contexti1, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
+            break;
+        case 3: // py
+            this._mergeFacesInline(material, model, contexti2, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
+            break;
+        case 4: // nz
+            this._mergeFacesInline(material, model, contexti3, faceIndex, y, z, x, vertY, vertZ, vertX, 3, 0, 1, 2);
+            break;
+        case 5: // pz
+            this._mergeFacesInline(material, model, contexti4, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
+            break;
+      }
+    }
 
-    //clearContexts();
+    clearContexts();
 
     // Combine nx, px, nz athisnd pz faces vertical up
     for (let x = model.voxels.minX; x <= model.voxels.maxX; x++) {
@@ -299,15 +301,15 @@ class Simplifier {
         (material.simplify === true || (material.simplify === null && model.simplify === true)) && 
         faceCulled.get(faceIndex) === 0) {
         
-      //if (context.maxVoxelAxis3 !== vaxis3 - 1) {
-      //  // Voxel was skipped, reset context and continue.
-      //  context.filled = true;
-      //  context.lastVoxelAxis1 = vaxis1;
-      //  context.lastVoxelAxis2 = vaxis2;
-      //  context.maxVoxelAxis3 = vaxis3;
-      //  context.lastFaceIndex = faceIndex;
-      //  return;
-      //}
+      if (context.maxVoxelAxis3 !== vaxis3 - 1) {
+        // Voxel was skipped, reset context and continue.
+        context.filled = true;
+        context.lastVoxelAxis1 = vaxis1;
+        context.lastVoxelAxis2 = vaxis2;
+        context.maxVoxelAxis3 = vaxis3;
+        context.lastFaceIndex = faceIndex;
+        return;
+      }
 
       const faceOffset = faceIndex * 4;
       const lastFaceIndex = context.lastFaceIndex;
@@ -437,12 +439,12 @@ class Simplifier {
       faceAo[2] === lastFaceAo[2] &&
       faceAo[3] === lastFaceAo[3] &&*/
 
-      const positionsEqual = Math.abs(axis1Arr[lastFaceVertIndexV1] - (1-ratio) * axis1Arr[faceVertIndexV1] - ratio * axis1Arr[lastFaceVertIndexV0]) <= Number.EPSILON * 10 &&
-            Math.abs(axis2Arr[lastFaceVertIndexV1] - (1-ratio) * axis2Arr[faceVertIndexV1] - ratio * axis2Arr[lastFaceVertIndexV0]) <= Number.EPSILON * 10 &&
-            Math.abs(axis3Arr[lastFaceVertIndexV1] - (1-ratio) * axis3Arr[faceVertIndexV1] - ratio * axis3Arr[lastFaceVertIndexV0]) <= Number.EPSILON * 10 &&
-            Math.abs(axis1Arr[lastFaceVertIndexV2] - (1-ratio) * axis1Arr[faceVertIndexV2] - ratio * axis1Arr[lastFaceVertIndexV3]) <= Number.EPSILON * 10 &&
-            Math.abs(axis2Arr[lastFaceVertIndexV2] - (1-ratio) * axis2Arr[faceVertIndexV2] - ratio * axis2Arr[lastFaceVertIndexV3]) <= Number.EPSILON * 10 &&
-            Math.abs(axis3Arr[lastFaceVertIndexV2] - (1-ratio) * axis3Arr[faceVertIndexV2] - ratio * axis3Arr[lastFaceVertIndexV3]) <= Number.EPSILON * 10;
+      const positionsEqual = Math.abs(axis1Arr[lastFaceVertIndexV1] - (1-ratio) * axis1Arr[faceVertIndexV1] - ratio * axis1Arr[lastFaceVertIndexV0]) <= EPS &&
+            Math.abs(axis2Arr[lastFaceVertIndexV1] - (1-ratio) * axis2Arr[faceVertIndexV1] - ratio * axis2Arr[lastFaceVertIndexV0]) <= EPS &&
+            Math.abs(axis3Arr[lastFaceVertIndexV1] - (1-ratio) * axis3Arr[faceVertIndexV1] - ratio * axis3Arr[lastFaceVertIndexV0]) <= EPS &&
+            Math.abs(axis1Arr[lastFaceVertIndexV2] - (1-ratio) * axis1Arr[faceVertIndexV2] - ratio * axis1Arr[lastFaceVertIndexV3]) <= EPS &&
+            Math.abs(axis2Arr[lastFaceVertIndexV2] - (1-ratio) * axis2Arr[faceVertIndexV2] - ratio * axis2Arr[lastFaceVertIndexV3]) <= EPS &&
+            Math.abs(axis3Arr[lastFaceVertIndexV2] - (1-ratio) * axis3Arr[faceVertIndexV2] - ratio * axis3Arr[lastFaceVertIndexV3]) <= EPS;
 
       if (!positionsEqual) return;
 
@@ -450,8 +452,8 @@ class Simplifier {
       // Everything checks out, so add this face to the last one
       //console.log(`MERGE: ${this._faceVerticesToString(lastFaceVertices)}`);
       //console.log(`  AND: ${this._faceVerticesToString(faceVertices)}`);
-      console.log("change", faceVertIndices[lastFaceOffset + v1], " to ", faceVertIndexV1);
-      console.log("change", faceVertIndices[lastFaceOffset + v2], " to ", faceVertIndexV2);
+      //console.log("change", faceVertIndices[lastFaceOffset + v1], " to ", faceVertIndexV1);
+      //console.log("change", faceVertIndices[lastFaceOffset + v2], " to ", faceVertIndexV2);
 
       faceVertIndices[lastFaceOffset + v1] = faceVertIndexV1;
       faceVertIndices[lastFaceOffset + v2] = faceVertIndexV2;
@@ -489,7 +491,7 @@ class Simplifier {
       
       // And remove this face
       faceCulled.set(faceIndex, 1);
-      return 
+      return true;
     }
 
     context.filled = true;
@@ -497,6 +499,7 @@ class Simplifier {
     context.lastVoxelAxis2 = vaxis2;
     context.maxVoxelAxis3 = vaxis3;
     context.lastFaceIndex = faceIndex;
+    return false;
   }
   
   
