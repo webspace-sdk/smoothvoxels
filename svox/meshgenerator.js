@@ -296,7 +296,7 @@ class SvoxMeshGenerator {
     let shells = SvoxMeshGenerator._getAllShells(model);
 
     const materials = model.materials.materials;
-    const { faceMaterials } = model;
+    const { faceMaterials, faceCulled } = model;
 
     // Add all vertices to the geometry     
     model.materials.baseMaterials.forEach(function(baseMaterial) {
@@ -307,7 +307,8 @@ class SvoxMeshGenerator {
         for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
           const material = materials[faceMaterials[faceIndex]];
 
-          if (material.baseId === baseMaterial.baseId) {
+          // Check for material match and face culling from simplifier
+          if (material.baseId === baseMaterial.baseId && faceCulled.get(faceIndex) === 0) {
             SvoxMeshGenerator._generateFace(model, faceIndex, mesh);
           }
         }

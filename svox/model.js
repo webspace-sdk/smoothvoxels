@@ -137,6 +137,7 @@ class Model {
     this.faceClamped = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
     this.faceSmooth = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
     this.faceEquidistant = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
+    this.faceCulled = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0); // Bits for removed faces from simplify
     this.faceNameIndices = new Uint8Array(MAX_FACES);
     this.faceMaterials = new Uint8Array(MAX_FACES);
     this.faceNrOfClampedLinks = new Uint8Array(MAX_FACES);
@@ -167,6 +168,7 @@ class Model {
 
     // Need to zero on reset:
     // face vert link counts, color counts
+    // all bitfields
   }
    
   _setVertex(x, y, z, vertex) {
