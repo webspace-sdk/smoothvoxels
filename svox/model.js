@@ -160,6 +160,11 @@ class Model {
     this.faceVertUs = new Float32Array(MAX_FACE_VERTS);
     this.faceVertVs = new Float32Array(MAX_FACE_VERTS);
 
+    this.voxelXZYFaceIndices = new BigUint64Array(MAX_FACES);
+    this.voxelXYZFaceIndices = new BigUint64Array(MAX_FACES);
+    this.voxelYZXFaceIndices = new BigUint64Array(MAX_FACES);
+
+
     // Need to zero on reset:
     // face vert link counts, color counts
   }
@@ -267,7 +272,20 @@ class Model {
                                     maximumDeformCount > 0, vertIndexLookup);  // Only link the vertices when needed
         if (face) {
           voxel.faces[faceName] = face;
-          voxel.faceOffset = this.faceCount - 1;
+          const faceIndex = this.faceCount - 1;
+          const nfaceIndex = BigInt(faceIndex);
+          const nvx = BigInt(voxel.x);
+          const nvy = BigInt(voxel.y);
+          const nvz = BigInt(voxel.z);
+
+          const xzyKey = (nvx << 48n) | (nvz << 40n) | (nvy << 32n) | nfaceIndex;
+          const xyzKey = (nvx << 48n) | (nvy << 40n) | (nvz << 32n) | nfaceIndex;
+          const yzxKey = (nvy << 48n) | (nvz << 40n) | (nvx << 32n) | nfaceIndex;
+
+          this.voxelXZYFaceIndices[faceIndex] = xzyKey;
+          this.voxelXYZFaceIndices[faceIndex] = xyzKey;
+          this.voxelYZXFaceIndices[faceIndex] = yzxKey;
+
           if (!face.skipped)
             voxel.color.count++;
           faceCount++;
@@ -276,7 +294,12 @@ class Model {
       
       voxel.visible = faceCount > 0;
     }, this, false);
-    
+
+    // Sort ordered faces, used for simplifier
+    this.voxelXZYFaceIndices.sort()
+    this.voxelXYZFaceIndices.sort()
+    this.voxelYZXFaceIndices.sort()
+
     VertexLinker.fixClampedLinks(this); 
     
     //VertexLinker.logLinks(this.voxels);
@@ -299,7 +322,7 @@ class Model {
 
     UVAssigner.assignUVs(this);
     
-    //Simplifier.simplify(this);
+    Simplifier.simplify(this);
     
     //FaceAligner.alignFaceDiagonals(this);
   }

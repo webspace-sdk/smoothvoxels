@@ -19,6 +19,15 @@ class Simplifier {
     }
     
     // Combine nx, px, nz athisnd pz faces vertical up
+    for (let i = model.voxelXYZFaceIndices.length - model.faceCount ; i < model.voxelXYZFaceIndices.length; i++) {
+      const key = model.voxelXZYFaceIndices[i]
+      let faceIndex = Number(key) & 0xFFFFFFFF;
+      let x = Number(key >> 32n) & 0xFF;
+      let y = Number(key >> 40n) & 0xFF;
+      let z = Number(key >> 48n) & 0xFF;
+    }
+
+    // Combine nx, px, nz athisnd pz faces vertical up
     for (let x = model.voxels.minX; x <= model.voxels.maxX; x++) {
       for (let z = model.voxels.minZ; z <= model.voxels.maxZ; z++) {
         for (let y = model.voxels.minY; y <= model.voxels.maxY; y++) {

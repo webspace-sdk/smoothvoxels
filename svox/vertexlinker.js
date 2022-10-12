@@ -115,6 +115,7 @@ class VertexLinker {
         for (let v = 0; v < 4; v++) {
           const vertFrom = face.vertices[v];
           if (vertFrom.links.length !== vertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]]) {
+            // TODO JEL breaking with hello world case
             //assertAlmostEqual(vertFrom.links.length, vertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]]);
           }
         }

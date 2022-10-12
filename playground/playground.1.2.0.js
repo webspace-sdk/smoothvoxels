@@ -7087,7 +7087,7 @@ size     = 20 18 20
 scale    = 0.05
 origin   = -y
 rotation = 0 -45 0
-material deform = 0, colors = V:#080
+material wireframe = true, deform = 0, colors = V:#080
 voxels
 -----------VV------- ----------VVVV------ ----------VVVV------ ---------VVVVVV----- ---------VVVVVV----- --------VVVVVVVV---- --------VVV--VVV---- -------VVVV--VVVV--- -------VVV----VVV--- ------VVVV----VVVV-- ------VVV------VVV-- -----VVVV------VVVV- -----VVV--------VVV- ----VVVV--------VVVV ----VVV----------VVV ----VVV----------VVV ----VVV----------VVV ----VVV----------VVV 
 -----------VV------- ----------VVVV------ ----------VVVV------ ---------VVVVVV----- ---------VVVVVV----- --------VVVVVVVV---- --------VVV--VVV---- -------VVVV--VVVV--- -------VVV----VVV--- ------VVVV----VVVV-- ------VVV------VVV-- -----VVVV------VVVV- -----VVV--------VVV- ----VVVV--------VVVV ----VVV----------VVV ----VVV----------VVV ----VVV----------VVV ----VVV----------VVV 
