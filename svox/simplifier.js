@@ -1,5 +1,3 @@
-const EPS = 0.0001;
-
 class Simplifier {
   
   // Combine all faces which are coplanar, have the same normals, colors, etc.

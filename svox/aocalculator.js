@@ -1,5 +1,3 @@
-const EPS = 0.0001;
-
 class AOCalculator {
   
   static calculateAmbientOcclusion(model) {

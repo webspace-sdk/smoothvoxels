@@ -12,18 +12,26 @@ class SvoxMeshGenerator {
   static generate(model) {
     model.prepareForRender();
   
-    console.log(model)
+    // Count the non-culled faces
+    let faceCount = 0;
+    for (let i = 0; i < model.faceCount; i++) {
+      if (model.faceCulled.get(i) === 0) {
+        faceCount++;
+      }
+    }
+
     let mesh = {
       materials: [],
       groups: [],
-      indices: [],
-      positions: new Float32Array(model.faceCount * 18),
+      indices: Array(faceCount * 6),
+      indicesIndex: 0,
+      positions: new Float32Array(faceCount * 4 * 3),
       positionIndex: 0,
-      normals: new Float32Array(model.faceCount * 18),
+      normals: new Float32Array(faceCount * 4 * 3),
       normalIndex: 0,
-      colors: new Float32Array(model.faceCount * 18),
+      colors: new Float32Array(faceCount * 4 * 3),
       colorIndex: 0,
-      uvs: new Float32Array(model.faceCount * 12),
+      uvs: new Float32Array(faceCount * 4 * 2),
       uvIndex: 0,
       data: null
     };
@@ -49,83 +57,9 @@ class SvoxMeshGenerator {
     
     SvoxMeshGenerator._generateLights(model, mesh);
 
-    mesh = SvoxMeshGenerator._toIndexed(mesh);
-
     return mesh;
   }
   
-  static _toIndexed(mesh) {
-    
-    let ids = {};
-    let lastIndex = -1;
-    for (let i=0; i < mesh.positionIndex / 3; i++) {
-      let id = '';
-      id += `${mesh.positions[i*3]}|${mesh.positions[i*3+1]}|${mesh.positions[i*3+2]}`;
-      id += `|${mesh.normals[i*3]}|${mesh.normals[i*3+1]}|${mesh.normals[i*3+2]}`;
-      if (mesh.colors && mesh.colors.length > 0)
-        id += `|${mesh.colors[i*3]}|${mesh.colors[i*3+1]}|${mesh.colors[i*3+2]}`;
-      if (mesh.uvs && mesh.uvs.length > 0)
-        id += `|${mesh.uvs[i*2]}|${mesh.uvs[i*2+1]}`;
-      if (mesh.data) {
-        for (let d=0;d<mesh.data.length;d++) {
-          let data = mesh.data[d];
-          for (let v=0; v<data.width; v++)
-            id += `|${data.values[i*data.width+v]}`;
-        }
-      }
-      let index = ids[id];
-      if (index === undefined) {
-        ids[id] = ++lastIndex;
-        index = lastIndex; 
-      }
-      mesh.indices[i] = index;
-    }
-    
-    let newMesh = {
-      materials: mesh.materials,
-      groups: mesh.groups,
-      indices: mesh.indices,
-      positions: [],
-      normals: [],
-      colors: mesh.colors ? [] : null,
-      uvs: mesh.uvs ? [] : null,
-      data: mesh.data ? [] : null
-    };
-    
-    if (mesh.data) {
-      for (let d=0;d<mesh.data.length;d++) {
-        newMesh.data.push( {name:mesh.data[d].name, width:mesh.data[d].width, values:[] } );
-      }
-    }
-
-    let index = -1;
-    for (let i=0; i < mesh.positionIndex / 3; i++) {
-      if (mesh.indices[i] > index) {
-        newMesh.positions.push(mesh.positions[i*3], mesh.positions[i*3+1], mesh.positions[i*3+2]);
-        newMesh.normals.push(mesh.normals[i*3], mesh.normals[i*3+1], mesh.normals[i*3+2]);
-        if (mesh.colors)
-          newMesh.colors.push(mesh.colors[i*3], mesh.colors[i*3+1], mesh.colors[i*3+2]);
-        if (mesh.uvs)
-          newMesh.uvs.push(mesh.uvs[i*2], mesh.uvs[i*2+1]);
-        if (mesh.data) {
-          for (let d=0;d<mesh.data.length;d++) {
-            let data = mesh.data[d];
-            let newData = newMesh.data[d];
-            for (let v=0; v<data.width; v++) {
-              newData.values.push(data.values[i*data.width+v]);
-            }
-          }          
-        }
-        
-        index++;
-      }
-    }
-    
-    // console.log(`Indexed Geometry: From ${mesh.positionIndex / 3} verts to ${lastIndex+1}`);
-    
-    return newMesh;
-  }
-
   static _generateMaterial(definition, modeldefinition) {
     let ao = definition.ao || modeldefinition.ao;
     
@@ -302,7 +236,7 @@ class SvoxMeshGenerator {
     model.materials.baseMaterials.forEach(function(baseMaterial) {
       if (baseMaterial.colorUsageCount > 0) {
 
-        let start = mesh.positionIndex;
+        let start = mesh.indicesIndex;
 
         for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
           const material = materials[faceMaterials[faceIndex]];
@@ -324,8 +258,8 @@ class SvoxMeshGenerator {
             //}
           
         // Add the group for this material
-        let end = mesh.positionIndex;
-        mesh.groups.push( { start:start/3, count: (end-start)/3, materialIndex:baseMaterial.index } );       
+        let end = mesh.indicesIndex;
+        mesh.groups.push( { start:start, count: (end-start), materialIndex:baseMaterial.index } );       
         
       }      
     }, this);       
@@ -418,62 +352,59 @@ class SvoxMeshGenerator {
       uv0U = uv2U; uv0V = uv2V;
       uv2U = swapX; uv2V = swapY;
     }
-        
+
+    const iIdx = mesh.indicesIndex;
+    const indices = mesh.indices;
+
     const pIdx = mesh.positionIndex;
     const positions = mesh.positions;
+    const baseIndex = iIdx === 0 ? 0 : (mesh.indices[iIdx - 2] + 1); // vert 3 of last triangle is max index
 
     // Face 1
-    positions[pIdx] = vert2X;
-    positions[pIdx+1] = vert2Y;
-    positions[pIdx+2] = vert2Z;
+    indices[iIdx] = baseIndex + 2;
+    indices[iIdx + 1] = baseIndex + 1;
+    indices[iIdx + 2] = baseIndex + 0;
+
+    // Face 2
+    indices[iIdx + 3] = baseIndex + 0;
+    indices[iIdx + 4] = baseIndex + 3;
+    indices[iIdx + 5] = baseIndex + 2;
+
+    mesh.indicesIndex += 6;
+        
+    positions[pIdx] = vert0X;
+    positions[pIdx+1] = vert0Y;
+    positions[pIdx+2] = vert0Z;
     positions[pIdx+3] = vert1X;
     positions[pIdx+4] = vert1Y;
     positions[pIdx+5] = vert1Z;
-    positions[pIdx+6] = vert0X;
-    positions[pIdx+7] = vert0Y;
-    positions[pIdx+8] = vert0Z;
+    positions[pIdx+6] = vert2X;
+    positions[pIdx+7] = vert2Y;
+    positions[pIdx+8] = vert2Z;
+    positions[pIdx+9] = vert3X;
+    positions[pIdx+10] = vert3Y;
+    positions[pIdx+11] = vert3Z;
 
-    // Face 2
-    positions[pIdx+9] = vert0X;
-    positions[pIdx+10] = vert0Y;
-    positions[pIdx+11] = vert0Z;
-    positions[pIdx+12] = vert3X;
-    positions[pIdx+13] = vert3Y;
-    positions[pIdx+14] = vert3Z;
-    positions[pIdx+15] = vert2X;
-    positions[pIdx+16] = vert2Y;
-    positions[pIdx+17] = vert2Z;
-
-    mesh.positionIndex += 18;
+    mesh.positionIndex += 12;
 
     const nIdx = mesh.normalIndex;
     const normals = mesh.normals;
     const smooth = faceSmooth.get(faceIndex) === 1;
     
     if (material.lighting === SVOX.SMOOTH || (material.lighting === SVOX.BOTH && smooth)) {
-      // Face 1
-      normals[nIdx] = norm2X;
-      normals[nIdx+1] = norm2Y;
-      normals[nIdx+2] = norm2Z;
+      normals[nIdx] = norm0X;
+      normals[nIdx+1] = norm0Y;
+      normals[nIdx+2] = norm0Z;
       normals[nIdx+3] = norm1X;
       normals[nIdx+4] = norm1Y;
       normals[nIdx+5] = norm1Z;
-      normals[nIdx+6] = norm0X;
-      normals[nIdx+7] = norm0Y;
-      normals[nIdx+8] = norm0Z;
-
-      // Face 2
-      normals[nIdx+9] = norm0X;
-      normals[nIdx+10] = norm0Y;
-      normals[nIdx+11] = norm0Z;
-      normals[nIdx+12] = norm3X;
-      normals[nIdx+13] = norm3Y;
-      normals[nIdx+14] = norm3Z;
-      normals[nIdx+15] = norm2X;
-      normals[nIdx+16] = norm2Y;
-      normals[nIdx+17] = norm2Z;
-    }
-    else {
+      normals[nIdx+6] = norm2X;
+      normals[nIdx+7] = norm2Y;
+      normals[nIdx+8] = norm2Z;
+      normals[nIdx+9] = norm3X;
+      normals[nIdx+10] = norm3Y;
+      normals[nIdx+11] = norm3Z;
+    } else {
       // Average the normals to get the flat normals
       let normFace1X = norm2X + norm1X + norm0X;
       let normFace1Y = norm2Y + norm1Y + norm0Y;
@@ -499,8 +430,9 @@ class SvoxMeshGenerator {
         normFace1Y = normFace2Y = (normFace1Y + normFace2Y) / combinedFaceLength;
         normFace1Z = normFace2Z = (normFace1Z + normFace2Z) / combinedFaceLength;
       }
-      
-      // Face 1
+
+      // Note: because of indices, this code when migrated has the wrong FLAT norm for the first and last vert of face 2
+      // For now, just use QUAD
       normals[nIdx] = normFace1X;
       normals[nIdx+1] = normFace1Y;
       normals[nIdx+2] = normFace1Z;
@@ -510,20 +442,35 @@ class SvoxMeshGenerator {
       normals[nIdx+6] = normFace1X;
       normals[nIdx+7] = normFace1Y;
       normals[nIdx+8] = normFace1Z;
-
-      // Face 2
       normals[nIdx+9] = normFace2X;
       normals[nIdx+10] = normFace2Y;
       normals[nIdx+11] = normFace2Z;
-      normals[nIdx+12] = normFace2X;
-      normals[nIdx+13] = normFace2Y;
-      normals[nIdx+14] = normFace2Z;
-      normals[nIdx+15] = normFace2X;
-      normals[nIdx+16] = normFace2Y;
-      normals[nIdx+17] = normFace2Z;
+      
+      // Code from non-indexed vertices:
+      // Face 1
+      //normals[nIdx] = normFace1X; // index + 2
+      //normals[nIdx+1] = normFace1Y;
+      //normals[nIdx+2] = normFace1Z;
+      //normals[nIdx+3] = normFace1X; // index + 1
+      //normals[nIdx+4] = normFace1Y;
+      //normals[nIdx+5] = normFace1Z;
+      //normals[nIdx+6] = normFace1X; // index + 0
+      //normals[nIdx+7] = normFace1Y;
+      //normals[nIdx+8] = normFace1Z;
+
+      //// Face 2
+      //normals[nIdx+9] = normFace2X; // index + 0
+      //normals[nIdx+10] = normFace2Y;
+      //normals[nIdx+11] = normFace2Z;
+      //normals[nIdx+12] = normFace2X; // index + 3
+      //normals[nIdx+13] = normFace2Y;
+      //normals[nIdx+14] = normFace2Z;
+      //normals[nIdx+15] = normFace2X; // index + 2
+      //normals[nIdx+16] = normFace2Y;
+      //normals[nIdx+17] = normFace2Z;
     }
 
-    mesh.normalIndex += 18;
+    mesh.normalIndex += 12;
 
     const colIdx = mesh.colorIndex;
     const colors = mesh.colors;
@@ -561,49 +508,34 @@ class SvoxMeshGenerator {
     }
 
     // Face 1
-    colors[colIdx] = col2R;
-    colors[colIdx+1] = col2G;
-    colors[colIdx+2] = col2B;
+    colors[colIdx] = col0R;
+    colors[colIdx+1] = col0G;
+    colors[colIdx+2] = col0B;
     colors[colIdx+3] = col1R;
     colors[colIdx+4] = col1G;
     colors[colIdx+5] = col1B;
-    colors[colIdx+6] = col0R;
-    colors[colIdx+7] = col0G;
-    colors[colIdx+8] = col0B;
+    colors[colIdx+6] = col2R;
+    colors[colIdx+7] = col2G;
+    colors[colIdx+8] = col2B;
+    colors[colIdx+9] = col3R;
+    colors[colIdx+10] = col3G;
+    colors[colIdx+11] = col3B;
 
-    // Face 2
-    colors[colIdx+9] = col0R;
-    colors[colIdx+10] = col0G;
-    colors[colIdx+11] = col0B;
-    colors[colIdx+12] = col3R;
-    colors[colIdx+13] = col3G;
-    colors[colIdx+14] = col3B;
-    colors[colIdx+15] = col2R;
-    colors[colIdx+16] = col2G;
-    colors[colIdx+17] = col2B;
-
-    mesh.colorIndex += 18;
+    mesh.colorIndex += 12;
 
     const uvIdx = mesh.uvIndex;
     const uvs = mesh.uvs;
 
-    // Face 1
-    uvs[uvIdx] = uv2U;
-    uvs[uvIdx+1] = uv2V;
+    uvs[uvIdx] = uv0U;
+    uvs[uvIdx+1] = uv0V;
     uvs[uvIdx+2] = uv1U;
     uvs[uvIdx+3] = uv1V;
-    uvs[uvIdx+4] = uv0U;
-    uvs[uvIdx+5] = uv0V;
+    uvs[uvIdx+4] = uv2U;
+    uvs[uvIdx+5] = uv2V;
+    uvs[uvIdx+6] = uv3U;
+    uvs[uvIdx+7] = uv3V;
 
-    // Face 2
-    uvs[uvIdx+6] = uv0U;
-    uvs[uvIdx+7] = uv0V;
-    uvs[uvIdx+8] = uv3U;
-    uvs[uvIdx+9] = uv3V;
-    uvs[uvIdx+10] = uv2U;
-    uvs[uvIdx+11] = uv2V;
-
-    mesh.uvIndex += 12;
+    mesh.uvIndex += 8;
 
     //if (mesh.data) {
     //  let data = voxel.material.data || model.data;

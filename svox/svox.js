@@ -124,3 +124,6 @@ SVOX._FACEINDEXUVS = [
   {u:'x', v:'y', order:[3,2,1,0], ud:-1, vd: 1, uo:1.00, vo:0.00 },  
   {u:'x', v:'y', order:[0,1,2,3], ud: 1, vd: 1, uo:0.25, vo:0.00 }  
 ];
+
+const EPS = 0.0001;
+
