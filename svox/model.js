@@ -137,6 +137,7 @@ class Model {
     this.vertWarpFrequency = new Float32Array(MAX_VERTS);
     this.vertScatter = new Float32Array(MAX_VERTS);
     this.vertRing = new Float32Array(MAX_VERTS);
+    this.vertNrOfClampedLinks = new Uint8Array(MAX_VERTS);
     this.vertLinkCounts = new Uint8Array(MAX_VERTS); // A vert can be linked to up to 6 other verts
     this.vertLinkIndices = new Uint32Array(MAX_VERTS * 6);
 
@@ -147,7 +148,6 @@ class Model {
     this.faceCulled = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0); // Bits for removed faces from simplify
     this.faceNameIndices = new Uint8Array(MAX_FACES);
     this.faceMaterials = new Uint8Array(MAX_FACES);
-    this.faceNrOfClampedLinks = new Uint8Array(MAX_FACES);
 
     this.faceVertIndices = new Uint32Array(MAX_FACE_VERTS);
     this.faceVertNormalX = new Float32Array(MAX_FACE_VERTS);
@@ -177,6 +177,7 @@ class Model {
     // face vert link counts, color counts
     // all bitfields
     // vert ring, since deformer checks for ring equality
+    // vert nr of clamped links
   }
    
   _setVertex(x, y, z, vertex) {

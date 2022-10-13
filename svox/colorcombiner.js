@@ -27,9 +27,9 @@ class ColorCombiner {
           let count = 0;
 
           const vertIndex = faceVertIndices[faceIndex * 4 + v];
-          const vertColorCount = vertColorCount[vertIndex];
+          const colorCount = vertColorCount[vertIndex];
 
-          for (let c = 0; c < vertColorCount; c++) {
+          for (let c = 0; c < colorCount; c++) {
             r += vertColorR[vertIndex * 5 + c];
             g += vertColorG[vertIndex * 5 + c];
             b += vertColorB[vertIndex * 5 + c];

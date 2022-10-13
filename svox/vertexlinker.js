@@ -11,7 +11,7 @@ function assertAlmostEqual(x, y) {
 class VertexLinker {
   
   static linkVertices(model, face, faceIndex) {
-    const { faceClamped, faceNrOfClampedLinks, faceVertIndices, vertLinkIndices, vertLinkCounts } = model;
+    const { faceClamped, vertNrOfClampedLinks, faceVertIndices, vertLinkIndices, vertLinkCounts } = model;
 
     const clamped = faceClamped.get(faceIndex);
 
@@ -36,6 +36,7 @@ class VertexLinker {
         if (!hasSelfLink) {
           vertLinkIndices[vertIndex * 6 + vertLinkCounts[vertIndex]] = vertIndex;
           vertLinkCounts[vertIndex]++;
+          vertNrOfClampedLinks[vertIndex]++;
         }
       }
     } else {
@@ -134,7 +135,7 @@ class VertexLinker {
   static fixClampedLinks(model) {
     const voxels = model.voxels;
 
-    const { faceNameIndices, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, faceNrOfClampedLinks, vertFullyClamped } = model;
+    const { faceNameIndices, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertNrOfClampedLinks, vertFullyClamped, vertLinkCounts, vertLinkIndices } = model;
 
     // Clamped sides are ignored when deforming so the clamped side does not pull in the other sodes.
     // This results in the other sides ending up nice and peripendicular to the clamped sides.
@@ -142,33 +143,19 @@ class VertexLinker {
     // This then results in the corners of these sides sticking out sharply with high deform counts.
     
     // Find all vertices that are fully clamped (i.e. not at the edge of the clamped side)
-    for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
-      const clamped = faceClamped.get(faceIndex);
-      if (clamped === 0) return;
+    for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
+      const nrOfClampedLinks = vertNrOfClampedLinks[vertIndex];
+      const nrOfLinks = vertLinkCounts[vertIndex];
 
-      for (let v = 0; v < 4; v++) {
-        const vertIndexFrom = faceVertIndices[faceIndex * 4 + v];
-        const vertIndexTo = faceVertIndices[faceIndex * 4 + (v + 1) % 4];
-
-        const nrOfClampedLinks = faceNrOfClampedLinks[vertIndex];
-        const linkCount = vertLinkCounts[vertIndex];
-
-        if (nrOfClampedLinks === linkCount) {
-          vertFullyClamped.set(vertIndex, 1);
-          vertLinkCounts[vertIndex] = 0; // Leave link vert indices dangling.
-        }
+      if (nrOfClampedLinks === nrOfLinks) {
+        vertFullyClamped.set(vertIndex, 1);
+        vertLinkCounts[vertIndex] = 0;
       }
     }
 
     // For these fully clamped vertices add links for normal deforming
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
-      const clamped = faceClamped.get(faceIndex);
-      if (clamped === 0) return;
-
       for (let v = 0; v < 4; v++) {
-        const vertIndex = faceVertIndices[faceIndex * 4 + v];
-        if (vertFullyClamped.get(vertIndex) === 1) continue;
-
         const vertIndexFrom = faceVertIndices[faceIndex * 4 + v];
         const vertIndexTo = faceVertIndices[faceIndex * 4 + (v + 1) % 4];
 
