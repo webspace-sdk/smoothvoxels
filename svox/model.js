@@ -105,6 +105,12 @@ class Model {
     this.vertY = new Float32Array(MAX_VERTS);
     this.vertZ = new Float32Array(MAX_VERTS);
 
+    // Used for deform
+    this.vertTmpX = new Float32Array(MAX_VERTS);
+    this.vertTmpY = new Float32Array(MAX_VERTS);
+    this.vertTmpZ = new Float32Array(MAX_VERTS);
+    this.vertHasTmp = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
+
     // Verts can have up to 5 colors, given it will belong to at most 5 visible faces (a corner on a flat part)
     this.vertColorR = new Float32Array(MAX_VERTS * 5);
     this.vertColorG = new Float32Array(MAX_VERTS * 5);
@@ -311,8 +317,8 @@ class Model {
     Deformer.changeShape(this, this._shape);
        
     Deformer.deform(this, maximumDeformCount);
-    //
-    //Deformer.warpAndScatter(this);
+    
+    Deformer.warpAndScatter(this);
     
     NormalsCalculator.calculateNormals(this);
     
@@ -460,6 +466,13 @@ class Model {
       this.faceVertIndices[this.faceCount * 4 + 1] = this._createInlineVertex(voxel, faceName, 1, flattened, clamped, vertIndexLookup);
       this.faceVertIndices[this.faceCount * 4 + 2] = this._createInlineVertex(voxel, faceName, 2, flattened, clamped, vertIndexLookup);
       this.faceVertIndices[this.faceCount * 4 + 3] = this._createInlineVertex(voxel, faceName, 3, flattened, clamped, vertIndexLookup);
+
+      // TODO Remove
+      face.vertices[0].vertIndex = this.faceVertIndices[this.faceCount * 4];
+      face.vertices[1].vertIndex = this.faceVertIndices[this.faceCount * 4 + 1];
+      face.vertices[2].vertIndex = this.faceVertIndices[this.faceCount * 4 + 2];
+      face.vertices[3].vertIndex = this.faceVertIndices[this.faceCount * 4 + 3];
+
       for (let v = 0; v < 4; v++) {
         this.faceVertColorR[this.faceCount * 4 + v] = voxel.color.r;
         this.faceVertColorG[this.faceCount * 4 + v] = voxel.color.g;
