@@ -7077,6 +7077,21 @@ GLTFExporter.Utils = {
 	}
 
 };
+SVOX.models.CherryPie = `
+size = 21 8 21
+scale = 0.04761905
+rotation = 30 0 0
+origin = -y
+material lighting = smooth, roughness = 0.2, metalness = 0.2, fade = true, deform = 5
+  colors = B:#C60 D:#620
+material lighting = smooth, deform = 10, clamp = y
+  colors = A:#830
+material lighting = smooth, roughness = 0, metalness = 0.3, deform = 1
+  colors = C:#600
+voxels
+112-2(7B14-)3(BD)B117-2(11B10-)BD7BDB13-4(5A16-)5A11-5B2CB2C5B6-5B2-B2-5B6-BD3B2-B2-3BDB9-4(9A12-)9A8-6B2CB2C6B4-3B3(2-B)2-3B4-3B2-B5-B2-3B6-4(13A8-)13A6-2(17B4-)D4BD-BDB-D4BD6-4(13A8-)13A5-4B3(2CB)2C4B2-2B-4(B2-)B-2B2-2B-B2-B5-B2-B-2B4-4(15A6-)15A4-4B3(2CB)2C4B2-2B-4(B2-)B-2B2-DB-2(B5-)B-BD4-4(15A6-)15A3-46B2(D-BDB-)D4B2-4(17A4-)17A2-2B5(2CB)2C4B5(2-B)2-2BDB2-2(B5-)B2-BD2-4(17A4-)17A2-2B5(2CB)2C4B5(2-B)2-4B2(5-B)5-2B2-4(17A4-)17A2-42BD3B2(DB-D-B)D3BD2-4(17A4-)17A2-2B5(2CB)2C4B5(2-B)2-4B2(5-B)5-2B2-4(17A4-)17A2-2B5(2CB)2C4B5(2-B)2-2BDB2-2(B5-)B2-BD3-4(15A6-)15A3-46B2(D-BDB-)D4B3-4(15A6-)15A4-4B3(2CB)2C4B2-2B-4(B2-)B-2B2-DB-2(B5-)B-BD5-4(13A8-)13A5-4B3(2CB)2C4B2-2B-4(B2-)B-2B2-2B-B2-B5-B2-B-2B5-4(13A8-)13A6-2(17B4-)D4BD-BDB-D4BD8-4(9A12-)9A8-6B2CB2C6B4-3B3(2-B)2-3B4-3B2-B5-B2-3B10-4(5A16-)5A11-5B2CB2C5B6-5B2-B2-5B6-BD3B2-B2-3BDB113-2(11B10-)BD7BDB117-2(7B14-)3(BD)B7-
+`;
+
 
 // =====================================================
 // /models/playgroundmodels.js
@@ -7903,21 +7918,6 @@ material lighting = smooth, roughness = 0.5, deform=2
   colors = D:#2B1D0E C:#FFF8F0   // Dough & Cream
 voxels
 42D21C42D5(3(D5(3-D)21D21C22D5(3-D))42D21C42D)
-`;
-
-SVOX.models.CherryPie = `
-size = 21 8 21
-scale = 0.04761905
-rotation = 30 0 0
-origin = -y
-material lighting = smooth, roughness = 0.2, metalness = 0.2, fade = true, deform = 5
-  colors = B:#C60 D:#620
-material lighting = smooth, deform = 10, clamp = y
-  colors = A:#830
-material lighting = smooth, roughness = 0, metalness = 0.3, deform = 1
-  colors = C:#600
-voxels
-112-2(7B14-)3(BD)B117-2(11B10-)BD7BDB13-4(5A16-)5A11-5B2CB2C5B6-5B2-B2-5B6-BD3B2-B2-3BDB9-4(9A12-)9A8-6B2CB2C6B4-3B3(2-B)2-3B4-3B2-B5-B2-3B6-4(13A8-)13A6-2(17B4-)D4BD-BDB-D4BD6-4(13A8-)13A5-4B3(2CB)2C4B2-2B-4(B2-)B-2B2-2B-B2-B5-B2-B-2B4-4(15A6-)15A4-4B3(2CB)2C4B2-2B-4(B2-)B-2B2-DB-2(B5-)B-BD4-4(15A6-)15A3-46B2(D-BDB-)D4B2-4(17A4-)17A2-2B5(2CB)2C4B5(2-B)2-2BDB2-2(B5-)B2-BD2-4(17A4-)17A2-2B5(2CB)2C4B5(2-B)2-4B2(5-B)5-2B2-4(17A4-)17A2-42BD3B2(DB-D-B)D3BD2-4(17A4-)17A2-2B5(2CB)2C4B5(2-B)2-4B2(5-B)5-2B2-4(17A4-)17A2-2B5(2CB)2C4B5(2-B)2-2BDB2-2(B5-)B2-BD3-4(15A6-)15A3-46B2(D-BDB-)D4B3-4(15A6-)15A4-4B3(2CB)2C4B2-2B-4(B2-)B-2B2-DB-2(B5-)B-BD5-4(13A8-)13A5-4B3(2CB)2C4B2-2B-4(B2-)B-2B2-2B-B2-B5-B2-B-2B5-4(13A8-)13A6-2(17B4-)D4BD-BDB-D4BD8-4(9A12-)9A8-6B2CB2C6B4-3B3(2-B)2-3B4-3B2-B5-B2-3B10-4(5A16-)5A11-5B2CB2C5B6-5B2-B2-5B6-BD3B2-B2-3BDB113-2(11B10-)BD7BDB117-2(7B14-)3(BD)B7-
 `;
 
 SVOX.models.Breakfast = `

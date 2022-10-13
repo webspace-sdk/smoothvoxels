@@ -3,13 +3,13 @@ class FaceAligner {
   // Align all 'quad' diagonals to the center, making most models look more symmetrical
   static alignFaceDiagonals(model) {
     // TODO skip culled faces
+    let maxDist = 0.1 * Math.min(model.scale.x, model.scale.y, model.scale.z);
+    maxDist *= maxDist; // No need to use sqrt for the distances
+    
 
     model.forEachVertex(function(vertex) { 
       vertex.count = 0;
     }, this);
-    
-    let maxDist = 0.1 * Math.min(model.scale.x, model.scale.y, model.scale.z);
-    maxDist *= maxDist; // No need to use sqrt for the distances
     
     model.voxels.forEach(function(voxel) {
       for (let faceName in voxel.faces) {
@@ -106,6 +106,7 @@ class FaceAligner {
               face.vertexColors.push(face.vertexColors.shift());
             min = this._getVertexSum(face.vertices[0]);
           }            
+
         }
       
       }

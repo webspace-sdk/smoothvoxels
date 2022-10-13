@@ -12,26 +12,20 @@ class SvoxMeshGenerator {
   static generate(model) {
     model.prepareForRender();
   
-    // Count the non-culled faces
-    let faceCount = 0;
-    for (let i = 0; i < model.faceCount; i++) {
-      if (model.faceCulled.get(i) === 0) {
-        faceCount++;
-      }
-    }
+    const { nonCulledFaceCount } = model;
 
     let mesh = {
       materials: [],
       groups: [],
-      indices: Array(faceCount * 6),
+      indices: Array(nonCulledFaceCount * 6),
       indicesIndex: 0,
-      positions: new Float32Array(faceCount * 4 * 3),
+      positions: new Float32Array(nonCulledFaceCount * 4 * 3),
       positionIndex: 0,
-      normals: new Float32Array(faceCount * 4 * 3),
+      normals: new Float32Array(nonCulledFaceCount * 4 * 3),
       normalIndex: 0,
-      colors: new Float32Array(faceCount * 4 * 3),
+      colors: new Float32Array(nonCulledFaceCount * 4 * 3),
       colorIndex: 0,
-      uvs: new Float32Array(faceCount * 4 * 2),
+      uvs: new Float32Array(nonCulledFaceCount * 4 * 2),
       uvIndex: 0,
       data: null
     };
@@ -238,7 +232,7 @@ class SvoxMeshGenerator {
 
         let start = mesh.indicesIndex;
 
-        for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
+        for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
           const material = materials[faceMaterials[faceIndex]];
 
           // Check for material match and face culling from simplifier

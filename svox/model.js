@@ -94,6 +94,7 @@ class Model {
 
     this.faceCount = 0;
     this.vertCount = 0;
+    this.nonCulledFaceCount = 0;
 
     const MAX_VERTS = 1024 * 1024;
     const MAX_VERT_BITS = Math.floor(MAX_VERTS / 8);
@@ -308,6 +309,8 @@ class Model {
       voxel.visible = faceCount > 0;
     }, this, false);
 
+    this.nonCulledFaceCount = this.faceCount;
+
     // Sort ordered faces, used for simplifier
     this.voxelXZYFaceIndices.sort()
     this.voxelXYZFaceIndices.sort()
@@ -337,7 +340,7 @@ class Model {
     
     Simplifier.simplify(this);
     
-    //FaceAligner.alignFaceDiagonals(this);
+    FaceAligner.alignFaceDiagonals(this);
   }
 
   determineBoundsOffsetAndRescale(resize) {

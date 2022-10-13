@@ -489,6 +489,8 @@ class Simplifier {
       
       // And remove this face
       faceCulled.set(faceIndex, 1);
+      model.nonCulledFaceCount--;
+
       return true;
     }
 
