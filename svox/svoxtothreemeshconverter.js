@@ -43,7 +43,6 @@ class SvoxToThreeMeshConverter {
     //geometry = THREE.BufferGeometryUtils.mergeVertices(geometry);
     
     let mesh = new THREE.Mesh(geometry, materials);
-    console.log(mesh);
     //return new THREE.VertexNormalsHelper(mesh, 0.1);
     //return new THREE.FaceNormalsHelper(mesh, 0.1);
     

@@ -263,7 +263,6 @@ class SvoxMeshGenerator {
         
       }      
     }, this);       
-    console.log(mesh)
   }
 
   static _generateVoxel(model, voxel, mesh) {

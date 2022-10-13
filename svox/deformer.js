@@ -2,7 +2,6 @@
 class Deformer {
   
   static changeShape(model, shape) {
-    console.log(shape);
     switch (shape) {
       case 'sphere' : this._circularDeform(model, 1, 1, 1); break;
       case 'cylinder-x' : this._circularDeform(model, 0, 1, 1); break;
@@ -195,11 +194,6 @@ class Deformer {
               vertex.newPos.x = vertex.x+offsetX*strength; 
               vertex.newPos.y = vertex.y+offsetY*strength; 
               vertex.newPos.z = vertex.z+offsetZ*strength;
-
-              if (vertex.vertIndex === 926) {
-                console.log(vertex.vertIndex, vertex.x, offsetX, strength, links.length, vertex.newPos.x, vertX[vertex.vertIndex]);
-              }
-
               vertex.newPos.set = true;
             } 
           }
