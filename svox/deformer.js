@@ -98,7 +98,6 @@ class Deformer {
     }, this, true);
   }
   
-  
   static maximumDeformCount(model) {
     let maximumCount = 0;
     model.materials.forEach(function(material) {

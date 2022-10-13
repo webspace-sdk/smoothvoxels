@@ -478,6 +478,8 @@ class Model {
 
       this.faceFlattened.set(this.faceCount, flattened ? 1 : 0);
       this.faceClamped.set(this.faceCount, clamped ? 1 : 0);
+      this.faceSmooth.set(this.faceCount, 0);
+      this.faceCulled.set(this.faceCount, 0);
       this.faceMaterials[this.faceCount] = voxel.materialListIndex;
       this.faceNameIndices[this.faceCount] = faceNameIndex;
 
@@ -584,6 +586,9 @@ class Model {
 
     let key = (x << 20) | (y << 10) | z;
 
+    const shape = model._shape;
+    const fadeAny = model.materials.find(m => m.colors.length > 1 && m.fade) ? true : false;
+
     if (vertIndexLookup.has(key)) {
       vertIndex = vertIndexLookup.get(key);
 
@@ -631,6 +636,8 @@ class Model {
         this.vertDeformDamping[vertIndex] = material.deform.damping;
         this.vertDeformCount[vertIndex] = material.deform.count;
         this.vertDeformStrength[vertIndex] = material.deform.strength;
+        this.vertLinkCounts[vertIndex] = 0;
+        this.vertFullyClamped.set(vertIndex, 0);
       }
 
       if (material.warp) {
@@ -640,6 +647,19 @@ class Model {
 
       if (material.scatter) {
         this.vertScatter[vertIndex] = material.scatter;
+      }
+
+      if (fadeAny) {
+        this.vertColorCount[vertIndex] = 0;
+      }
+
+      switch (shape) {
+        case 'sphere' :
+        case 'cylinder-x' :
+        case 'cylinder-y' :
+        case 'cylinder-z' :
+          this.vertRing[vertIndex] = 0;
+        default: break;
       }
     }
 
@@ -734,16 +754,14 @@ class Model {
     }
     
     if (planar) {
-      if (arrX.get(vertIndex) === 0) {
         // Note bounds are in voxel coordinates and vertices add from 0 0 0 to 1 1 1
-        arrX.set(vertIndex, planar.x || (planar.nx && vx < bounds.minX + 0.5) || (planar.px && vx > bounds.maxX + 0.5 ? 1 : 0));
-      }
-      if (arrY.get(vertIndex) === 0) {
-        arrY.set(vertIndex, planar.y || (planar.ny && vy < bounds.minY + 0.5) || (planar.py && vy > bounds.maxY + 0.5 ? 1 : 0));
-      }
-      if (arrZ.get(vertIndex) === 0) {
-        arrZ.set(vertIndex, planar.z || (planar.nz && vz < bounds.minZ + 0.5) || (planar.pz && vz > bounds.maxZ + 0.5 ? 1 : 0));
-      }
+      arrX.set(vertIndex, (planar.x || (planar.nx && vx < bounds.minX + 0.5) || (planar.px && vx > bounds.maxX + 0.5 )) ? 1 : 0);
+      arrY.set(vertIndex, (planar.y || (planar.ny && vy < bounds.minY + 0.5) || (planar.py && vy > bounds.maxY + 0.5 )) ? 1 : 0);
+      arrZ.set(vertIndex, (planar.z || (planar.nz && vz < bounds.minZ + 0.5) || (planar.pz && vz > bounds.maxZ + 0.5 )) ? 1 : 0);
+    } else {
+      arrX.set(vertIndex, 0);
+      arrY.set(vertIndex, 0);
+      arrZ.set(vertIndex, 0);
     }
   }
     
