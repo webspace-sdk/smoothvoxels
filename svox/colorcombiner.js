@@ -9,13 +9,13 @@ class ColorCombiner {
 
     const fadeMaterials = Array(materials.length).fill(false);
 
-    for (let m = 0; m < materials.length; m++) {
+    for (let m = 0, l = materials.length; m < l; m++) {
       if (fadeAny && materials[m].colors.length > 1 && materials[m].fade) {
         fadeMaterials[m] = true;
       }
     }
 
-    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
+    for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       let fadeFace = fadeMaterials[faceMaterials[faceIndex]];
 
       if (fadeFace) {
@@ -78,7 +78,7 @@ class ColorCombiner {
       let b = 0;
       let count = 0;    
 
-      for (let c = 0; c < vert.colors.length; c++) {
+      for (let c = 0, l = vert.colors.length; c < l; c++) {
         let col = vert.colors[c];
         if (col.material === voxel.material) {
           r += col.r; 

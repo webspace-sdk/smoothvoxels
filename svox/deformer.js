@@ -2,6 +2,7 @@
 class Deformer {
   
   static changeShape(model, shape) {
+    console.log(shape);
     switch (shape) {
       case 'sphere' : this._circularDeform(model, 1, 1, 1); break;
       case 'cylinder-x' : this._circularDeform(model, 0, 1, 1); break;
@@ -16,6 +17,29 @@ class Deformer {
     let xMid = (model.voxels.minX + model.voxels.maxX)/2 + 0.5;
     let yMid = (model.voxels.minY + model.voxels.maxY)/2 + 0.5;
     let zMid = (model.voxels.minZ + model.voxels.maxZ)/2 + 0.5;    
+
+    const { vertX, vertY, vertZ, vertRing } = model;
+
+    for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
+      const vx = vertX[vertIndex];
+      const vy = vertY[vertIndex];
+      const vz = vertZ[vertIndex];
+
+      const x = (vx - xMid);
+      const y = (vy - yMid);
+      const z = (vz - zMid);
+
+      const sphereSize = Math.max(Math.abs(x * xStrength), Math.abs(y * yStrength), Math.abs(z * zStrength));
+      const vertexDistance = Math.sqrt(x*x*xStrength + y*y*yStrength + z*z*zStrength);
+      if (vertexDistance === 0) continue;
+      const factor = sphereSize / vertexDistance;
+
+      vertX[vertIndex] = x*((1-xStrength) + (xStrength)*factor) + xMid;
+      vertY[vertIndex] = y*((1-yStrength) + (yStrength)*factor) + yMid;
+      vertZ[vertIndex] = z*((1-zStrength) + (zStrength)*factor) + zMid;
+      vertRing[vertIndex] = sphereSize;
+    }
+
     model.forEachVertex(function(vertex) {
       let x = (vertex.x - xMid);
       let y = (vertex.y - yMid);
@@ -41,7 +65,23 @@ class Deformer {
   }  
   
     
+  static _repositionVertex(model, vertIndex, x, y, z, dontclamp = false) {
+  }
+
   static _markEquidistantFaces(model) {
+    const { faceVertIndices, vertRing, faceEquidistant } = model;
+
+    for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+      const faceVertIndex0 = faceIndex * 3;
+      const faceVertIndex1 = faceVertIndex0 + 1;
+      const faceVertIndex2 = faceVertIndex0 + 2;
+      const faceVertIndex3 = faceVertIndex0 + 3;
+
+      faceEquidistant.set(faceIndex, vertRing[faceVertIndices[faceVertIndex0]] === vertRing[faceVertIndices[faceVertIndex1]] &&
+        vertRing[faceVertIndices[faceVertIndex0]] === vertRing[faceVertIndices[faceVertIndex2]] &&
+        vertRing[faceVertIndices[faceVertIndex0]] === vertRing[faceVertIndices[faceVertIndex3]] ? 1 : 0);
+    }
+
     model.voxels.forEach(function(voxel) {      
       for (let faceName in voxel.faces) {
         let face = voxel.faces[faceName];
@@ -73,6 +113,11 @@ class Deformer {
   }
   
   static deform(model, maximumDeformCount) {
+    const { vertLinkIndices, vertLinkCounts, vertDeformCount, vertDeformDamping, vertDeformStrength } = model;
+
+    for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
+
+    }
     
     for (let step = 0; step < maximumDeformCount; step++) {
 
@@ -156,16 +201,6 @@ class Deformer {
   }
 
   static _repositionChangedVertices(model, dontclamp) {
-    
-    // Add 0.5 to the min and max because vertices of voxel are 0 - +1  
-    // I.e voxel (0,0,0) occupies the space (0,0,0) - (1,1,1) 
-    let minX = model.voxels.minX + 0.5;
-    let maxX = model.voxels.maxX + 0.5;
-    let minY = model.voxels.minY + 0.5;
-    let maxY = model.voxels.maxY + 0.5;
-    let minZ = model.voxels.minZ + 0.5;
-    let maxZ = model.voxels.maxZ + 0.5;
-    
     if (dontclamp) {
       // Move all vertices to their new position without clamping / flattening
       model.forEachVertex(function(vertex) {

@@ -6,7 +6,7 @@ class NormalsCalculator {
 
     const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, vertX, vertY, vertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertSmoothNormalX, vertSmoothNormalY, vertSmoothNormalZ, vertBothNormalX, vertBothNormalY, vertBothNormalZ } = model;
 
-    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
+    for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       // Compute face vertex normals
       const faceNameIndex = faceNameIndices[faceIndex];
       const equidistant = faceEquidistant[faceIndex];
@@ -225,7 +225,7 @@ class NormalsCalculator {
     }, this, true);
 
     // Normalize the smooth + both vertex normals
-    for (let vertIndex = 0; vertIndex < model.vertCount; vertIndex++) {
+    for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
       const smoothX = vertSmoothNormalX[vertIndex];
       const smoothY = vertSmoothNormalY[vertIndex];
       const smoothZ = vertSmoothNormalZ[vertIndex];
@@ -253,7 +253,7 @@ class NormalsCalculator {
     const materials = model.materials.materials;
 
     // Use flat normals if as both normals for faces if both is not set or isn't smooth
-    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
+    for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       const isSmooth = faceSmooth.get(faceIndex) === 1;
       const material = materials[faceMaterials[faceIndex]];
 

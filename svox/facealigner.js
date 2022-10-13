@@ -2,6 +2,7 @@ class FaceAligner {
      
   // Align all 'quad' diagonals to the center, making most models look more symmetrical
   static alignFaceDiagonals(model) {
+    // TODO skip culled faces
 
     model.forEachVertex(function(vertex) { 
       vertex.count = 0;

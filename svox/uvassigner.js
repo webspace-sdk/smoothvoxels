@@ -51,7 +51,7 @@ class UVAssigner {
         materialVScales.push(vscale);
       }
 
-      for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
         const faceMaterialIndex = faceMaterials[faceIndex];
         const useOffset = materialUseOffsets[faceMaterialIndex];
         const uscale = materialUScales[faceMaterialIndex];

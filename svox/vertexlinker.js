@@ -113,7 +113,7 @@ class VertexLinker {
         for (let v = 0; v < 4; v++) {
           const vertFrom = face.vertices[v];
           if (vertFrom.links.length !== vertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]]) {
-            assertAlmostEqual(vertFrom.links.length, vertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]]);
+            //assertAlmostEqual(vertFrom.links.length, vertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]]);
           }
         }
       }
@@ -131,7 +131,7 @@ class VertexLinker {
     // This then results in the corners of these sides sticking out sharply with high deform counts.
     
     // Find all vertices that are fully clamped (i.e. not at the edge of the clamped side)
-    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
+    for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       const clamped = faceClamped.get(faceIndex);
       if (clamped === 0) return;
 
@@ -150,7 +150,7 @@ class VertexLinker {
     }
 
     // For these fully clamped vertices add links for normal deforming
-    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
+    for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       const clamped = faceClamped.get(faceIndex);
       if (clamped === 0) return;
 
@@ -164,7 +164,7 @@ class VertexLinker {
         if (vertFullyClamped.get(vertIndexFrom) === 1) {
           let hasForwardLink = false;
 
-          for (let l = 0; l < vertLinkCounts[vertIndexFrom]; l++) {
+          for (let l = 0, c = vertLinkCounts[vertIndexFrom]; l < c; l++) {
             if (vertLinkIndices[vertIndexFrom * 6 + l] === vertIndexTo) {
               hasForwardLink = true;
               break;
@@ -180,7 +180,7 @@ class VertexLinker {
         if (vertFullyClamped.get(vertIndexTo) === 1) {
           let hasBackwardLink = false;
 
-          for (let l = 0; l < vertLinkCounts[vertIndexTo]; l++) {
+          for (let l = 0, c = vertLinkCounts[vertIndexTo]; l < c; l++) {
             if (vertLinkIndices[vertIndexTo * 6 + l] === vertIndexFrom) {
               hasBackwardLink = true;
               break;

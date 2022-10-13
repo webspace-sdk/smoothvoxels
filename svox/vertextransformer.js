@@ -37,9 +37,9 @@ class VertexTransformer {
     const normalZs = [model.faceVertNormalZ, model.faceVertFlatNormalZ, model.faceVertSmoothNormalZ, model.faceVertBothNormalZ];
 
     // Transform all normals
-    for (let faceIndex = 0; faceIndex < model.faceCount; faceIndex++) {
+    for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       for (let normalIndex = 0; normalIndex < 4; normalIndex++) {
-        for (let normalType = 0; normalType < normalXs.length; normalType++) {
+        for (let normalType = 0, c = normalXs.length; normalType < c; normalType++) {
           const xs = normalXs[normalType];
           const ys = normalYs[normalType];
           const zs = normalZs[normalType];

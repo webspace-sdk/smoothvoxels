@@ -130,6 +130,7 @@ class Model {
     this.vertWarpAmplitude = new Float32Array(MAX_VERTS);
     this.vertWarpFrequency = new Float32Array(MAX_VERTS);
     this.vertScatter = new Float32Array(MAX_VERTS);
+    this.vertRing = new Float32Array(MAX_VERTS);
     this.vertLinkCounts = new Uint8Array(MAX_VERTS); // A vert can be linked to up to 6 other verts
     this.vertLinkIndices = new Uint32Array(MAX_VERTS * 6);
 
@@ -169,6 +170,7 @@ class Model {
     // Need to zero on reset:
     // face vert link counts, color counts
     // all bitfields
+    // vert ring, since deformer checks for ring equality
   }
    
   _setVertex(x, y, z, vertex) {
@@ -306,9 +308,9 @@ class Model {
     
     //VertexLinker.logLinks(this.voxels);
 
-    //Deformer.changeShape(this, this._shape);
+    Deformer.changeShape(this, this._shape);
        
-    //Deformer.deform(this, maximumDeformCount);
+    Deformer.deform(this, maximumDeformCount);
     //
     //Deformer.warpAndScatter(this);
     

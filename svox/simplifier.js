@@ -58,7 +58,7 @@ class Simplifier {
     const { faceMaterials, faceCulled, faceNameIndices, vertX, vertY, vertZ } = model;
 
     // Combine nx, px, nz and pz faces vertical up
-    for (let i = model.voxelXZYFaceIndices.length - model.faceCount ; i < model.voxelXZYFaceIndices.length; i++) {
+    for (let i = model.voxelXZYFaceIndices.length - model.faceCount, l = model.voxelXZYFaceIndices.length ; i < l; i++) {
       const key = model.voxelXZYFaceIndices[i]
       const faceIndex = Number(key) & 0xFFFFFFFF;
       if (faceCulled.get(faceIndex)) continue;
@@ -88,7 +88,7 @@ class Simplifier {
     clearContexts();
 
     // Combine nx, px, ny and py faces from back to front
-    for (let i = model.voxelXYZFaceIndices.length - model.faceCount ; i < model.voxelXYZFaceIndices.length; i++) {
+    for (let i = model.voxelXYZFaceIndices.length - model.faceCount, l = model.voxelXYZFaceIndices.length ; i < l; i++) {
       const key = model.voxelXYZFaceIndices[i]
       const faceIndex = Number(key) & 0xFFFFFFFF;
       if (faceCulled.get(faceIndex)) continue;
@@ -118,7 +118,7 @@ class Simplifier {
     clearContexts();
 
     // Combine ny, py, nz and pz faces from left to right
-    for (let i = model.voxelYZXFaceIndices.length - model.faceCount ; i < model.voxelYZXFaceIndices.length; i++) {
+    for (let i = model.voxelYZXFaceIndices.length - model.faceCount, l = model.voxelYZXFaceIndices.length ; i < l; i++) {
       const key = model.voxelYZXFaceIndices[i]
       const faceIndex = Number(key) & 0xFFFFFFFF;
       if (faceCulled.get(faceIndex)) continue;
