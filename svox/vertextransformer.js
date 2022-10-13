@@ -10,6 +10,7 @@ function assertAlmostEqual(x, y) {
 class VertexTransformer {
          
   static transformVertices(model) {
+    const { vertX, vertY, vertZ, faceVertNormalX, faceVertFlatNormalX, faceVertNormalY, faceVertFlatNormalY, faceVertNormalZ, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = model;
     let bor = model.determineBoundsOffsetAndRescale(model.resize);
     
     // Define the transformation in reverse order to how they are carried out
@@ -28,13 +29,13 @@ class VertexTransformer {
     normalTransform = Matrix.transpose(normalTransform);
 
     // Now move all vertices to their new position and transform the average normals
-    for (let vertIndex = 0; vertIndex < model.vertCount; vertIndex++) {
-      vertexTransform.transformPointInline(model.vertX, model.vertY, model.vertZ, vertIndex);
+    for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
+      vertexTransform.transformPointInline(vertX, vertY, vertZ, vertIndex);
     }
 
-    const normalXs = [model.faceVertNormalX, model.faceVertFlatNormalX, model.faceVertSmoothNormalX, model.faceVertBothNormalX];
-    const normalYs = [model.faceVertNormalY, model.faceVertFlatNormalY, model.faceVertSmoothNormalY, model.faceVertBothNormalY];
-    const normalZs = [model.faceVertNormalZ, model.faceVertFlatNormalZ, model.faceVertSmoothNormalZ, model.faceVertBothNormalZ];
+    const normalXs = [faceVertNormalX, faceVertFlatNormalX, faceVertSmoothNormalX, faceVertBothNormalX];
+    const normalYs = [faceVertNormalY, faceVertFlatNormalY, faceVertSmoothNormalY, faceVertBothNormalY];
+    const normalZs = [faceVertNormalZ, faceVertFlatNormalZ, faceVertSmoothNormalZ, faceVertBothNormalZ];
 
     // Transform all normals
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {

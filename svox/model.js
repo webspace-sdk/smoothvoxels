@@ -172,7 +172,6 @@ class Model {
     this.voxelXYZFaceIndices = new BigUint64Array(MAX_FACES);
     this.voxelYZXFaceIndices = new BigUint64Array(MAX_FACES);
 
-
     // Need to zero on reset:
     // face vert link counts, color counts
     // all bitfields
@@ -271,6 +270,9 @@ class Model {
     let removeCount = 0;
 
     const vertIndexLookup = new Map();
+
+    this.faceCount = 0;
+    this.vertCount = 0;
 
     this.voxels.forEach(function createFaces(voxel) {
       let faceCount = 0;
@@ -467,12 +469,6 @@ class Model {
       this.faceVertIndices[this.faceCount * 4 + 1] = this._createInlineVertex(voxel, faceName, 1, flattened, clamped, vertIndexLookup);
       this.faceVertIndices[this.faceCount * 4 + 2] = this._createInlineVertex(voxel, faceName, 2, flattened, clamped, vertIndexLookup);
       this.faceVertIndices[this.faceCount * 4 + 3] = this._createInlineVertex(voxel, faceName, 3, flattened, clamped, vertIndexLookup);
-
-      // TODO Remove
-      face.vertices[0].vertIndex = this.faceVertIndices[this.faceCount * 4];
-      face.vertices[1].vertIndex = this.faceVertIndices[this.faceCount * 4 + 1];
-      face.vertices[2].vertIndex = this.faceVertIndices[this.faceCount * 4 + 2];
-      face.vertices[3].vertIndex = this.faceVertIndices[this.faceCount * 4 + 3];
 
       for (let v = 0; v < 4; v++) {
         this.faceVertColorR[this.faceCount * 4 + v] = voxel.color.r;

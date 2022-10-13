@@ -104,32 +104,6 @@ class VertexLinker {
           vertexTo.links.push(vertexFrom);
       }
     }  
-
-    //let assertCount = 0;
-
-    //model.voxels.forEach(function computeNormals(voxel) {
-    //  for (let faceName in voxel.faces) {
-    //    let face = voxel.faces[faceName];
-    //    if (face.skipped) 
-    //      continue;
-
-    //    for (let v = 0; v < 4; v++) {
-    //      const vertFrom = face.vertices[v];
-    //      const c = vertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]];
-    //      assertAlmostEqual(c, vertFrom.links.length);
-
-    //      for (let l = 0; l < c; l++) {
-    //        const linkToVertIndex = vertFrom.links[l].vertIndex;
-    //        const newLinkToVertex = vertLinkIndices[faceVertIndices[face.faceIndex * 4 + v] * 6 + l];
-    //        assertAlmostEqual(linkToVertIndex, newLinkToVertex);
-    //        assertCount++;
-    //      }
-    //    }
-    //  }
-
-    //}, this, true);
-
-    //console.log(assertCount);
   }
   
   static fixClampedLinks(model) {
