@@ -37,8 +37,6 @@ class VertexLinker {
           vertLinkIndices[vertIndex * 6 + vertLinkCounts[vertIndex]] = vertIndex;
           vertLinkCounts[vertIndex]++;
         }
-
-        vertLinkCounts[vertIndex]++;
       }
     } else {
       // Link each vertex with its neighbor and back (so not diagonally)
@@ -115,8 +113,7 @@ class VertexLinker {
         for (let v = 0; v < 4; v++) {
           const vertFrom = face.vertices[v];
           if (vertFrom.links.length !== vertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]]) {
-            // TODO JEL breaking with hello world case
-            //assertAlmostEqual(vertFrom.links.length, vertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]]);
+            assertAlmostEqual(vertFrom.links.length, vertLinkCounts[faceVertIndices[face.faceIndex * 4 + v]]);
           }
         }
       }

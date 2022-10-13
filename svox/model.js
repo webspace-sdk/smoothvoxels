@@ -324,7 +324,7 @@ class Model {
 
     UVAssigner.assignUVs(this);
     
-    //Simplifier.simplify(this);
+    Simplifier.simplify(this);
     
     //FaceAligner.alignFaceDiagonals(this);
   }
