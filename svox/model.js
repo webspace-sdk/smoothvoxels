@@ -95,6 +95,7 @@ class Model {
     this.faceCount = 0;
     this.vertCount = 0;
     this.nonCulledFaceCount = 0;
+    this.tmpVertIndexLookup = new Map();
 
     const MAX_VERTS = 1024 * 1024;
     const MAX_VERT_BITS = Math.floor(MAX_VERTS / 8);
@@ -262,6 +263,8 @@ class Model {
     
 
   prepareForRender() {
+    const { voxels, tmpVertIndexLookup, voxelXZYFaceIndices, voxelXYZFaceIndices, voxelYZXFaceIndices } = this;
+
     this.prepareForWrite();
     
     let maximumDeformCount = Deformer.maximumDeformCount(this);
@@ -270,20 +273,19 @@ class Model {
   
     let removeCount = 0;
 
-    const vertIndexLookup = new Map();
-
     this.faceCount = 0;
     this.vertCount = 0;
 
-    this.voxels.forEach(function createFaces(voxel) {
+    voxels.forEach(function createFaces(voxel) {
+
       let faceCount = 0;
       // Check which faces should be generated
       for (let f=0; f < SVOX._FACES.length; f++) {
         let faceName = SVOX._FACES[f];
         let neighbor = SVOX._NEIGHBORS[faceName];
         let face = this._createFace(voxel, faceName, f,
-                                    this.voxels.getVoxel(voxel.x+neighbor.x, voxel.y+neighbor.y, voxel.z+neighbor.z),
-                                    maximumDeformCount > 0, vertIndexLookup);  // Only link the vertices when needed
+                                    voxels.getVoxel(voxel.x+neighbor.x, voxel.y+neighbor.y, voxel.z+neighbor.z),
+                                    maximumDeformCount > 0, tmpVertIndexLookup);  // Only link the vertices when needed
         if (face) {
           voxel.faces[faceName] = face;
           const faceIndex = this.faceCount - 1;
@@ -296,9 +298,9 @@ class Model {
           const xyzKey = (nvx << 48n) | (nvy << 40n) | (nvz << 32n) | nfaceIndex;
           const yzxKey = (nvy << 48n) | (nvz << 40n) | (nvx << 32n) | nfaceIndex;
 
-          this.voxelXZYFaceIndices[faceIndex] = xzyKey;
-          this.voxelXYZFaceIndices[faceIndex] = xyzKey;
-          this.voxelYZXFaceIndices[faceIndex] = yzxKey;
+          voxelXZYFaceIndices[faceIndex] = xzyKey;
+          voxelXYZFaceIndices[faceIndex] = xyzKey;
+          voxelYZXFaceIndices[faceIndex] = yzxKey;
 
           if (!face.skipped)
             voxel.color.count++;
@@ -306,15 +308,17 @@ class Model {
         }
       }
       
+      // TODO JEL remove
       voxel.visible = faceCount > 0;
     }, this, false);
 
     this.nonCulledFaceCount = this.faceCount;
+    tmpVertIndexLookup.clear();
 
     // Sort ordered faces, used for simplifier
-    this.voxelXZYFaceIndices.sort()
-    this.voxelXYZFaceIndices.sort()
-    this.voxelYZXFaceIndices.sort()
+    voxelXZYFaceIndices.sort()
+    voxelXYZFaceIndices.sort()
+    voxelYZXFaceIndices.sort()
 
     VertexLinker.fixClampedLinks(this); 
     
@@ -468,34 +472,37 @@ class Model {
         faceIndex: this.faceCount
       };
 
-      this.faceVertIndices[this.faceCount * 4] = this._createInlineVertex(voxel, faceName, 0, flattened, clamped, vertIndexLookup);
-      this.faceVertIndices[this.faceCount * 4 + 1] = this._createInlineVertex(voxel, faceName, 1, flattened, clamped, vertIndexLookup);
-      this.faceVertIndices[this.faceCount * 4 + 2] = this._createInlineVertex(voxel, faceName, 2, flattened, clamped, vertIndexLookup);
-      this.faceVertIndices[this.faceCount * 4 + 3] = this._createInlineVertex(voxel, faceName, 3, flattened, clamped, vertIndexLookup);
+      const { faceVertIndices, faceVertColorR, faceVertColorG, faceVertColorB, faceFlattened, faceClamped, faceSmooth, faceCulled, faceMaterials, faceNameIndices, faceVertUs, faceVertVs, faceCount} = this;
+      const faceVertOffset = faceCount * 4;
+
+      faceVertIndices[faceVertOffset] = this._createInlineVertex(voxel, faceName, 0, flattened, clamped, vertIndexLookup);
+      faceVertIndices[faceVertOffset + 1] = this._createInlineVertex(voxel, faceName, 1, flattened, clamped, vertIndexLookup);
+      faceVertIndices[faceVertOffset + 2] = this._createInlineVertex(voxel, faceName, 2, flattened, clamped, vertIndexLookup);
+      faceVertIndices[faceVertOffset + 3] = this._createInlineVertex(voxel, faceName, 3, flattened, clamped, vertIndexLookup);
 
       for (let v = 0; v < 4; v++) {
-        this.faceVertColorR[this.faceCount * 4 + v] = voxel.color.r;
-        this.faceVertColorG[this.faceCount * 4 + v] = voxel.color.g;
-        this.faceVertColorB[this.faceCount * 4 + v] = voxel.color.b;
+        faceVertColorR[faceVertOffset + v] = voxel.color.r;
+        faceVertColorG[faceVertOffset + v] = voxel.color.g;
+        faceVertColorB[faceVertOffset + v] = voxel.color.b;
       }
 
-      this.faceFlattened.set(this.faceCount, flattened ? 1 : 0);
-      this.faceClamped.set(this.faceCount, clamped ? 1 : 0);
-      this.faceSmooth.set(this.faceCount, 0);
-      this.faceCulled.set(this.faceCount, 0);
-      this.faceMaterials[this.faceCount] = voxel.materialListIndex;
-      this.faceNameIndices[this.faceCount] = faceNameIndex;
+      faceFlattened.set(faceCount, flattened ? 1 : 0);
+      faceClamped.set(faceCount, clamped ? 1 : 0);
+      faceSmooth.set(faceCount, 0);
+      faceCulled.set(faceCount, 0);
+      faceMaterials[faceCount] = voxel.materialListIndex;
+      faceNameIndices[faceCount] = faceNameIndex;
 
       // See UVAssigner, we fill in the proper x, y, z value from the voxel for the UV mapping to be resolved later
       const faceUVs = SVOX._FACEINDEXUVS[faceNameIndex];
       for (let i = 0; i < 4; i++) {
-        this.faceVertUs[this.faceCount * 4 + i] = voxel[faceUVs.u];
-        this.faceVertVs[this.faceCount * 4 + i] = voxel[faceUVs.v];
+        faceVertUs[faceVertOffset + i] = voxel[faceUVs.u];
+        faceVertVs[faceVertOffset + i] = voxel[faceUVs.v];
       }
 
        // Link the vertices for deformation
       if (linkVertices)
-        VertexLinker.linkVertices(model, face, this.faceCount);
+        VertexLinker.linkVertices(model, face, faceCount);
 
       this.faceCount++;
     }
@@ -591,69 +598,70 @@ class Model {
 
     const shape = model._shape;
     const fadeAny = model.materials.find(m => m.colors.length > 1 && m.fade) ? true : false;
+    const { vertDeformCount, vertDeformDamping, vertDeformStrength, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertX, vertY, vertZ, vertLinkCounts, vertFullyClamped, vertRing, _flatten: modelFlatten, _clamp: modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertColorR, vertColorG, vertColorB, vertColorCount, vertFlattenedX, vertFlattenedY, vertFlattenedZ } = model;
 
     if (vertIndexLookup.has(key)) {
       vertIndex = vertIndexLookup.get(key);
 
       // Favour less deformation over more deformation
       if (!material.deform) {
-        this.vertDeformCount[vertIndex] = 0;
-        this.vertDeformDamping[vertIndex] = 0;
-        this.vertDeformStrength[vertIndex] = 0;
+        vertDeformCount[vertIndex] = 0;
+        vertDeformDamping[vertIndex] = 0;
+        vertDeformStrength[vertIndex] = 0;
       }
-      else if (this.vertDeformCount[vertIndex] !== 0 &&
+      else if (vertDeformCount[vertIndex] !== 0 &&
                (this._getDeformIntegral(material.deform) < this._getDeformIntegralAtVertex(vertIndex))) {
-        this.vertDeformStrength[vertIndex] = material.deform.strength;
-        this.vertDeformDamping[vertIndex] = material.deform.damping;
-        this.vertDeformCount[vertIndex] = material.deform.count;
+        vertDeformStrength[vertIndex] = material.deform.strength;
+        vertDeformDamping[vertIndex] = material.deform.damping;
+        vertDeformCount[vertIndex] = material.deform.count;
       }
 
       // Favour less / less requent warp over more warp
       if (!material.warp) {
-        this.vertWarpAmplitude[vertIndex] = 0;
-        this.vertWarpFrequency[vertIndex] = 0;
+        vertWarpAmplitude[vertIndex] = 0;
+        vertWarpFrequency[vertIndex] = 0;
       }
-      else if (this.vertWarpAmplitude[vertIndex] !== 0 &&
-               ((material.warp.amplitude < this.vertWarpAmplitude[vertIndex]) ||
-                (material.warp.amplitude === this.vertWarpAmplitude[vertIndex] && material.warp.frequency > this.vertWarpFrequency[vertIndex]))) {
-        this.vertWarpAmplitude[vertIndex] = material.warp.amplitude;
-        this.vertWarpFrequency[vertIndex] = material.warp.frequency;
+      else if (vertWarpAmplitude[vertIndex] !== 0 &&
+               ((material.warp.amplitude < vertWarpAmplitude[vertIndex]) ||
+                (material.warp.amplitude === vertWarpAmplitude[vertIndex] && material.warp.frequency > vertWarpFrequency[vertIndex]))) {
+        vertWarpAmplitude[vertIndex] = material.warp.amplitude;
+        vertWarpFrequency[vertIndex] = material.warp.frequency;
       }
 
       // Favour less scatter over more scatter
       if (!material.scatter)
-        this.vertScatter[vertIndex] = 0;
-      else if (this.vertScatter[vertIndex] !== 0 &&
-               Math.abs(material.scatter) < Math.abs(this.vertScatter[vertIndex])) {
-        this.vertScatter[vertIndex] = material.scatter;
+        vertScatter[vertIndex] = 0;
+      else if (vertScatter[vertIndex] !== 0 &&
+               Math.abs(material.scatter) < Math.abs(vertScatter[vertIndex])) {
+        vertScatter[vertIndex] = material.scatter;
       }
     } else {
       vertIndex = this.vertCount;
       vertIndexLookup.set(key, vertIndex);
 
-      this.vertX[vertIndex] = x;
-      this.vertY[vertIndex] = y;
-      this.vertZ[vertIndex] = z;
+      vertX[vertIndex] = x;
+      vertY[vertIndex] = y;
+      vertZ[vertIndex] = z;
 
       if (material.deform) {
-        this.vertDeformDamping[vertIndex] = material.deform.damping;
-        this.vertDeformCount[vertIndex] = material.deform.count;
-        this.vertDeformStrength[vertIndex] = material.deform.strength;
-        this.vertLinkCounts[vertIndex] = 0;
-        this.vertFullyClamped.set(vertIndex, 0);
+        vertDeformDamping[vertIndex] = material.deform.damping;
+        vertDeformCount[vertIndex] = material.deform.count;
+        vertDeformStrength[vertIndex] = material.deform.strength;
+        vertLinkCounts[vertIndex] = 0;
+        vertFullyClamped.set(vertIndex, 0);
       }
 
       if (material.warp) {
-        this.vertWarpAmplitude[vertIndex] = material.warp.amplitude;
-        this.vertWarpFrequency[vertIndex] = material.warp.frequency;
+        vertWarpAmplitude[vertIndex] = material.warp.amplitude;
+        vertWarpFrequency[vertIndex] = material.warp.frequency;
       }
 
       if (material.scatter) {
-        this.vertScatter[vertIndex] = material.scatter;
+        vertScatter[vertIndex] = material.scatter;
       }
 
       if (fadeAny) {
-        this.vertColorCount[vertIndex] = 0;
+        vertColorCount[vertIndex] = 0;
       }
 
       switch (shape) {
@@ -661,20 +669,20 @@ class Model {
         case 'cylinder-x' :
         case 'cylinder-y' :
         case 'cylinder-z' :
-          this.vertRing[vertIndex] = 0;
+          vertRing[vertIndex] = 0;
         default: break;
       }
     }
 
     // This will || the planar values
-    this._setIsVertexPlanar(voxel, x, y, z, material._flatten, this._flatten, this.vertFlattenedX, this.vertFlattenedY, this.vertFlattenedZ, vertIndex);
-    this._setIsVertexPlanar(voxel, x, y, z, material._clamp, this._clamp, this.vertClampedX, this.vertClampedY, this.vertClampedZ, vertIndex);
+    this._setIsVertexPlanar(voxel, x, y, z, material._flatten, modelFlatten, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertIndex);
+    this._setIsVertexPlanar(voxel, x, y, z, material._clamp, modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertIndex);
 
-    const vertColorIndex = this.vertColorCount[vertIndex];
-    this.vertColorR[vertIndex * 5 + vertColorIndex] = voxel.color.r;
-    this.vertColorG[vertIndex * 5 + vertColorIndex] = voxel.color.g;
-    this.vertColorB[vertIndex * 5 + vertColorIndex] = voxel.color.b;
-    this.vertColorCount[vertIndex] = vertColorIndex + 1;
+    const vertColorIndex = vertColorCount[vertIndex];
+    vertColorR[vertIndex * 5 + vertColorIndex] = voxel.color.r;
+    vertColorG[vertIndex * 5 + vertColorIndex] = voxel.color.g;
+    vertColorB[vertIndex * 5 + vertColorIndex] = voxel.color.b;
+    vertColorCount[vertIndex] = vertColorIndex + 1;
 
     this.vertCount++;
 
