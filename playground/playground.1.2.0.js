@@ -3195,7 +3195,6 @@ function toggleFps() {
   }
 }
 
-SVOX.clampColors = true;
 function toggleClampColors() {
   SVOX.clampColors = !SVOX.clampColors;
   setRadioButtons("toggleClampColors", "Clamp colors", "On", "Off", SVOX.clampColors);
