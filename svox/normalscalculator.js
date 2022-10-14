@@ -63,12 +63,15 @@ class NormalsCalculator {
         e1l = e1l === 0 ? 1 : e1l;
         e2l = e2l === 0 ? 1 : e2l;
 
-        e1X /= e1l;
-        e1Y /= e1l;
-        e1Z /= e1l;
-        e2X /= e2l;
-        e2Y /= e2l;
-        e2Z /= e2l;
+        const e1d = 1 / e1l;
+        e1X *= e1d;
+        e1Y *= e1d;
+        e1Z *= e1d;
+
+        const e2d = 1 / e2l;
+        e2X *= e2d;
+        e2Y *= e2d;
+        e2Z *= e2d;
 
         // Calculate cross product to start normal
         let normalX = e1Y * e2Z - e1Z * e2Y;
@@ -105,9 +108,10 @@ class NormalsCalculator {
         let nl = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
         nl = nl === 0 ? 1 : nl;
 
-        normalX /= nl;
-        normalY /= nl;
-        normalZ /= nl;
+        const nd = 1 / nl;
+        normalX *= nd;
+        normalY *= nd;
+        normalZ *= nd;
 
         // Store the normal for all 4 vertices (used for flat lighting)
         faceVertFlatNormalX[faceIndex * 4 + v] = normalX;

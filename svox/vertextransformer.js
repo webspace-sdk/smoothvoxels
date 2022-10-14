@@ -56,9 +56,10 @@ class VertexTransformer {
           let normalLength = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
 
           if (normalLength > 0) {
-            xs[idx] = normalX / normalLength;
-            ys[idx] = normalY / normalLength;
-            zs[idx] = normalZ / normalLength;
+            const d = 1 / normalLength;
+            xs[idx] = normalX * d;
+            ys[idx] = normalY * d;
+            zs[idx] = normalZ * d;
           }
         }
       }

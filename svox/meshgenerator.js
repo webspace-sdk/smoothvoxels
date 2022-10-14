@@ -417,19 +417,24 @@ class SvoxMeshGenerator {
       const normFace1Length = Math.sqrt(normFace1X*normFace1X + normFace1Y*normFace1Y + normFace1Z*normFace1Z);
       const normFace2Length = Math.sqrt(normFace2X*normFace2X + normFace2Y*normFace2Y + normFace2Z*normFace2Z);
 
-      normFace1X /= normFace1Length;
-      normFace1Y /= normFace1Length;
-      normFace1Z /= normFace1Length;
-      normFace2X /= normFace2Length;
-      normFace2Y /= normFace2Length;
-      normFace2Z /= normFace2Length;
+      const normFace1LengthInv = 1 / normFace1Length;
+      const normFace2LengthInv = 1 / normFace2Length;
+
+      normFace1X *= normFace1LengthInv;
+      normFace1Y *= normFace1LengthInv;
+      normFace1Z *= normFace1LengthInv;
+      normFace2X *= normFace2LengthInv;
+      normFace2Y *= normFace2LengthInv;
+      normFace2Z *= normFace2LengthInv;
 
       // Average the normals to get the flat normals
       if (material.lighting === SVOX.QUAD) {
         const combinedFaceLength = Math.sqrt(normFace1X*normFace1X + normFace1Y*normFace1Y + normFace1Z*normFace1Z) + Math.sqrt(normFace2X*normFace2X + normFace2Y*normFace2Y + normFace2Z*normFace2Z);
-        normFace1X = normFace2X = (normFace1X + normFace2X) / combinedFaceLength;
-        normFace1Y = normFace2Y = (normFace1Y + normFace2Y) / combinedFaceLength;
-        normFace1Z = normFace2Z = (normFace1Z + normFace2Z) / combinedFaceLength;
+        const combinedFaceLengthInv = 1 / combinedFaceLength;
+        
+        normFace1X = normFace2X = (normFace1X + normFace2X) * combinedFaceLengthInv;
+        normFace1Y = normFace2Y = (normFace1Y + normFace2Y) * combinedFaceLengthInv;
+        normFace1Z = normFace2Z = (normFace1Z + normFace2Z) * combinedFaceLengthInv;
       }
 
       // Note: because of indices, this code when migrated has the wrong FLAT norm for the first and last vert of face 2
@@ -484,27 +489,31 @@ class SvoxMeshGenerator {
       const col3Length = Math.sqrt(col3R*col3R + col3G*col3G + col3B*col3B);
 
       if (col0Length > 0) {
-        col0R /= col0Length;
-        col0G /= col0Length;
-        col0B /= col0Length;
+        const d = 1 / col0Length;
+        col0R *= d;
+        col0G *= d;
+        col0B *= d;
       }
 
       if (col1Length > 0) {
-        col1R /= col1Length;
-        col1G /= col1Length;
-        col1B /= col1Length;
+        const d = 1 / col1Length;
+        col1R *= d;
+        col1G *= d;
+        col1B *= d;
       }
 
       if (col2Length > 0) {
-        col2R /= col2Length;
-        col2G /= col2Length;
-        col2B /= col2Length;
+        const d = 1 / col2Length
+        col2R *= d;
+        col2G *= d;
+        col2B *= d;
       }
 
       if (col3Length > 0) {
-        col3R /= col3Length;
-        col3G /= col3Length;
-        col3B /= col3Length;
+        const d = 1 / col3Length
+        col3R *= d;
+        col3G *= d;
+        col3B *= d;
       }
     }
 
