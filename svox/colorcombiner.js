@@ -19,7 +19,6 @@ class ColorCombiner {
       let fadeFace = fadeMaterials[faceMaterials[faceIndex]];
 
       if (fadeFace) {
-        console.log("HI")
         // Fade vertex colors
         for (let v = 0; v < 4; v++) {
           let r = 0;
