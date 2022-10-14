@@ -190,7 +190,8 @@ class BaseMaterial {
   }
   
   get baseId() {
-    return `${this.type}|${this.roughness}|${this.metalness}|` +
+    if (this._baseId === undefined) {
+      this._baseId = `${this.type}|${this.roughness}|${this.metalness}|` +
            `${this.opacity}|${this.alphaTest}|${this.transparent?1:0}|` + 
            `${this.refractionRatio}|${this.wireframe?1:0}|${this.side}|`+ 
            (this.emissive ? `${this.emissive.color}|${this.emissive.intensity}|` : `||`) + 
@@ -206,6 +207,9 @@ class BaseMaterial {
            `${this.mapTransform.uscale}|${this.mapTransform.vscale}|` + 
            `${this.mapTransform.uoffset}|${this.mapTransform.voffset}|` +
            `${this.mapTransform.rotation}`;
+    }
+
+    return this._baseId;
   }
   
   get isTransparent() {

@@ -10,7 +10,9 @@ function assertAlmostEqual(x, y) {
 class SvoxMeshGenerator {
 
   static generate(model) {
+    let t0 = performance.now();
     model.prepareForRender();
+    console.log("prep for render: " + (performance.now() - t0) + "ms");
   
     const { nonCulledFaceCount } = model;
 
@@ -30,12 +32,14 @@ class SvoxMeshGenerator {
       data: null
     };
     
+    t0 = performance.now();
     model.materials.baseMaterials.forEach(function(material) {
       if (material.colorUsageCount > 0) {
         material.index = mesh.materials.length;
         mesh.materials.push(SvoxMeshGenerator._generateMaterial(material, model));
       }
     }, this);
+    console.log("generate materials: " + (performance.now() - t0) + "ms");
 
     // TODO JEL does this matter?
     // if (model.data) {
@@ -47,9 +51,13 @@ class SvoxMeshGenerator {
     //   }
     // }
     
+    t0 = performance.now();
     SvoxMeshGenerator._generateAll(model, mesh);
+    console.log("Mesh generation took " + (performance.now() - t0) + " ms");
     
+    t0 = performance.now();
     SvoxMeshGenerator._generateLights(model, mesh);
+    console.log("Light generation took " + (performance.now() - t0) + " ms");
 
     return mesh;
   }
@@ -236,7 +244,7 @@ class SvoxMeshGenerator {
           const material = materials[faceMaterials[faceIndex]];
 
           // Check for material match and face culling from simplifier
-          if (material.baseId === baseMaterial.baseId && faceCulled.get(faceIndex) === 0) {
+          if (material._baseMaterial === baseMaterial && faceCulled.get(faceIndex) === 0) {
             SvoxMeshGenerator._generateFace(model, faceIndex, mesh);
           }
         }

@@ -280,6 +280,9 @@ class Model {
     this.faceCount = 0;
     this.vertCount = 0;
 
+    let t0, t1;
+    t0 = performance.now();
+
     const allowDeform = maximumDeformCount > 0
 
     voxels.forEach(function createFaces(voxel) {
@@ -319,6 +322,7 @@ class Model {
       // TODO JEL remove
       voxel.visible = faceCount > 0;
     }, this, false);
+    console.log("createFaces: " + (performance.now() - t0));
 
     this.nonCulledFaceCount = this.faceCount;
     tmpVertIndexLookup.clear();
@@ -333,29 +337,49 @@ class Model {
     this.voxelXYZFaceIndices.sort(SORT_NUMBERS);
     this.voxelYZXFaceIndices.sort(SORT_NUMBERS);
 
+    t0 = performance.now();
     VertexLinker.fixClampedLinks(this); 
+    console.log("fixClampedLinks: " + (performance.now() - t0));
     
+    t0 = performance.now();
     Deformer.changeShape(this, this._shape);
+    console.log("changeShape: " + (performance.now() - t0));
        
+    t0 = performance.now();
     Deformer.deform(this, maximumDeformCount);
+    console.log("deform: " + (performance.now() - t0));
     
+    t0 = performance.now();
     Deformer.warpAndScatter(this);
+    console.log("warpAndScatter: " + (performance.now() - t0));
     
+    t0 = performance.now();
     NormalsCalculator.calculateNormals(this);
+    console.log("calculateNormals: " + (performance.now() - t0));
     
+    t0 = performance.now();
     VertexTransformer.transformVertices(this);    
+    console.log("transformVertices: " + (performance.now() - t0));
     
     //LightsCalculator.calculateLights(this);
     
     //AOCalculator.calculateAmbientOcclusion(this);
     
+    t0 = performance.now();
     ColorCombiner.combineColors(this);
+    console.log("combineColors: " + (performance.now() - t0));
 
+    t0 = performance.now();
     UVAssigner.assignUVs(this);
+    console.log("assignUVs: " + (performance.now() - t0));
     
-    Simplifier.simplify(this);
+    t0 = performance.now();
+    //Simplifier.simplify(this);
+    console.log("simplify: " + (performance.now() - t0));
     
+    t0 = performance.now();
     FaceAligner.alignFaceDiagonals(this);
+    console.log("alignFaceDiagonals: " + (performance.now() - t0));
   }
 
   determineBoundsOffsetAndRescale(resize) {
