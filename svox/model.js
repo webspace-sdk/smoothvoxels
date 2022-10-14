@@ -283,10 +283,10 @@ class Model {
 
       let faceCount = 0;
 
-      // Hacky trick to pack keys into 52 bits. BigInts are slow.
+      // Hacky trick to pack keys into 52 bits. BigInts are slow to do these bitwise ops.
       const xzyKey = (voxel.x << 16 | voxel.z << 8 | voxel.y) * (1 << 28);
       const xyzKey = (voxel.x << 16 | voxel.y << 8 | voxel.z) * (1 << 28);
-      const yzxKey = (voxel.x << 16 | voxel.z << 8 | voxel.y) * (1 << 28);
+      const yzxKey = (voxel.y << 16 | voxel.z << 8 | voxel.x) * (1 << 28);
 
       // Check which faces should be generated
       for (let faceNameIndex = 0, l = SVOX._FACES.length; faceNameIndex < l; faceNameIndex++) {
@@ -317,12 +317,13 @@ class Model {
 
     console.log(this);
     // Sort ordered faces, used for simplifier
+    // NOTE this is a memory allocation we take on. Using bigint buffers was too slow.
     this.voxelXZYFaceIndices = tmpVoxelXZYFaceIndices.slice(0, this.faceCount);
     this.voxelXYZFaceIndices = tmpVoxelXYZFaceIndices.slice(0, this.faceCount);
     this.voxelYZXFaceIndices = tmpVoxelYZXFaceIndices.slice(0, this.faceCount);
-    this.voxelXZYFaceIndices.sort();
-    this.voxelXYZFaceIndices.sort();
-    this.voxelYZXFaceIndices.sort();
+    this.voxelXZYFaceIndices.sort((a, b) => a - b);
+    this.voxelXYZFaceIndices.sort((a, b) => a - b);
+    this.voxelYZXFaceIndices.sort((a, b) => a - b);
 
     VertexLinker.fixClampedLinks(this); 
     
