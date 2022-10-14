@@ -10,6 +10,7 @@ class Light {
   } 
 }
 
+const SORT_NUMBERS = (a, b) => a - b;
 
 class Model {
 
@@ -279,22 +280,29 @@ class Model {
     this.faceCount = 0;
     this.vertCount = 0;
 
-    voxels.forEach(function createFaces(voxel) {
+    const allowDeform = maximumDeformCount > 0
 
+    voxels.forEach(function createFaces(voxel) {
       let faceCount = 0;
 
+      const vx = voxel.x;
+      const vy = voxel.y;
+      const vz = voxel.z;
+
       // Hacky trick to pack keys into 52 bits. BigInts are slow to do these bitwise ops.
-      const xzyKey = (voxel.x << 16 | voxel.z << 8 | voxel.y) * (1 << 28);
-      const xyzKey = (voxel.x << 16 | voxel.y << 8 | voxel.z) * (1 << 28);
-      const yzxKey = (voxel.y << 16 | voxel.z << 8 | voxel.x) * (1 << 28);
+      const vxTop = vx << 16;
+      const vzMid = vz << 8;
+
+      const xzyKey = (vxTop | vzMid | voxel.y) * (1 << 28);
+      const xyzKey = (vxTop | voxel.y << 8 | voxel.z) * (1 << 28);
+      const yzxKey = (vy << 16 | vzMid | voxel.x) * (1 << 28);
 
       // Check which faces should be generated
       for (let faceNameIndex = 0, l = SVOX._FACES.length; faceNameIndex < l; faceNameIndex++) {
-
         const neighbor = SVOX._NEIGHBORS[faceNameIndex];
         const created = this._createFace(voxel, faceNameIndex,
-                          voxels.getVoxel(voxel.x+neighbor[0], voxel.y+neighbor[1], voxel.z+neighbor[2]),
-                          maximumDeformCount > 0, tmpVertIndexLookup);  // Only link the vertices when needed
+                          voxels.getVoxel(vx + neighbor[0], vy + neighbor[1], vz + neighbor[2]),
+                          allowDeform, tmpVertIndexLookup);  // Only link the vertices when needed
         if (created) {
           //voxel.faces[faceName] = face;
           const faceIndex = this.faceCount - 1;
@@ -321,9 +329,9 @@ class Model {
     this.voxelXZYFaceIndices = tmpVoxelXZYFaceIndices.slice(0, this.faceCount);
     this.voxelXYZFaceIndices = tmpVoxelXYZFaceIndices.slice(0, this.faceCount);
     this.voxelYZXFaceIndices = tmpVoxelYZXFaceIndices.slice(0, this.faceCount);
-    this.voxelXZYFaceIndices.sort((a, b) => a - b);
-    this.voxelXYZFaceIndices.sort((a, b) => a - b);
-    this.voxelYZXFaceIndices.sort((a, b) => a - b);
+    this.voxelXZYFaceIndices.sort(SORT_NUMBERS);
+    this.voxelXYZFaceIndices.sort(SORT_NUMBERS);
+    this.voxelYZXFaceIndices.sort(SORT_NUMBERS);
 
     VertexLinker.fixClampedLinks(this); 
     
@@ -416,14 +424,13 @@ class Model {
   }  
   
   _createFace(voxel, faceNameIndex, neighbor, linkVertices, vertIndexLookup) {
-    const material = voxel?.material;
-    const neighborMaterial = neighbor?.material;
+    const material = voxel.material;
     
-    if (!material || material.opacity === 0) {
+    if (material.opacity === 0) {
       // No voxel, so no face
       return false;
     }
-    else if (!neighborMaterial) {
+    else if (neighbor === undefined || neighbor === null) {
       // The voxel is next to an empty voxel, so create a face
     }
     else if (!material.isTransparent && !material.wireframe) {
@@ -433,7 +440,7 @@ class Model {
     else if (!material.isTransparent && !material.wireframe) {
       // The voxel is not see through, but the neighbor is, so create the face 
     }
-    else if (material.isTransparent && !material.wireframe && neighborMaterial.wireframe) {
+    else if (material.isTransparent && !material.wireframe && neighbor && neighbor.material.wireframe) {
        // The voxel is transparent and the neighbor is wireframe, create the face 
     }
     else {
@@ -449,10 +456,14 @@ class Model {
     const { faceVertIndices, faceVertColorR, faceVertColorG, faceVertColorB, faceFlattened, faceClamped, faceSmooth, faceCulled, faceMaterials, faceNameIndices, faceVertUs, faceVertVs, faceCount} = this;
     const faceVertOffset = faceCount * 4;
 
-    faceVertIndices[faceVertOffset] = this._createVertex(voxel, faceNameIndex, 0, flattened, clamped, vertIndexLookup);
-    faceVertIndices[faceVertOffset + 1] = this._createVertex(voxel, faceNameIndex, 1, flattened, clamped, vertIndexLookup);
-    faceVertIndices[faceVertOffset + 2] = this._createVertex(voxel, faceNameIndex, 2, flattened, clamped, vertIndexLookup);
-    faceVertIndices[faceVertOffset + 3] = this._createVertex(voxel, faceNameIndex, 3, flattened, clamped, vertIndexLookup);
+    const vx = voxel.x;
+    const vy = voxel.y;
+    const vz = voxel.z;
+
+    faceVertIndices[faceVertOffset] = this._createVertex(voxel, vx, vy, vz, faceNameIndex, 0, flattened, clamped, vertIndexLookup);
+    faceVertIndices[faceVertOffset + 1] = this._createVertex(voxel, vx, vy, vz, faceNameIndex, 1, flattened, clamped, vertIndexLookup);
+    faceVertIndices[faceVertOffset + 2] = this._createVertex(voxel, vx, vy, vz, faceNameIndex, 2, flattened, clamped, vertIndexLookup);
+    faceVertIndices[faceVertOffset + 3] = this._createVertex(voxel, vx, vy, vz, faceNameIndex, 3, flattened, clamped, vertIndexLookup);
 
     for (let v = 0; v < 4; v++) {
       faceVertColorR[faceVertOffset + v] = voxel.color.r;
@@ -467,11 +478,17 @@ class Model {
     faceMaterials[faceCount] = voxel.materialListIndex;
     faceNameIndices[faceCount] = faceNameIndex;
 
+    const faceUVs = SVOX._FACEINDEXUV_MULTIPLIERS[faceNameIndex];
+    const faceUVsU = faceUVs[0];
+    const faceUVsV = faceUVs[1];
+
+    const u = vx * faceUVsU[0] + vy * faceUVsU[1] + vz * faceUVsU[2];
+    const v = vx * faceUVsV[0] + vy * faceUVsV[1] + vz * faceUVsV[2];
+
     // See UVAssigner, we fill in the proper x, y, z value from the voxel for the UV mapping to be resolved later
-    const faceUVs = SVOX._FACEINDEXUVS[faceNameIndex];
     for (let i = 0; i < 4; i++) {
-      faceVertUs[faceVertOffset + i] = voxel[faceUVs.u];
-      faceVertVs[faceVertOffset + i] = voxel[faceUVs.v];
+      faceVertUs[faceVertOffset + i] = u;
+      faceVertVs[faceVertOffset + i] = v;
     }
 
      // Link the vertices for deformation
@@ -483,12 +500,12 @@ class Model {
     return true;
   }
   
-  _createVertex(voxel, faceNameIndex, vi, flattened, clamped, vertIndexLookup) {
+  _createVertex(voxel, vx, vy, vz, faceNameIndex, vi, flattened, clamped, vertIndexLookup) {
     // Calculate the actual vertex coordinates
     const vertexOffset = SVOX._VERTEX_OFFSETS[faceNameIndex][vi];
-    const x = voxel.x + vertexOffset[0];
-    const y = voxel.y + vertexOffset[1];
-    const z = voxel.z + vertexOffset[2];
+    const x = vx + vertexOffset[0];
+    const y = vy + vertexOffset[1];
+    const z = vz + vertexOffset[2];
 
     const material = voxel.material;
 

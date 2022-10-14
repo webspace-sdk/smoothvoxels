@@ -1,3 +1,35 @@
+const contexti1 = {
+  filled: false,
+  lastVoxelAxis1: 0,
+  lastVoxelAxis2: 0,
+  maxVoxelAxis3: 0,
+  lastFaceIndex: 0,
+}
+
+const contexti2 = {
+  filled: false,
+  lastVoxelAxis1: 0,
+  lastVoxelAxis2: 0,
+  maxVoxelAxis3: 0,
+  lastFaceIndex: 0,
+}
+
+const contexti3 = {
+  filled: false,
+  lastVoxelAxis1: 0,
+  lastVoxelAxis2: 0,
+  maxVoxelAxis3: 0,
+  lastFaceIndex: 0,
+}
+
+const contexti4 = {
+  filled: false,
+  lastVoxelAxis1: 0,
+  lastVoxelAxis2: 0,
+  maxVoxelAxis3: 0,
+  lastFaceIndex: 0,
+}
+
 class Simplifier {
   
   // Combine all faces which are coplanar, have the same normals, colors, etc.
@@ -6,39 +38,7 @@ class Simplifier {
     if (!model.simplify)
       return;
 
-    const contexti1 = {
-      filled: false,
-      lastVoxelAxis1: 0,
-      lastVoxelAxis2: 0,
-      maxVoxelAxis3: 0,
-      lastFaceIndex: 0,
-    }
-
-    const contexti2 = {
-      filled: false,
-      lastVoxelAxis1: 0,
-      lastVoxelAxis2: 0,
-      maxVoxelAxis3: 0,
-      lastFaceIndex: 0,
-    }
-
-    const contexti3 = {
-      filled: false,
-      lastVoxelAxis1: 0,
-      lastVoxelAxis2: 0,
-      maxVoxelAxis3: 0,
-      lastFaceIndex: 0,
-    }
-
-    const contexti4 = {
-      filled: false,
-      lastVoxelAxis1: 0,
-      lastVoxelAxis2: 0,
-      maxVoxelAxis3: 0,
-      lastFaceIndex: 0,
-    }
-
-    let clearContexts = function() {
+    const clearContexts = function() {
       contexti1.filled = false;
       contexti2.filled = false;
       contexti3.filled = false;
@@ -140,6 +140,8 @@ class Simplifier {
             break;
       }
     }
+
+    clearContexts();
   }
   
   static _mergeFaces(material, model, context, faceIndex, vaxis1, vaxis2, vaxis3, axis1Arr, axis2Arr, axis3Arr, v0, v1, v2, v3) {

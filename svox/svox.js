@@ -107,5 +107,15 @@ SVOX._FACEINDEXUVS = [
   {u:'x', v:'y', order:[0,1,2,3], ud: 1, vd: 1, uo:0.25, vo:0.00 }  
 ];
 
+// Optimization over above
+SVOX._FACEINDEXUV_MULTIPLIERS = [
+  [[0, 0, 1], [0, 1, 0]],
+  [[0, 0, 1], [0, 1, 0]],
+  [[1, 0, 0], [0, 0, 1]],
+  [[1, 0, 0], [0, 0, 1]],
+  [[1, 0, 0], [0, 1, 0]],
+  [[1, 0, 0], [0, 1, 0]]
+]
+
 const EPS = 0.0001;
 

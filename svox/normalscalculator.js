@@ -9,7 +9,7 @@ class NormalsCalculator {
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       // Compute face vertex normals
       const faceNameIndex = faceNameIndices[faceIndex];
-      const equidistant = faceEquidistant[faceIndex];
+      const equidistant = faceEquidistant.get(faceIndex);
       const flattened = faceFlattened.get(faceIndex);
       const clamped = faceClamped.get(faceIndex);
 
