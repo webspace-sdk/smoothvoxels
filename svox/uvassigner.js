@@ -81,29 +81,6 @@ class UVAssigner {
         faceVertUs[faceIndex * 4 + faceUVs.order[3]] = useOffset * faceUVs.uo + (voxU3 + 0.9999) * faceUVs.ud * uscale;
         faceVertVs[faceIndex * 4 + faceUVs.order[3]] = useOffset * faceUVs.vo + (voxV3 + 0.0001) * faceUVs.vd * vscale;
       }
-
-      model.voxels.forEach(function(voxel) {
-        const useOffset = materialUseOffsets[voxel.materialListIndex];
-        const uscale = materialUScales[voxel.materialListIndex];
-        const vscale = materialUScales[voxel.materialListIndex];
-
-        let material = voxel.material;
-        
-        // We're always calculating UV's since even when the voxel does not use them, the shell might need them
-        
-        for (let faceName in voxel.faces) {
-          let face = voxel.faces[faceName];
-          if (face.skipped)
-            continue;
-          
-          let faceUVs = SVOX._FACEUVS[faceName];
-          face.uv = [];
-          face.uv[faceUVs.order[0]] = { u:useOffset*faceUVs.uo+(voxel[faceUVs.u]+0.0001)*faceUVs.ud*uscale, v:useOffset*faceUVs.vo+(voxel[faceUVs.v]+0.0001)*faceUVs.vd*vscale }; 
-          face.uv[faceUVs.order[1]] = { u:useOffset*faceUVs.uo+(voxel[faceUVs.u]+0.0001)*faceUVs.ud*uscale, v:useOffset*faceUVs.vo+(voxel[faceUVs.v]+0.9999)*faceUVs.vd*vscale }; 
-          face.uv[faceUVs.order[2]] = { u:useOffset*faceUVs.uo+(voxel[faceUVs.u]+0.9999)*faceUVs.ud*uscale, v:useOffset*faceUVs.vo+(voxel[faceUVs.v]+0.9999)*faceUVs.vd*vscale }; 
-          face.uv[faceUVs.order[3]] = { u:useOffset*faceUVs.uo+(voxel[faceUVs.u]+0.9999)*faceUVs.ud*uscale, v:useOffset*faceUVs.vo+(voxel[faceUVs.v]+0.0001)*faceUVs.vd*vscale };
-        }
-      }, this, true);  
   }
 }
 

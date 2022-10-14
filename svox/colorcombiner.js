@@ -44,29 +44,6 @@ class ColorCombiner {
         // Face colors are already set to voxel color during model load
       }
     }
-
-    model.voxels.forEach(function combine(voxel) {
-      let fadeVoxel = (fadeAny && voxel.material.fade && voxel.material.colors.length > 1);
-
-      for (let faceName in voxel.faces) {
-        let face = voxel.faces[faceName];
-        if (face && !face.skipped) {
-          
-          if (!fadeVoxel) {
-            // No fading, so no per vertex colors
-            delete face.vertexColors;
-          }
-          else {
-            // Fade the colors
-            this._fadeFaceColor(voxel, face);
-          }   
-          
-          // Combine AO + Lights + Face color(s)
-          // TODO JEL inline
-          this._combineFaceColors(model, voxel, face);                   
-        }  
-      }
-    }, this, true);
   }
        
   static _fadeFaceColor(voxel, face) {

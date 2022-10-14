@@ -63,36 +63,5 @@ class VertexTransformer {
         }
       }
     }
-
-    // Now move all vertices to their new position and transform the average normals
-    model.forEachVertex(function(vertex) {      
-      vertexTransform.transformPoint(vertex)
-    }, this); 
-         
-    // Transform all normals
-    model.voxels.forEach(function transformNormals(voxel) {
-      for (let faceName in voxel.faces) {
-        let face = voxel.faces[faceName];
-        if (face && !face.skipped) {
-          for (let n = 0; n<face.normals.length; n++) {
-            if (!face.flatNormals[n].transformed) {
-              normalTransform.transformVector(face.flatNormals[n]);
-              model._normalize(face.flatNormals[n]);
-              face.flatNormals[n].transformed = true;
-            }
-            if (!face.smoothNormals[n].transformed) {
-              normalTransform.transformVector(face.smoothNormals[n]);
-              model._normalize(face.smoothNormals[n]);
-              face.smoothNormals[n].transformed = true;
-            }
-            if (!face.bothNormals[n].transformed) {
-              normalTransform.transformVector(face.bothNormals[n]);
-              model._normalize(face.bothNormals[n]);
-              face.bothNormals[n].transformed = true;
-            }
-          }
-        }
-      }
-    }, this, true);
   }
 }
