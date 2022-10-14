@@ -47,7 +47,7 @@ class Deformer {
     const { faceVertIndices, vertRing, faceEquidistant } = model;
 
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
-      const faceVertIndex0 = faceIndex * 3;
+      const faceVertIndex0 = faceIndex * 4;
       const faceVertIndex1 = faceVertIndex0 + 1;
       const faceVertIndex2 = faceVertIndex0 + 2;
       const faceVertIndex3 = faceVertIndex0 + 3;
