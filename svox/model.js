@@ -170,9 +170,9 @@ class Model {
     this.faceVertUs = new Float32Array(MAX_FACE_VERTS);
     this.faceVertVs = new Float32Array(MAX_FACE_VERTS);
 
-    this.voxelXZYFaceIndices = new BigUint64Array(MAX_FACES);
-    this.voxelXYZFaceIndices = new BigUint64Array(MAX_FACES);
-    this.voxelYZXFaceIndices = new BigUint64Array(MAX_FACES);
+    this.voxelXZYFaceIndices = Array(MAX_FACES).fill(0);
+    this.voxelXYZFaceIndices = Array(MAX_FACES).fill(0);
+    this.voxelYZXFaceIndices = Array(MAX_FACES).fill(0);
 
     // Need to zero on reset:
     // face vert link counts, color counts
@@ -280,12 +280,10 @@ class Model {
 
       let faceCount = 0;
 
-      const nvx = BigInt(voxel.x);
-      const nvy = BigInt(voxel.y);
-      const nvz = BigInt(voxel.z);
-      const xzyKey = (nvx << 48n) | (nvz << 40n) | (nvy << 32n);
-      const xyzKey = (nvx << 48n) | (nvy << 40n) | (nvz << 32n);
-      const yzxKey = (nvy << 48n) | (nvz << 40n) | (nvx << 32n);
+      // Hacky trick to pack keys into 52 bits. BigInts are slow.
+      const xzyKey = (voxel.x << 16 | voxel.z << 8 | voxel.y) * (1 << 28);
+      const xyzKey = (voxel.x << 16 | voxel.y << 8 | voxel.z) * (1 << 28);
+      const yzxKey = (voxel.x << 16 | voxel.z << 8 | voxel.y) * (1 << 28);
 
       // Check which faces should be generated
       for (let faceNameIndex = 0, l = SVOX._FACES.length; faceNameIndex < l; faceNameIndex++) {
@@ -297,11 +295,10 @@ class Model {
         if (created) {
           //voxel.faces[faceName] = face;
           const faceIndex = this.faceCount - 1;
-          const nfaceIndex = BigInt(faceIndex);
 
-          voxelXZYFaceIndices[faceIndex] = xzyKey | nfaceIndex;
-          voxelXYZFaceIndices[faceIndex] = xyzKey | nfaceIndex;
-          voxelYZXFaceIndices[faceIndex] = yzxKey | nfaceIndex;
+          voxelXZYFaceIndices[faceIndex] = xzyKey + faceIndex;
+          voxelXYZFaceIndices[faceIndex] = xyzKey + faceIndex;
+          voxelYZXFaceIndices[faceIndex] = yzxKey + faceIndex;
 
           voxel.color.count++;
           faceCount++;
@@ -488,16 +485,15 @@ class Model {
 
     const material = voxel.material;
 
-    let vertIndex;
-
     // Key is bit shifted x, y, z values as ints
     const key = (x << 20) | (y << 10) | z;
 
     const shape = model._shape;
-    const fadeAny = model.materials.find(m => m.colors.length > 1 && m.fade) ? true : false;
     const { vertDeformCount, vertDeformDamping, vertDeformStrength, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertX, vertY, vertZ, vertLinkCounts, vertFullyClamped, vertRing, _flatten: modelFlatten, _clamp: modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertColorR, vertColorG, vertColorB, vertColorCount, vertFlattenedX, vertFlattenedY, vertFlattenedZ } = model;
 
     const { deform, warp, scatter } = material;
+
+    let vertIndex;
 
     if (vertIndexLookup.has(key)) {
       vertIndex = vertIndexLookup.get(key);
@@ -569,9 +565,10 @@ class Model {
 
     const vertColorIndex = vertColorCount[vertIndex];
     const color = voxel.color;
-    vertColorR[vertIndex * 5 + vertColorIndex] = color.r;
-    vertColorG[vertIndex * 5 + vertColorIndex] = color.g;
-    vertColorB[vertIndex * 5 + vertColorIndex] = color.b;
+    const vertColorOffset = vertIndex * 5;
+    vertColorR[vertColorOffset + vertColorIndex] = color.r;
+    vertColorG[vertColorOffset + vertColorIndex] = color.g;
+    vertColorB[vertColorOffset + vertColorIndex] = color.b;
     vertColorCount[vertIndex] = vertColorIndex + 1;
 
     this.vertCount++;
@@ -618,27 +615,6 @@ class Model {
     }
   }
 
-  _isVertexPlanar(voxel, vx, vy, vz, materialPlanar, modelPlanar) {
-    let material = voxel.material;  
-    
-    let planar = materialPlanar;
-    let bounds = material.bounds;
-    if (!planar) {
-      planar = modelPlanar;
-      bounds = this.voxels.bounds;
-    }
-    
-    let result = { x:false, y:false, z:false};
-    if (planar) {
-      // Note bounds are in voxel coordinates and vertices add from 0 0 0 to 1 1 1
-      result.x = planar.x || (planar.nx && vx < bounds.minX + 0.5) || (planar.px && vx > bounds.maxX + 0.5);
-      result.y = planar.y || (planar.ny && vy < bounds.minY + 0.5) || (planar.py && vy > bounds.maxY + 0.5);
-      result.z = planar.z || (planar.nz && vz < bounds.minZ + 0.5) || (planar.pz && vz > bounds.maxZ + 0.5);
-    }
-    
-    return result;
-  }
-  
   _setIsVertexPlanar(voxel, vx, vy, vz, materialPlanar, modelPlanar, arrX, arrY, arrZ, vertIndex) {
     let material = voxel.material;  
     

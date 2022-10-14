@@ -51,12 +51,13 @@ class Simplifier {
     // Combine nx, px, nz and pz faces vertical up
     for (let i = model.voxelXZYFaceIndices.length - model.faceCount, l = model.voxelXZYFaceIndices.length ; i < l; i++) {
       const key = model.voxelXZYFaceIndices[i]
-      const faceIndex = Number(key) & 0xFFFFFFFF;
+      const faceIndex = key & ((1 << 28) - 1);
       if (faceCulled.get(faceIndex)) continue;
 
-      const x = Number(key >> 48n) & 0xFF;
-      const z = Number(key >> 40n) & 0xFF;
-      const y = Number(key >> 32n) & 0xFF;
+      const xzy = key / (1 << 28);
+      const x = xzy >> 16 & 0xFF;
+      const z = xzy >> 8 & 0xFF;
+      const y = xzy & 0xFF;
       const faceNameIndex = faceNameIndices[faceIndex];
       const material = materials[faceMaterials[faceIndex]];
 
@@ -81,12 +82,14 @@ class Simplifier {
     // Combine nx, px, ny and py faces from back to front
     for (let i = model.voxelXYZFaceIndices.length - model.faceCount, l = model.voxelXYZFaceIndices.length ; i < l; i++) {
       const key = model.voxelXYZFaceIndices[i]
-      const faceIndex = Number(key) & 0xFFFFFFFF;
+      const faceIndex = key & ((1 << 28) - 1);
       if (faceCulled.get(faceIndex)) continue;
 
-      const x = Number(key >> 48n) & 0xFF;
-      const y = Number(key >> 40n) & 0xFF;
-      const z = Number(key >> 32n) & 0xFF;
+      const xyz = key / (1 << 28);
+      const x = xyz >> 16 & 0xFF;
+      const y = xyz >> 8 & 0xFF;
+      const z = xyz & 0xFF;
+
       const faceNameIndex = faceNameIndices[faceIndex];
       const material = materials[faceMaterials[faceIndex]];
 
@@ -111,12 +114,14 @@ class Simplifier {
     // Combine ny, py, nz and pz faces from left to right
     for (let i = model.voxelYZXFaceIndices.length - model.faceCount, l = model.voxelYZXFaceIndices.length ; i < l; i++) {
       const key = model.voxelYZXFaceIndices[i]
-      const faceIndex = Number(key) & 0xFFFFFFFF;
+      const faceIndex = key & ((1 << 28) - 1);
       if (faceCulled.get(faceIndex)) continue;
 
-      const y = Number(key >> 48n) & 0xFF;
-      const z = Number(key >> 40n) & 0xFF;
-      const x = Number(key >> 32n) & 0xFF;
+      const yzx = key / (1 << 28);
+      const y = yzx >> 16 & 0xFF;
+      const z = yzx >> 8 & 0xFF;
+      const x = yzx & 0xFF;
+
       const faceNameIndex = faceNameIndices[faceIndex];
       const material = materials[faceMaterials[faceIndex]];
 
