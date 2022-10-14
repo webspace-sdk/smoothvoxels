@@ -48,48 +48,30 @@ SVOX._FACES   = [ 'nx', 'px', 'ny', 'py', 'nz', 'pz'];
 
 // Define the vertex offsets for each side.
 
-SVOX._VERTICES = {
-  nx: [ { x:0, y:0, z:0 },  
-        { x:0, y:1, z:0 },  
-        { x:0, y:1, z:1 },  
-        { x:0, y:0, z:1 }  
-      ],
-  px: [ { x:1, y:0, z:1 },  
-        { x:1, y:1, z:1 },  
-        { x:1, y:1, z:0 },  
-        { x:1, y:0, z:0 }  
-      ],
-  ny: [ { x:0, y:0, z:0 },  
-        { x:0, y:0, z:1 },  
-        { x:1, y:0, z:1 },  
-        { x:1, y:0, z:0 }  
-      ],
-  py: [ { x:0, y:1, z:1 },  
-        { x:0, y:1, z:0 },  
-        { x:1, y:1, z:0 },  
-        { x:1, y:1, z:1 }  
-      ],
-  nz: [ { x:1, y:0, z:0 },  
-        { x:1, y:1, z:0 },  
-        { x:0, y:1, z:0 },  
-        { x:0, y:0, z:0 }  
-      ],
-  pz: [ { x:0, y:0, z:1 },  
-        { x:0, y:1, z:1 },  
-        { x:1, y:1, z:1 },  
-        { x:1, y:0, z:1 }  
-      ]
-};
+SVOX._VERTEX_OFFSETS = [
+  // nx
+  [ [ 0, 0, 0 ],  [ 0, 1, 0 ],  [ 0, 1, 1 ],  [ 0, 0, 1 ]  ],
+  // px
+  [ [ 1, 0, 1 ],  [ 1, 1, 1 ],  [ 1, 1, 0 ],  [ 1, 0, 0 ]  ],
+  // ny
+  [ [ 0, 0, 0 ],  [ 0, 0, 1 ],  [ 1, 0, 1 ],  [ 1, 0, 0 ]  ],
+  // py
+  [ [ 0, 1, 1 ],  [ 0, 1, 0 ],  [ 1, 1, 0 ],  [ 1, 1, 1 ]  ],
+  // nz
+  [ [ 1, 0, 0 ],  [ 1, 1, 0 ],  [ 0, 1, 0 ],  [ 0, 0, 0 ]  ],
+  // pz
+  [ [ 0, 0, 1 ],  [ 0, 1, 1 ],  [ 1, 1, 1 ],  [ 1, 0, 1 ]  ]
+];
 
 // Define the neighbor voxels for each face
-SVOX._NEIGHBORS = {
-  nx: { x:-1, y:0, z:0 },
-  px: { x:+1, y:0, z:0 },
-  ny: { x:0, y:-1, z:0 },
-  py: { x:0, y:+1, z:0 },
-  nz: { x:0, y:0, z:-1 },
-  pz: { x:0, y:0, z:+1 }  
-};
+SVOX._NEIGHBORS = [
+  [-1, 0, 0 ], // nx
+  [+1, 0, 0 ], // px
+  [0, -1, 0 ], // ny
+  [0, +1, 0 ], // py
+  [0, 0, -1 ], // nz
+  [0, 0, +1 ] // pz
+];
 
 // Define the uv's for each face
 // Textures can be shown on all sides of all voxels (allows scaling and rotating) 

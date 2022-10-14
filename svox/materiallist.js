@@ -374,7 +374,7 @@ class Material {
     if (count > 0 && strength !== 0.0)
       this._deform = { count, strength, damping };
     else
-      this._deform = undefined;
+      this._deform = { count: 0, strength: 0, damping: 0};
   }
   
   get deform() {

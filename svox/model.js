@@ -279,28 +279,29 @@ class Model {
     voxels.forEach(function createFaces(voxel) {
 
       let faceCount = 0;
+
+      const nvx = BigInt(voxel.x);
+      const nvy = BigInt(voxel.y);
+      const nvz = BigInt(voxel.z);
+      const xzyKey = (nvx << 48n) | (nvz << 40n) | (nvy << 32n);
+      const xyzKey = (nvx << 48n) | (nvy << 40n) | (nvz << 32n);
+      const yzxKey = (nvy << 48n) | (nvz << 40n) | (nvx << 32n);
+
       // Check which faces should be generated
-      for (let f=0; f < SVOX._FACES.length; f++) {
-        let faceName = SVOX._FACES[f];
-        let neighbor = SVOX._NEIGHBORS[faceName];
-        const created = this._createFace(voxel, faceName, f,
-                          voxels.getVoxel(voxel.x+neighbor.x, voxel.y+neighbor.y, voxel.z+neighbor.z),
+      for (let faceNameIndex = 0, l = SVOX._FACES.length; faceNameIndex < l; faceNameIndex++) {
+
+        const neighbor = SVOX._NEIGHBORS[faceNameIndex];
+        const created = this._createFace(voxel, faceNameIndex,
+                          voxels.getVoxel(voxel.x+neighbor[0], voxel.y+neighbor[1], voxel.z+neighbor[2]),
                           maximumDeformCount > 0, tmpVertIndexLookup);  // Only link the vertices when needed
         if (created) {
           //voxel.faces[faceName] = face;
           const faceIndex = this.faceCount - 1;
           const nfaceIndex = BigInt(faceIndex);
-          const nvx = BigInt(voxel.x);
-          const nvy = BigInt(voxel.y);
-          const nvz = BigInt(voxel.z);
 
-          const xzyKey = (nvx << 48n) | (nvz << 40n) | (nvy << 32n) | nfaceIndex;
-          const xyzKey = (nvx << 48n) | (nvy << 40n) | (nvz << 32n) | nfaceIndex;
-          const yzxKey = (nvy << 48n) | (nvz << 40n) | (nvx << 32n) | nfaceIndex;
-
-          voxelXZYFaceIndices[faceIndex] = xzyKey;
-          voxelXYZFaceIndices[faceIndex] = xyzKey;
-          voxelYZXFaceIndices[faceIndex] = yzxKey;
+          voxelXZYFaceIndices[faceIndex] = xzyKey | nfaceIndex;
+          voxelXYZFaceIndices[faceIndex] = xyzKey | nfaceIndex;
+          voxelYZXFaceIndices[faceIndex] = yzxKey | nfaceIndex;
 
           voxel.color.count++;
           faceCount++;
@@ -349,6 +350,7 @@ class Model {
     let bos = { bounds:null, offset:null, rescale:1 };
     
     let minX, minY, minZ, maxX, maxY, maxZ;
+    const { vertX, vertY, vertZ } = this;
     
     if (resize === SVOX.BOUNDS || resize === SVOX.MODEL) {
       // Determine the actual model size if resize is set (to model or bounds)
@@ -360,23 +362,19 @@ class Model {
       maxZ = Number.NEGATIVE_INFINITY;
 
       // Skip the skipped faces when determining the bounds
-      this.voxels.forEach(function(voxel) {
-        for (let faceName in voxel.faces) {
-          let face = voxel.faces[faceName];
-          if (!face.skipped) {
-            for (let v = 0; v < 4; v++) {
-              let vertex = face.vertices[v];
-              if (vertex.x<minX) minX = vertex.x;
-              if (vertex.y<minY) minY = vertex.y;
-              if (vertex.z<minZ) minZ = vertex.z;
-              if (vertex.x>maxX) maxX = vertex.x;
-              if (vertex.y>maxY) maxY = vertex.y;
-              if (vertex.z>maxZ) maxZ = vertex.z;
-            }
-          }
-        }
-      }, this, true);
-      
+      for (let vertIndex = 0, c = this.vertCount; vertIndex < c; vertIndex++) {
+        const vx = vertX[vertIndex];
+        const vy = vertY[vertIndex];
+        const vz = vertZ[vertIndex];
+
+        if (vx<minX) minX = vx;
+        if (vy<minY) minY = vy;
+        if (vz<minZ) minZ = vz;
+        if (vx>maxX) maxX = vx;
+        if (vy>maxY) maxY = vy;
+        if (vz>maxZ) maxZ = vz;
+      }
+
       if (resize === SVOX.MODEL) {
         // Resize the actual model to the original voxel bounds
         let scaleX = (this.voxels.maxX-this.voxels.minX+1)/(maxX-minX);
@@ -413,42 +411,44 @@ class Model {
     return bos;
   }  
   
-  _createFace(voxel, faceName, faceNameIndex, neighbor, linkVertices, vertIndexLookup) {
+  _createFace(voxel, faceNameIndex, neighbor, linkVertices, vertIndexLookup) {
+    const material = voxel?.material;
+    const neighborMaterial = neighbor?.material;
     
-    if (!voxel || !voxel.material || voxel.material.opacity === 0) {
+    if (!material || material.opacity === 0) {
       // No voxel, so no face
       return false;
     }
-    else if (!neighbor || !neighbor.material) {
+    else if (!neighborMaterial) {
       // The voxel is next to an empty voxel, so create a face
     }
-    else if (!neighbor.material.isTransparent && !neighbor.material.wireframe) {
+    else if (!material.isTransparent && !material.wireframe) {
       // The neighbor is not see through, so skip this face
       return false;
     }
-    else if (!voxel.material.isTransparent && !voxel.material.wireframe) {
+    else if (!material.isTransparent && !material.wireframe) {
       // The voxel is not see through, but the neighbor is, so create the face 
     }
-    else if (voxel.material.isTransparent && !voxel.material.wireframe && neighbor.material.wireframe) {
+    else if (material.isTransparent && !material.wireframe && neighborMaterial.wireframe) {
        // The voxel is transparent and the neighbor is wireframe, create the face 
     }
     else {
       return false;
     }
-    
-    let flattened = this._isFacePlanar(voxel, faceName, voxel.material._flatten, this._flatten);
-    let clamped   = this._isFacePlanar(voxel, faceName, voxel.material._clamp, this._clamp);
-    let skipped   = this._isFacePlanar(voxel, faceName, voxel.material._skip, this._skip);
+
+    let flattened = this._isFacePlanar(voxel, faceNameIndex, material, material._flatten, this._flatten);
+    let clamped   = this._isFacePlanar(voxel, faceNameIndex, material, material._clamp, this._clamp);
+    let skipped   = this._isFacePlanar(voxel, faceNameIndex, material, material._skip, this._skip);
 
     if (skipped) return false;
 
     const { faceVertIndices, faceVertColorR, faceVertColorG, faceVertColorB, faceFlattened, faceClamped, faceSmooth, faceCulled, faceMaterials, faceNameIndices, faceVertUs, faceVertVs, faceCount} = this;
     const faceVertOffset = faceCount * 4;
 
-    faceVertIndices[faceVertOffset] = this._createVertex(voxel, faceName, 0, flattened, clamped, vertIndexLookup);
-    faceVertIndices[faceVertOffset + 1] = this._createVertex(voxel, faceName, 1, flattened, clamped, vertIndexLookup);
-    faceVertIndices[faceVertOffset + 2] = this._createVertex(voxel, faceName, 2, flattened, clamped, vertIndexLookup);
-    faceVertIndices[faceVertOffset + 3] = this._createVertex(voxel, faceName, 3, flattened, clamped, vertIndexLookup);
+    faceVertIndices[faceVertOffset] = this._createVertex(voxel, faceNameIndex, 0, flattened, clamped, vertIndexLookup);
+    faceVertIndices[faceVertOffset + 1] = this._createVertex(voxel, faceNameIndex, 1, flattened, clamped, vertIndexLookup);
+    faceVertIndices[faceVertOffset + 2] = this._createVertex(voxel, faceNameIndex, 2, flattened, clamped, vertIndexLookup);
+    faceVertIndices[faceVertOffset + 3] = this._createVertex(voxel, faceNameIndex, 3, flattened, clamped, vertIndexLookup);
 
     for (let v = 0; v < 4; v++) {
       faceVertColorR[faceVertOffset + v] = voxel.color.r;
@@ -479,58 +479,60 @@ class Model {
     return true;
   }
   
-  _createVertex(voxel, faceName, vi, flattened, clamped, vertIndexLookup) {
+  _createVertex(voxel, faceNameIndex, vi, flattened, clamped, vertIndexLookup) {
     // Calculate the actual vertex coordinates
-    let vertexOffset = SVOX._VERTICES[faceName][vi];
-    let x = voxel.x + vertexOffset.x;
-    let y = voxel.y + vertexOffset.y;
-    let z = voxel.z + vertexOffset.z;
+    const vertexOffset = SVOX._VERTEX_OFFSETS[faceNameIndex][vi];
+    const x = voxel.x + vertexOffset[0];
+    const y = voxel.y + vertexOffset[1];
+    const z = voxel.z + vertexOffset[2];
 
     const material = voxel.material;
 
-    // Key is bit shifted x, y, z values as ints
     let vertIndex;
 
-    let key = (x << 20) | (y << 10) | z;
+    // Key is bit shifted x, y, z values as ints
+    const key = (x << 20) | (y << 10) | z;
 
     const shape = model._shape;
     const fadeAny = model.materials.find(m => m.colors.length > 1 && m.fade) ? true : false;
     const { vertDeformCount, vertDeformDamping, vertDeformStrength, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertX, vertY, vertZ, vertLinkCounts, vertFullyClamped, vertRing, _flatten: modelFlatten, _clamp: modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertColorR, vertColorG, vertColorB, vertColorCount, vertFlattenedX, vertFlattenedY, vertFlattenedZ } = model;
 
+    const { deform, warp, scatter } = material;
+
     if (vertIndexLookup.has(key)) {
       vertIndex = vertIndexLookup.get(key);
 
       // Favour less deformation over more deformation
-      if (!material.deform) {
+      if (!deform) {
         vertDeformCount[vertIndex] = 0;
         vertDeformDamping[vertIndex] = 0;
         vertDeformStrength[vertIndex] = 0;
       }
       else if (vertDeformCount[vertIndex] !== 0 &&
                (this._getDeformIntegral(material.deform) < this._getDeformIntegralAtVertex(vertIndex))) {
-        vertDeformStrength[vertIndex] = material.deform.strength;
-        vertDeformDamping[vertIndex] = material.deform.damping;
-        vertDeformCount[vertIndex] = material.deform.count;
+        vertDeformStrength[vertIndex] = deform.strength;
+        vertDeformDamping[vertIndex] = deform.damping;
+        vertDeformCount[vertIndex] = deform.count;
       }
 
       // Favour less / less requent warp over more warp
-      if (!material.warp) {
+      if (!warp) {
         vertWarpAmplitude[vertIndex] = 0;
         vertWarpFrequency[vertIndex] = 0;
       }
       else if (vertWarpAmplitude[vertIndex] !== 0 &&
-               ((material.warp.amplitude < vertWarpAmplitude[vertIndex]) ||
-                (material.warp.amplitude === vertWarpAmplitude[vertIndex] && material.warp.frequency > vertWarpFrequency[vertIndex]))) {
-        vertWarpAmplitude[vertIndex] = material.warp.amplitude;
-        vertWarpFrequency[vertIndex] = material.warp.frequency;
+               ((warp.amplitude < vertWarpAmplitude[vertIndex]) ||
+                (warp.amplitude === vertWarpAmplitude[vertIndex] && warp.frequency > vertWarpFrequency[vertIndex]))) {
+        vertWarpAmplitude[vertIndex] = warp.amplitude;
+        vertWarpFrequency[vertIndex] = warp.frequency;
       }
 
       // Favour less scatter over more scatter
-      if (!material.scatter)
+      if (!scatter)
         vertScatter[vertIndex] = 0;
       else if (vertScatter[vertIndex] !== 0 &&
-               Math.abs(material.scatter) < Math.abs(vertScatter[vertIndex])) {
-        vertScatter[vertIndex] = material.scatter;
+               Math.abs(scatter) < Math.abs(vertScatter[vertIndex])) {
+        vertScatter[vertIndex] = scatter;
       }
     } else {
       vertIndex = this.vertCount;
@@ -540,35 +542,25 @@ class Model {
       vertY[vertIndex] = y;
       vertZ[vertIndex] = z;
 
-      if (material.deform) {
-        vertDeformDamping[vertIndex] = material.deform.damping;
-        vertDeformCount[vertIndex] = material.deform.count;
-        vertDeformStrength[vertIndex] = material.deform.strength;
+      if (deform) {
+        vertDeformDamping[vertIndex] = deform.damping;
+        vertDeformCount[vertIndex] = deform.count;
+        vertDeformStrength[vertIndex] = deform.strength;
         vertLinkCounts[vertIndex] = 0;
         vertFullyClamped.set(vertIndex, 0);
       }
 
-      if (material.warp) {
-        vertWarpAmplitude[vertIndex] = material.warp.amplitude;
-        vertWarpFrequency[vertIndex] = material.warp.frequency;
+      if (warp) {
+        vertWarpAmplitude[vertIndex] = warp.amplitude;
+        vertWarpFrequency[vertIndex] = warp.frequency;
       }
 
-      if (material.scatter) {
-        vertScatter[vertIndex] = material.scatter;
+      if (scatter) {
+        vertScatter[vertIndex] = scatter;
       }
 
-      if (fadeAny) {
-        vertColorCount[vertIndex] = 0;
-      }
-
-      switch (shape) {
-        case 'sphere' :
-        case 'cylinder-x' :
-        case 'cylinder-y' :
-        case 'cylinder-z' :
-          vertRing[vertIndex] = 0;
-        default: break;
-      }
+      vertColorCount[vertIndex] = 0;
+      vertRing[vertIndex] = 0;
     }
 
     // This will || the planar values
@@ -576,9 +568,10 @@ class Model {
     this._setIsVertexPlanar(voxel, x, y, z, material._clamp, modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertIndex);
 
     const vertColorIndex = vertColorCount[vertIndex];
-    vertColorR[vertIndex * 5 + vertColorIndex] = voxel.color.r;
-    vertColorG[vertIndex * 5 + vertColorIndex] = voxel.color.g;
-    vertColorB[vertIndex * 5 + vertColorIndex] = voxel.color.b;
+    const color = voxel.color;
+    vertColorR[vertIndex * 5 + vertColorIndex] = color.r;
+    vertColorG[vertIndex * 5 + vertColorIndex] = color.g;
+    vertColorB[vertIndex * 5 + vertColorIndex] = color.b;
     vertColorCount[vertIndex] = vertColorIndex + 1;
 
     this.vertCount++;
@@ -604,9 +597,7 @@ class Model {
        : (strength*(1-Math.pow(damping,count+1)))/(1-damping);
   }
   
-  _isFacePlanar(voxel, faceName, materialPlanar, modelPlanar) {
-    let material = voxel.material;
-    
+  _isFacePlanar(voxel, faceNameIndex, material, materialPlanar, modelPlanar) {
     let planar = materialPlanar;
     let bounds = material.bounds;
     if (!planar) {
@@ -614,18 +605,15 @@ class Model {
       bounds = this.voxels.bounds;
     }
     
-    if (!planar) {
-      faceName = 'not';
-    }
-    
-    switch(faceName) {
-      case 'nx' : return planar.x || (planar.nx && voxel.x === bounds.minX);
-      case 'px' : return planar.x || (planar.px && voxel.x === bounds.maxX);
-      case 'ny' : return planar.y || (planar.ny && voxel.y === bounds.minY);
-      case 'py' : return planar.y || (planar.py && voxel.y === bounds.maxY);
-      case 'nz' : return planar.z || (planar.nz && voxel.z === bounds.minZ);
-      case 'pz' : return planar.z || (planar.pz && voxel.z === bounds.maxZ);
-      case 'not': return false;
+    if (!planar) return false;
+
+    switch(faceNameIndex) {
+      case 0 : return planar.x || (planar.nx && voxel.x === bounds.minX); // nx
+      case 1 : return planar.x || (planar.px && voxel.x === bounds.maxX); // px
+      case 2 : return planar.y || (planar.ny && voxel.y === bounds.minY); // ny
+      case 3 : return planar.y || (planar.py && voxel.y === bounds.maxY); // py
+      case 4 : return planar.z || (planar.nz && voxel.z === bounds.minZ); // nz
+      case 5 : return planar.z || (planar.pz && voxel.z === bounds.maxZ); // pz
       default: return false;
     }
   }
