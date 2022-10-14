@@ -170,9 +170,12 @@ class Model {
     this.faceVertUs = new Float32Array(MAX_FACE_VERTS);
     this.faceVertVs = new Float32Array(MAX_FACE_VERTS);
 
-    this.voxelXZYFaceIndices = Array(MAX_FACES).fill(0);
-    this.voxelXYZFaceIndices = Array(MAX_FACES).fill(0);
-    this.voxelYZXFaceIndices = Array(MAX_FACES).fill(0);
+    this.tmpVoxelXZYFaceIndices = Array(MAX_FACES).fill(0);
+    this.tmpVoxelXYZFaceIndices = Array(MAX_FACES).fill(0);
+    this.tmpVoxelYZXFaceIndices = Array(MAX_FACES).fill(0);
+    this.voxelXZYFaceIndices = null;
+    this.voxelXYZFaceIndices = null;
+    this.voxelYZXFaceIndices = null;
 
     // Need to zero on reset:
     // face vert link counts, color counts
@@ -263,7 +266,7 @@ class Model {
     
 
   prepareForRender() {
-    const { voxels, tmpVertIndexLookup, voxelXZYFaceIndices, voxelXYZFaceIndices, voxelYZXFaceIndices } = this;
+    const { voxels, tmpVertIndexLookup, tmpVoxelXZYFaceIndices, tmpVoxelXYZFaceIndices, tmpVoxelYZXFaceIndices } = this;
 
     this.prepareForWrite();
     
@@ -296,9 +299,9 @@ class Model {
           //voxel.faces[faceName] = face;
           const faceIndex = this.faceCount - 1;
 
-          voxelXZYFaceIndices[faceIndex] = xzyKey + faceIndex;
-          voxelXYZFaceIndices[faceIndex] = xyzKey + faceIndex;
-          voxelYZXFaceIndices[faceIndex] = yzxKey + faceIndex;
+          tmpVoxelXZYFaceIndices[faceIndex] = xzyKey + faceIndex;
+          tmpVoxelXYZFaceIndices[faceIndex] = xyzKey + faceIndex;
+          tmpVoxelYZXFaceIndices[faceIndex] = yzxKey + faceIndex;
 
           voxel.color.count++;
           faceCount++;
@@ -314,9 +317,12 @@ class Model {
 
     console.log(this);
     // Sort ordered faces, used for simplifier
-    voxelXZYFaceIndices.sort()
-    voxelXYZFaceIndices.sort()
-    voxelYZXFaceIndices.sort()
+    this.voxelXZYFaceIndices = tmpVoxelXZYFaceIndices.slice(0, this.faceCount);
+    this.voxelXYZFaceIndices = tmpVoxelXYZFaceIndices.slice(0, this.faceCount);
+    this.voxelYZXFaceIndices = tmpVoxelYZXFaceIndices.slice(0, this.faceCount);
+    this.voxelXZYFaceIndices.sort();
+    this.voxelXYZFaceIndices.sort();
+    this.voxelYZXFaceIndices.sort();
 
     VertexLinker.fixClampedLinks(this); 
     
