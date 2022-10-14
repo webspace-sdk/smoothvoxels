@@ -374,7 +374,7 @@ class Model {
     console.log("assignUVs: " + (performance.now() - t0));
     
     t0 = performance.now();
-    //Simplifier.simplify(this);
+    Simplifier.simplify(this);
     console.log("simplify: " + (performance.now() - t0));
     
     t0 = performance.now();
