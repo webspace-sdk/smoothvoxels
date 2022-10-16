@@ -378,6 +378,8 @@ class ModelReader {
         // Check the voxel matrix size against the specified size
         let totalSize = model.size.x * model.size.y * model.size.z;
         let voxelLength = 0;
+        const voxChunk = model.voxChunk = new VoxChunk([model.size.x, model.size.y, model.size.z]);
+
         for (let i = 0; i < rleArray.length; i++) {
             voxelLength += rleArray[i][1];
         }
@@ -401,11 +403,14 @@ class ModelReader {
             z: 0
         };
 
+        let materialIndex = 0;
         // Create all chunks, using the context as cursor
         for (let i = 0; i < rleArray.length; i++) {
             let color = null;
             if (rleArray[i][0] !== '-') {
                 color = colors[rleArray[i][0]];
+                materialIndex = model.materials.materials.findIndex(m => m.colors.includes(color));
+
                 if (!color) {
                   // Oops, this is not a known color, create a purple 'error' color
                   if (errorMaterial === null)
@@ -417,7 +422,7 @@ class ModelReader {
                 }
             }
 
-            this._setVoxels(model, color, rleArray[i][1], context);
+            this._setVoxels(model, color, rleArray[i][1], context, voxChunk, materialIndex);
         }
     }
   
@@ -709,11 +714,15 @@ class ModelReader {
      * @param {int} count The number of voxels to set. 
      * @param {object} context The context which holds the current 'cursor' in the voxel array.
      */
-    static _setVoxels(model, color, count, context) {
+    static _setVoxels(model, color, count, context, voxChunk, materialIndex) {
         while (count-- > 0) {
-            if (color) 
+            if (color)  {
               model.voxels.setVoxel(context.x, context.y, context.z, new Voxel(color, model.materials));
-            else if(!model.resize) // Keep the empty voxels except when resize is set (to model or bounds)
+              // Convert the color to a 32 bit integer
+              const rgbt = voxColorForRGBT(Math.floor(color.r * 255), Math.floor(color.g * 255), Math.floor(color.b * 255), materialIndex);
+
+              voxChunk.setColorAt(context.x, context.y, context.z, rgbt);
+            } else if(!model.resize) // Keep the empty voxels except when resize is set (to model or bounds)
               model.voxels.clearVoxel(context.x, context.y, context.z);
             context.x++;
             if (context.x > context.maxx) {
