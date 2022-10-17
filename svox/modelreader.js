@@ -717,6 +717,8 @@ class ModelReader {
      * @param {object} context The context which holds the current 'cursor' in the voxel array.
      */
     static _setVoxels(model, color, count, context, voxChunk, materialIndex) {
+        const material = model.materials.materials[materialIndex];
+
         while (count-- > 0) {
             if (color)  {
               // Convert the color to a 32 bit integer
@@ -727,6 +729,7 @@ class ModelReader {
               const vz = context.z - shiftForSize(model.size.z);
 
               model.bounds.set(vx, vy, vz);
+              material.bounds.set(vx, vy, vz);
               voxChunk.setColorAt(vx, vy, vz, rgbt);
             }
 

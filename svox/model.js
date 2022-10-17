@@ -183,78 +183,8 @@ class Model {
     // vert ring, since deformer checks for ring equality
     // vert nr of clamped links
   }
-   
-  _setVertex(x, y, z, vertex) {
-    vertex.x = x;
-    vertex.y = y;
-    vertex.z = z;
-    
-    let matrixy = this.vertices[z + 1000000];
-    if (!matrixy) {
-      matrixy = [ ];
-      this.vertices[z + 1000000] = matrixy;
-    }
-    let matrixx = matrixy[y + 1000000];
-    if (!matrixx) {
-      matrixx = [ ];
-      matrixy[y + 1000000] = matrixx;
-    }
-    matrixx[x + 1000000] = vertex;
-  }
   
-  _getVertex(x, y, z) {
-    let matrix = this.vertices[z + 1000000];
-    if (matrix) {
-      matrix = matrix[y + 1000000];
-      if (matrix) {
-        return matrix[x + 1000000];
-      }
-    }
-    return null;
-  }
-  
-  forEachVertex(func, thisArg) {
-    let param = [];
-    for (let indexz in this.vertices) {
-      let matrixy = this.vertices[indexz];
-      for (let indexy in matrixy) {
-        let matrixx = matrixy[indexy];
-        for (let indexx in matrixx) {
-          param[0] = matrixx[indexx];
-          func.apply(thisArg, param);
-        }
-      }
-    }
-  }
-    
   prepareForWrite() {
-    this.materials.forEach(function(material) {
-      
-      // Reset all material bounding boxes
-      material.bounds.reset();
-      
-      material.colors.forEach(function(color) {
-        // Reset all color counts
-        color.count = 0;
-      }, this);
-    }, this);
-    
-    // Add color usage count for model shell colors (to ensure the material is generated)
-    if (this.shell) {
-      this.shell.forEach(function (sh) {
-        sh.color.count++;
-      }, this);
-    }
-      
-    // Add color usage count for material shell colors
-    this.materials.forEach(function(material) {
-      if (material.shell) {
-        material.shell.forEach(function (sh) {
-          sh.color.count++;      
-        }, this);
-      }
-    }, this);    
-    
     if (this.lights.some((light) => light.size)) {
       // There are visible lights, so the modelreader created a material and a color for them
       // Set the count to 1 to indicate it is used
@@ -628,7 +558,7 @@ class Model {
 
     // This will || the planar values
     this._setIsVertexPlanar(material, x, y, z, material._flatten, modelFlatten, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertIndex);
-    this._setIsVertexPlanar(material, x, y, z, true, modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertIndex);
+    this._setIsVertexPlanar(material, x, y, z, material._clamp, modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertIndex);
 
     const vertColorIndex = vertColorCount[vertIndex];
     const vertColorOffset = vertIndex * 5;
