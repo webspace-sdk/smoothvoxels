@@ -13,9 +13,11 @@ class Deformer {
   }
 
   static _circularDeform(model, xStrength, yStrength, zStrength) {
-    let xMid = (model.voxels.minX + model.voxels.maxX)/2 + 0.5;
-    let yMid = (model.voxels.minY + model.voxels.maxY)/2 + 0.5;
-    let zMid = (model.voxels.minZ + model.voxels.maxZ)/2 + 0.5;    
+    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(model.voxChunk.size);
+
+    let xMid = (minX + maxX)/2 + 0.5;
+    let yMid = (minY + maxY)/2 + 0.5;
+    let zMid = (minZ + maxZ)/2 + 0.5;    
 
     const { vertX, vertY, vertZ, vertRing } = model;
 
@@ -129,11 +131,10 @@ class Deformer {
   
   static warpAndScatter(model) {
     let noise = SVOX.Noise().noise;
-    let voxels = model.voxels;
     let { nx: tnx, px: tpx, ny: tny, py: tpy, nz: tnz, pz: tpz } = model._tile;
     let tile = model._tile;
+    let [vxMinX, vxMaxX, vxMinY, vxMaxY, vxMinZ, vxMaxZ] = xyzRangeForSize(model.voxChunk.size);
 
-    let { minX: vxMinX, minY: vxMinY, minZ: vxMinZ, maxX: vxMaxX, maxY: vxMaxY, maxZ: vxMaxZ } = voxels;
     const { vertX, vertY, vertZ, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertClampedX, vertClampedY, vertClampedZ } = model;
 
     vxMinX += 0.1;

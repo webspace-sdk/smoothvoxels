@@ -34,10 +34,10 @@ class SvoxMeshGenerator {
     
     t0 = performance.now();
     model.materials.baseMaterials.forEach(function(material) {
-      if (material.colorUsageCount > 0) {
+      //if (material.colorUsageCount > 0) {
         material.index = mesh.materials.length;
         mesh.materials.push(SvoxMeshGenerator._generateMaterial(material, model));
-      }
+      //}
     }, this);
     console.log("generate materials: " + (performance.now() - t0) + "ms");
 
@@ -55,9 +55,9 @@ class SvoxMeshGenerator {
     SvoxMeshGenerator._generateAll(model, mesh);
     console.log("Mesh generation took " + (performance.now() - t0) + " ms");
     
-    t0 = performance.now();
-    SvoxMeshGenerator._generateLights(model, mesh);
-    console.log("Light generation took " + (performance.now() - t0) + " ms");
+    // t0 = performance.now();
+    // SvoxMeshGenerator._generateLights(model, mesh);
+    // console.log("Light generation took " + (performance.now() - t0) + " ms");
 
     return mesh;
   }
@@ -229,41 +229,25 @@ class SvoxMeshGenerator {
   }
   
   static _generateAll(model, mesh) {
-    let shells = SvoxMeshGenerator._getAllShells(model);
-
     const materials = model.materials.materials;
     const { faceMaterials, faceCulled } = model;
 
     // Add all vertices to the geometry     
     model.materials.baseMaterials.forEach(function(baseMaterial) {
-      if (baseMaterial.colorUsageCount > 0) {
+      let start = mesh.indicesIndex;
 
-        let start = mesh.indicesIndex;
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        const material = materials[faceMaterials[faceIndex]];
 
-        for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
-          const material = materials[faceMaterials[faceIndex]];
-
-          // Check for material match and face culling from simplifier
-          if (material._baseMaterial === baseMaterial && faceCulled.get(faceIndex) === 0) {
-            SvoxMeshGenerator._generateFace(model, faceIndex, mesh);
-          }
+        // Check for material match and face culling from simplifier
+        if (material._baseMaterial === baseMaterial && faceCulled.get(faceIndex) === 0) {
+          SvoxMeshGenerator._generateFace(model, faceIndex, mesh);
         }
-        
-          // TODO JEL shells
-          //model.voxels.forEach(function(voxel) {
-          //shells.forEach(function (shell) {
-          //  if (shell.shellMaterialIndex === material.index &&
-          //      shell.voxelMaterial === voxel.color.material) {
-          //    SvoxMeshGenerator._generateVoxelShell(model, voxel, mesh, shell.distance, shell.color);
-          //  }
-          //}, this);
-            //}
-          
-        // Add the group for this material
-        let end = mesh.indicesIndex;
-        mesh.groups.push( { start:start, count: (end-start), materialIndex:baseMaterial.index } );       
-        
-      }      
+      }
+      
+      // Add the group for this material
+      let end = mesh.indicesIndex;
+      mesh.groups.push( { start:start, count: (end-start), materialIndex:baseMaterial.index } );       
     }, this);       
   }
 
@@ -559,180 +543,6 @@ class SvoxMeshGenerator {
     //}
   }
 
-  static _getAllShells(model) {
-   
-    let shells = [];
-    
-    model.materials.forEach(function (material) {    
-      
-      let shell = undefined
-      if (model.shell && model.shell.length > 0 && !material.shell)
-        shell = model.shell;
-      if (material.shell && material.shell.length > 0)
-        shell = material.shell;
-      
-      if (shell) {
-        shell.forEach(function (sh) {
-          shells.push({
-            voxelMaterial: material,
-            shellMaterialIndex: sh.color.material.index,
-            color: sh.color,
-            distance: sh.distance
-          });
-        }, this);
-      }
-    }, this);
-    
-    shells.sort(function(a,b) {
-      let v = a.shellMaterialIndex - b.shellMaterialIndex;
-    });
-    
-    return shells;
-  };
-  
-  static _generateVoxelShell(model, voxel, mesh, distance, color) {
-    for (let f = 0; f < SVOX._FACES.length; f++) {
-      let face = voxel.faces[SVOX._FACES[f]];
-      if (face && !face.skipped) {
-        SvoxMeshGenerator._generateVoxelShellFace(model, voxel, face, mesh, distance, color);
-      }  
-    }
-  }
-
-  static _generateVoxelShellFace(model, voxel, face, mesh, distance, color) {
-    let vert0, vert1, vert2, vert3;
-    let shellDirection0, shellDirection1, shellDirection2, shellDirection3;
-    let norm0, norm1, norm2, norm3;
-    let col0, col1, col2, col3;
-    let uv0, uv1, uv2, uv3;
-    
-    vert0 = face.vertices[0];
-    vert1 = face.vertices[1];
-    vert2 = face.vertices[2];
-    vert3 = face.vertices[3];
-    
-    shellDirection0 = face.smoothNormals[0];
-    shellDirection1 = face.smoothNormals[1];
-    shellDirection2 = face.smoothNormals[2];
-    shellDirection3 = face.smoothNormals[3];
-
-    // Now set the actual normals for this face
-    let normals = null;
-    switch (color.material.lighting) {
-      case SVOX.SMOOTH:
-        normals = face.smoothNormals;
-        break;
-      case SVOX.BOTH:
-        normals = face.smooth ? face.bothNormals : face.flatNormals; 
-        break;
-      default:
-        normals = face.flatNormals;
-        break;
-    }    
-
-    norm0 = normals[0];
-    norm1 = normals[1];
-    norm2 = normals[2];
-    norm3 = normals[3];
-    
-    if (mesh.uvs) {
-      uv0 = face.uv[0] || { u:0.0001, v:0.0001 };
-      uv1 = face.uv[1] || { u:0.0001, v:0.9999 };
-      uv2 = face.uv[2] || { u:0.9999, v:0.9999 };
-      uv3 = face.uv[3] || { u:0.9999, v:0.0001 };
-    }
-        
-    if (color.material.side === 'back') {
-      let swap;
-      swap = vert0; vert0 = vert2; vert2 = swap;
-      swap = norm0; norm0 = norm2; norm2 = swap;
-      swap = shellDirection0; shellDirection0 = shellDirection2; shellDirection2 = swap;
-      swap =   uv0;   uv0 =   uv2;   uv2 = swap;
-    }
-    
-    // Push out the vertices according to the average normals
-    let vert0x = vert0.x + shellDirection0.x * distance * model.scale.x;
-    let vert0y = vert0.y + shellDirection0.y * distance * model.scale.y;
-    let vert0z = vert0.z + shellDirection0.z * distance * model.scale.z;
-    let vert1x = vert1.x + shellDirection1.x * distance * model.scale.x;  
-    let vert1y = vert1.y + shellDirection1.y * distance * model.scale.y;
-    let vert1z = vert1.z + shellDirection1.z * distance * model.scale.z;
-    let vert2x = vert2.x + shellDirection2.x * distance * model.scale.x;  
-    let vert2y = vert2.y + shellDirection2.y * distance * model.scale.y;
-    let vert2z = vert2.z + shellDirection2.z * distance * model.scale.z;
-    let vert3x = vert3.x + shellDirection3.x * distance * model.scale.x;  
-    let vert3y = vert3.y + shellDirection3.y * distance * model.scale.y;
-    let vert3z = vert3.z + shellDirection3.z * distance * model.scale.z;
-            
-    // Face 1
-    mesh.positions.push(vert2x, vert2y, vert2z); 
-    mesh.positions.push(vert1x, vert1y, vert1z); 
-    mesh.positions.push(vert0x, vert0y, vert0z); 
-    
-    // Face 2
-    mesh.positions.push(vert0x, vert0y, vert0z); 
-    mesh.positions.push(vert3x, vert3y, vert3z); 
-    mesh.positions.push(vert2x, vert2y, vert2z);  
-
-    if (color.material.lighting === SVOX.SMOOTH || (color.material.lighting === SVOX.BOTH && face.smooth)) {
-      // Face 1
-      mesh.normals.push(norm2.x, norm2.y, norm2.z);
-      mesh.normals.push(norm1.x, norm1.y, norm1.z);
-      mesh.normals.push(norm0.x, norm0.y, norm0.z);
-
-      // Face 2
-      mesh.normals.push(norm0.x, norm0.y, norm0.z);
-      mesh.normals.push(norm3.x, norm3.y, norm3.z);
-      mesh.normals.push(norm2.x, norm2.y, norm2.z);
-    }
-    else {
-      // Average the normals to get the flat normals
-      let normFace1 = model._normalize({ x:norm2.x+norm1.x+norm0.x, y:norm2.y+norm1.y+norm0.y, z:norm2.z+norm1.z+norm0.z});
-      let normFace2 = model._normalize({ x:norm0.x+norm3.x+norm2.x, y:norm0.y+norm3.y+norm2.y, z:norm0.z+norm3.z+norm2.z});
-      if (voxel.material.lighting === SVOX.QUAD) {
-        normFace1 = model._normalize({ x:normFace1.x+normFace2.x, y:normFace1.y+normFace2.y, z:normFace1.z+normFace2.z});
-        normFace2 = normFace1;
-      }
-      
-      // Face 1
-      mesh.normals.push(normFace1.x, normFace1.y, normFace1.z);
-      mesh.normals.push(normFace1.x, normFace1.y, normFace1.z);
-      mesh.normals.push(normFace1.x, normFace1.y, normFace1.z);
-
-      // Face 2
-      mesh.normals.push(normFace2.x, normFace2.y, normFace2.z);
-      mesh.normals.push(normFace2.x, normFace2.y, normFace2.z);
-      mesh.normals.push(normFace2.x, normFace2.y, normFace2.z);
-    }
-
-    for (let v=0; v<6; v++) {
-      mesh.colors.push(color.r, color.g, color.b);
-    }
-      
-    if (mesh.uvs) {     
-      // Face 1
-      mesh.uvs.push(uv2.u, uv2.v);
-      mesh.uvs.push(uv1.u, uv1.v);
-      mesh.uvs.push(uv0.u, uv0.v);
-
-      // Face 1
-      mesh.uvs.push(uv0.u, uv0.v);
-      mesh.uvs.push(uv3.u, uv3.v);
-      mesh.uvs.push(uv2.u, uv2.v);
-    }
-    
-    if (mesh.data) {
-      let data = voxel.material.data || model.data;
-      for (let vertex=0;vertex<6;vertex++) {
-        for (let d=0;d<data.length;d++) {
-          for (let v=0;v<data[d].values.length;v++) {
-            mesh.data.push(data[d].values[v]);
-          }
-        }
-      }
-    }    
-  }
-  
   static _normalize(v) {
     let l = Math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
     v.x /= l; 

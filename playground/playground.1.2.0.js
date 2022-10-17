@@ -7080,17 +7080,6 @@ GLTFExporter.Utils = {
 // =====================================================
 // /models/playgroundmodels.js
 // =====================================================
-SVOX.models.CUBE = `
-model
-size     = 1 1 1
-scale    = 0.5
-origin   = -y
-material lighting = flat, roughness = 1.0,
-  colors = V:#080
-voxels
-V
-`;
-
 SVOX.models.SVOX = `
 model
 size     = 20 18 20

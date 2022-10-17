@@ -82,9 +82,11 @@ AFRAME.registerComponent('svox', {
 
         let t0 = performance.now();
         let svoxmesh = SvoxMeshGenerator.generate(model);
+    console.log(svoxmesh);
         console.log("SvoxMeshGenerator.generate took " + (performance.now() - t0) + " ms.");
         let t1 = performance.now();
         this.mesh = SvoxToThreeMeshConverter.generate(svoxmesh);
+    console.log(this.mesh);
       
         // Log stats
         let statsText = `Time: ${Math.round(t1 - t0)}ms. Verts:${svoxmesh.positions.length / 3} Faces:${svoxmesh.indices.length / 3} Materials:${this.mesh.material.length}`;

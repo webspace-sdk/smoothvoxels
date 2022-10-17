@@ -66,9 +66,7 @@ class Model {
     this.lights = [];
     this.textures = {};
     this.materials = new MaterialList();
-    this.voxels = new VoxelMatrix();
     this.voxChunk = null;
-    this.vertices = []; 
     
     this.scale = { x:1, y:1, z:1 };
     this.rotation = { x:0, y:0, z:0 };  // In degrees
@@ -262,13 +260,11 @@ class Model {
       // Set the count to 1 to indicate it is used
       this.materials.materials[0].colors[0].count = 1;
     }
-        
-    this.voxels.prepareForWrite();
   }
     
 
   prepareForRender() {
-    const { voxels, voxChunk, tmpVertIndexLookup, tmpVoxelXZYFaceIndices, tmpVoxelXYZFaceIndices, tmpVoxelYZXFaceIndices } = this;
+    const { voxChunk, tmpVertIndexLookup, tmpVoxelXZYFaceIndices, tmpVoxelXYZFaceIndices, tmpVoxelYZXFaceIndices } = this;
 
     this.prepareForWrite();
     
@@ -297,6 +293,7 @@ class Model {
         for (let vz = minZ; vz <= maxZ; vz++) {
           let faceCount = 0;
           const paletteIndex = voxChunk.getPaletteIndexAt(vx, vy, vz);
+          if (paletteIndex === 0) continue;
 
           // Shift to positive values
           const pvx = vx + xShift;
@@ -383,7 +380,6 @@ class Model {
     console.log("transformVertices: " + (performance.now() - t0));
     
     //LightsCalculator.calculateLights(this);
-    
     //AOCalculator.calculateAmbientOcclusion(this);
     
     t0 = performance.now();
@@ -433,22 +429,24 @@ class Model {
       }
 
       if (resize === SVOX.MODEL) {
+        const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(this.voxChunk.size);
+
         // Resize the actual model to the original voxel bounds
-        let scaleX = (this.voxels.maxX-this.voxels.minX+1)/(maxX-minX);
-        let scaleY = (this.voxels.maxY-this.voxels.minY+1)/(maxY-minY);
-        let scaleZ = (this.voxels.maxZ-this.voxels.minZ+1)/(maxZ-minZ);
+        let scaleX = (maxX-minX+1)/(maxX-minX);
+        let scaleY = (maxY-minY+1)/(maxY-minY);
+        let scaleZ = (maxZ-minZ+1)/(maxZ-minZ);
         bos.rescale = Math.min(scaleX, scaleY, scaleZ);
       }
     }
     
     if (!resize) {
       // Just use it's original bounds
-      minX = this.voxels.bounds.minX;
-      maxX = this.voxels.bounds.maxX+1;
-      minY = this.voxels.bounds.minY;
-      maxY = this.voxels.bounds.maxY+1;
-      minZ = this.voxels.bounds.minZ;
-      maxZ = this.voxels.bounds.maxZ+1;
+      minX = this.bounds.minX;
+      maxX = this.bounds.maxX+1;
+      minY = this.bounds.minY;
+      maxY = this.bounds.maxY+1;
+      minZ = this.bounds.minZ;
+      maxZ = this.bounds.maxZ+1;
     }
     
     let offsetX = -(minX + maxX)/2;
@@ -630,7 +628,7 @@ class Model {
 
     // This will || the planar values
     this._setIsVertexPlanar(material, x, y, z, material._flatten, modelFlatten, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertIndex);
-    this._setIsVertexPlanar(material, x, y, z, material._clamp, modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertIndex);
+    this._setIsVertexPlanar(material, x, y, z, true, modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertIndex);
 
     const vertColorIndex = vertColorCount[vertIndex];
     const vertColorOffset = vertIndex * 5;

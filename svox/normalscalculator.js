@@ -6,6 +6,8 @@ class NormalsCalculator {
 
     const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, vertX, vertY, vertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertSmoothNormalX, vertSmoothNormalY, vertSmoothNormalZ, vertBothNormalX, vertBothNormalY, vertBothNormalZ } = model;
 
+    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(model.voxChunk.size);
+
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       // Compute face vertex normals
       const faceNameIndex = faceNameIndices[faceIndex];
@@ -78,12 +80,12 @@ class NormalsCalculator {
         let normalY = e1Z * e2X - e1X * e2Z;
         let normalZ = e1X * e2Y - e1Y * e2X;
 
-        const voxMinXBuf = voxels.minX + 0.1;
-        const voxMaxXBuf = voxels.maxX + 0.9;
-        const voxMinYBuf = voxels.minY + 0.1;
-        const voxMaxYBuf = voxels.maxY + 0.9;
-        const voxMinZBuf = voxels.minZ + 0.1;
-        const voxMaxZBuf = voxels.maxZ + 0.9;
+        const voxMinXBuf = minX + 0.1;
+        const voxMaxXBuf = maxX + 0.9;
+        const voxMinYBuf = minY + 0.1;
+        const voxMaxYBuf = maxY + 0.9;
+        const voxMinZBuf = minZ + 0.1;
+        const voxMaxZBuf = maxZ + 0.9;
 
         // In case of tiling, make normals peripendicular on edges
         if (tile) {
