@@ -403,6 +403,8 @@ class ModelReader {
             z: 0
         };
 
+        model.bounds = new BoundingBox();
+
         let materialIndex = 0;
         // Create all chunks, using the context as cursor
         for (let i = 0; i < rleArray.length; i++) {
@@ -721,7 +723,12 @@ class ModelReader {
               // Convert the color to a 32 bit integer
               const rgbt = voxColorForRGBT(Math.floor(color.r * 255), Math.floor(color.g * 255), Math.floor(color.b * 255), materialIndex);
 
-              voxChunk.setColorAt(context.x, context.y, context.z, rgbt);
+              const vx = context.x - shiftForSize(model.size.x);
+              const vy = context.y - shiftForSize(model.size.y);
+              const vz = context.z - shiftForSize(model.size.z);
+
+              model.bounds.set(vx, vy, vz);
+              voxChunk.setColorAt(vx, vy, vz, rgbt);
             } else if(!model.resize) // Keep the empty voxels except when resize is set (to model or bounds)
               model.voxels.clearVoxel(context.x, context.y, context.z);
             context.x++;

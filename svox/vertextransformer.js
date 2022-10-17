@@ -7,6 +7,10 @@ function assertAlmostEqual(x, y) {
     throw new Error("Assertion failed: " + x + " != " + y);
 }
 
+const normalXs = [null, null, null, null];
+const normalYs = [null, null, null, null];
+const normalZs = [null, null, null, null];
+
 class VertexTransformer {
          
   static transformVertices(model) {
@@ -33,19 +37,30 @@ class VertexTransformer {
       vertexTransform.transformPointInline(vertX, vertY, vertZ, vertIndex);
     }
 
-    const normalXs = [faceVertNormalX, faceVertFlatNormalX, faceVertSmoothNormalX, faceVertBothNormalX];
-    const normalYs = [faceVertNormalY, faceVertFlatNormalY, faceVertSmoothNormalY, faceVertBothNormalY];
-    const normalZs = [faceVertNormalZ, faceVertFlatNormalZ, faceVertSmoothNormalZ, faceVertBothNormalZ];
+    normalXs[0] = faceVertNormalX;
+    normalYs[0] = faceVertNormalY;
+    normalZs[0] = faceVertNormalZ;
+    normalXs[1] = faceVertFlatNormalX;
+    normalYs[1] = faceVertFlatNormalY;
+    normalZs[1] = faceVertFlatNormalZ;
+    normalXs[2] = faceVertSmoothNormalX;
+    normalYs[2] = faceVertSmoothNormalY;
+    normalZs[2] = faceVertSmoothNormalZ;
+    normalXs[3] = faceVertBothNormalX;
+    normalYs[3] = faceVertBothNormalY;
+    normalZs[3] = faceVertBothNormalZ;
 
     // Transform all normals
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+      const faceOffset = faceIndex * 4;
+
       for (let normalIndex = 0; normalIndex < 4; normalIndex++) {
         for (let normalType = 0, c = normalXs.length; normalType < c; normalType++) {
           const xs = normalXs[normalType];
           const ys = normalYs[normalType];
           const zs = normalZs[normalType];
 
-          const idx = faceIndex * 4 + normalIndex;
+          const idx = faceOffset + normalIndex;
           normalTransform.transformVectorInline(xs, ys, zs, idx);
 
           // Normalize
@@ -53,7 +68,7 @@ class VertexTransformer {
           const normalY = ys[idx];
           const normalZ = zs[idx];
 
-          let normalLength = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
+          const normalLength = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
 
           if (normalLength > 0) {
             const d = 1 / normalLength;
