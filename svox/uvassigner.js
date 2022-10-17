@@ -9,8 +9,8 @@ function assertAlmostEqual(x, y) {
 
 class UVAssigner {
   
-    static assignUVs(model) {
-      const { faceMaterials, faceNameIndices, faceVertUs, faceVertVs } = model;
+    static assignUVs(model, buffers) {
+      const { faceMaterials, faceNameIndices, faceVertUs, faceVertVs } = buffers;
 
       const materialUseOffsets = [];
       const materialUScales = [];

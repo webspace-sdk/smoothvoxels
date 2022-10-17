@@ -1,12 +1,12 @@
 class FaceAligner {
      
   // Align all 'quad' diagonals to the center, making most models look more symmetrical
-  static alignFaceDiagonals(model) {
+  static alignFaceDiagonals(model, buffers) {
     // TODO skip culled faces
     let maxDist = 0.1 * Math.min(model.scale.x, model.scale.y, model.scale.z);
     maxDist *= maxDist; // No need to use sqrt for the distances
 
-    const { faceCulled, faceVertIndices, vertX, vertY, vertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertUs, faceVertVs, faceVertColorR, faceVertColorG, faceVertColorB, faceVertNormalX, faceVertNormalY, faceVertNormalZ } = model;
+    const { faceCulled, faceVertIndices, vertX, vertY, vertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertUs, faceVertVs, faceVertColorR, faceVertColorG, faceVertColorB, faceVertNormalX, faceVertNormalY, faceVertNormalZ } = buffers;
 
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       if (faceCulled.get(faceIndex) === 1) continue;

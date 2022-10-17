@@ -9,9 +9,9 @@ function assertAlmostEqual(x, y) {
 // Generates a clean js mesh data model, which serves as the basis for transformation in the SvoxToThreeMeshConverter or the SvoxToAFrameConverter
 class SvoxMeshGenerator {
 
-  static generate(model) {
+  static generate(model, buffers) {
     let t0 = performance.now();
-    model.prepareForRender();
+    model.prepareForRender(buffers);
     console.log("prep for render: " + (performance.now() - t0) + "ms");
   
     const { nonCulledFaceCount } = model;
@@ -52,7 +52,7 @@ class SvoxMeshGenerator {
     // }
     
     t0 = performance.now();
-    SvoxMeshGenerator._generateAll(model, mesh);
+    SvoxMeshGenerator._generateAll(model, mesh, buffers);
     console.log("Mesh generation took " + (performance.now() - t0) + " ms");
     
     // t0 = performance.now();
@@ -228,9 +228,9 @@ class SvoxMeshGenerator {
     }
   }
   
-  static _generateAll(model, mesh) {
+  static _generateAll(model, mesh, buffers) {
     const materials = model.materials.materials;
-    const { faceMaterials, faceCulled } = model;
+    const { faceMaterials, faceCulled } = buffers;
 
     // Add all vertices to the geometry     
     model.materials.baseMaterials.forEach(function(baseMaterial) {
@@ -241,7 +241,7 @@ class SvoxMeshGenerator {
 
         // Check for material match and face culling from simplifier
         if (material._baseMaterial === baseMaterial && faceCulled.get(faceIndex) === 0) {
-          SvoxMeshGenerator._generateFace(model, faceIndex, mesh);
+          SvoxMeshGenerator._generateFace(model, buffers, faceIndex, mesh);
         }
       }
       
@@ -259,8 +259,8 @@ class SvoxMeshGenerator {
     }
   }
 
-  static _generateFace(model, faceIndex, mesh) {
-    const { faceVertIndices, faceVertNormalX, faceVertNormalY, faceVertNormalZ, vertX, vertY, vertZ, faceVertColorR, faceVertColorG, faceVertColorB, faceVertUs, faceVertVs, faceMaterials, faceSmooth } = model;
+  static _generateFace(model, buffers, faceIndex, mesh) {
+    const { faceVertIndices, faceVertNormalX, faceVertNormalY, faceVertNormalZ, vertX, vertY, vertZ, faceVertColorR, faceVertColorG, faceVertColorB, faceVertUs, faceVertVs, faceMaterials, faceSmooth } = buffers;
 
     const materials = model.materials.materials;
     const material = materials[faceMaterials[faceIndex]];

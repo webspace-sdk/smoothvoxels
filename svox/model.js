@@ -95,93 +95,6 @@ class Model {
     this.faceCount = 0;
     this.vertCount = 0;
     this.nonCulledFaceCount = 0;
-    this.tmpVertIndexLookup = new Map();
-
-    const MAX_VERTS = 1024 * 1024;
-    const MAX_VERT_BITS = Math.floor(MAX_VERTS / 8);
-    const MAX_FACES = MAX_VERTS / 4;
-    const MAX_FACE_BITS = Math.floor(MAX_FACES / 8);
-    const MAX_FACE_VERTS = MAX_FACES * 4;
-
-    this.vertX = new Float32Array(MAX_VERTS);
-    this.vertY = new Float32Array(MAX_VERTS);
-    this.vertZ = new Float32Array(MAX_VERTS);
-
-    // Used for deform
-    this.vertTmpX = new Float32Array(MAX_VERTS);
-    this.vertTmpY = new Float32Array(MAX_VERTS);
-    this.vertTmpZ = new Float32Array(MAX_VERTS);
-    this.vertHasTmp = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-
-    // Verts can have up to 5 colors, given it will belong to at most 5 visible faces (a corner on a flat part)
-    this.vertColorR = new Float32Array(MAX_VERTS * 5);
-    this.vertColorG = new Float32Array(MAX_VERTS * 5);
-    this.vertColorB = new Float32Array(MAX_VERTS * 5);
-    this.vertColorCount = new Uint8Array(MAX_VERTS);
-
-    this.vertSmoothNormalX = new Float32Array(MAX_VERTS);
-    this.vertSmoothNormalY = new Float32Array(MAX_VERTS);
-    this.vertSmoothNormalZ = new Float32Array(MAX_VERTS);
-    this.vertBothNormalX = new Float32Array(MAX_VERTS);
-    this.vertBothNormalY = new Float32Array(MAX_VERTS);
-    this.vertBothNormalZ = new Float32Array(MAX_VERTS);
-    this.vertFlattenedX = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.vertFlattenedY = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.vertFlattenedZ = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.vertClampedX = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.vertClampedY = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.vertClampedZ = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.vertFullyClamped = Bits.create(new Uint8Array(MAX_VERT_BITS).buffer, 1, 0);
-    this.vertDeformCount = new Uint8Array(MAX_VERTS);
-    this.vertDeformDamping = new Float32Array(MAX_VERTS);
-    this.vertDeformStrength = new Float32Array(MAX_VERTS);
-    this.vertWarpAmplitude = new Float32Array(MAX_VERTS);
-    this.vertWarpFrequency = new Float32Array(MAX_VERTS);
-    this.vertScatter = new Float32Array(MAX_VERTS);
-    this.vertRing = new Float32Array(MAX_VERTS);
-    this.vertNrOfClampedLinks = new Uint8Array(MAX_VERTS);
-    this.vertLinkCounts = new Uint8Array(MAX_VERTS); // A vert can be linked to up to 6 other verts
-    this.vertLinkIndices = new Uint32Array(MAX_VERTS * 6);
-
-    this.faceFlattened = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
-    this.faceClamped = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
-    this.faceSmooth = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
-    this.faceEquidistant = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0);
-    this.faceCulled = Bits.create(new Uint8Array(MAX_FACE_BITS).buffer, 1, 0); // Bits for removed faces from simplify
-    this.faceNameIndices = new Uint8Array(MAX_FACES);
-    this.faceMaterials = new Uint8Array(MAX_FACES);
-
-    this.faceVertIndices = new Uint32Array(MAX_FACE_VERTS);
-    this.faceVertNormalX = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertNormalY = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertNormalZ = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertFlatNormalX = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertFlatNormalY = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertFlatNormalZ = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertSmoothNormalX = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertSmoothNormalY = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertSmoothNormalZ = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertBothNormalX = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertBothNormalY = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertBothNormalZ = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertColorR = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertColorG = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertColorB = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertUs = new Float32Array(MAX_FACE_VERTS);
-    this.faceVertVs = new Float32Array(MAX_FACE_VERTS);
-
-    this.tmpVoxelXZYFaceIndices = Array(MAX_FACES).fill(0);
-    this.tmpVoxelXYZFaceIndices = Array(MAX_FACES).fill(0);
-    this.tmpVoxelYZXFaceIndices = Array(MAX_FACES).fill(0);
-    this.voxelXZYFaceIndices = null;
-    this.voxelXYZFaceIndices = null;
-    this.voxelYZXFaceIndices = null;
-
-    // Need to zero on reset:
-    // face vert link counts, color counts
-    // all bitfields
-    // vert ring, since deformer checks for ring equality
-    // vert nr of clamped links
   }
   
   prepareForWrite() {
@@ -193,16 +106,13 @@ class Model {
   }
     
 
-  prepareForRender() {
-    const { voxChunk, tmpVertIndexLookup, tmpVoxelXZYFaceIndices, tmpVoxelXYZFaceIndices, tmpVoxelYZXFaceIndices } = this;
+  prepareForRender(buffers) {
+    const { tmpVertIndexLookup, tmpVoxelXZYFaceIndices, tmpVoxelXYZFaceIndices, tmpVoxelYZXFaceIndices } = buffers;
+    const { voxChunk } = model;
 
     this.prepareForWrite();
     
     let maximumDeformCount = Deformer.maximumDeformCount(this);
-
-    this.vertices = [];
-  
-    let removeCount = 0;
 
     this.faceCount = 0;
     this.vertCount = 0;
@@ -254,7 +164,7 @@ class Model {
               neighborPaletteIndex = voxChunk.getPaletteIndexAt(nvx, nvy, nvz);
             }
 
-            const created = this._createFace(voxChunk, materials, vx, vy, vz, xShift, yShift, zShift, paletteIndex, neighborPaletteIndex, faceNameIndex, allowDeform, tmpVertIndexLookup);
+            const created = this._createFace(voxChunk, buffers, materials, vx, vy, vz, xShift, yShift, zShift, paletteIndex, neighborPaletteIndex, faceNameIndex, allowDeform, tmpVertIndexLookup);
 
             if (created) {
               const faceIndex = this.faceCount - 1;
@@ -278,54 +188,54 @@ class Model {
     console.log(this);
     // Sort ordered faces, used for simplifier
     // NOTE this is a memory allocation we take on. Using bigint buffers was too slow.
-    this.voxelXZYFaceIndices = tmpVoxelXZYFaceIndices.slice(0, this.faceCount);
-    this.voxelXYZFaceIndices = tmpVoxelXYZFaceIndices.slice(0, this.faceCount);
-    this.voxelYZXFaceIndices = tmpVoxelYZXFaceIndices.slice(0, this.faceCount);
-    this.voxelXZYFaceIndices.sort(SORT_NUMBERS);
-    this.voxelXYZFaceIndices.sort(SORT_NUMBERS);
-    this.voxelYZXFaceIndices.sort(SORT_NUMBERS);
+    buffers.voxelXZYFaceIndices = tmpVoxelXZYFaceIndices.slice(0, this.faceCount);
+    buffers.voxelXYZFaceIndices = tmpVoxelXYZFaceIndices.slice(0, this.faceCount);
+    buffers.voxelYZXFaceIndices = tmpVoxelYZXFaceIndices.slice(0, this.faceCount);
+    buffers.voxelXZYFaceIndices.sort(SORT_NUMBERS);
+    buffers.voxelXYZFaceIndices.sort(SORT_NUMBERS);
+    buffers.voxelYZXFaceIndices.sort(SORT_NUMBERS);
 
     t0 = performance.now();
-    VertexLinker.fixClampedLinks(this); 
+    VertexLinker.fixClampedLinks(this, buffers); 
     console.log("fixClampedLinks: " + (performance.now() - t0));
     
     t0 = performance.now();
-    Deformer.changeShape(this, this._shape);
+    Deformer.changeShape(this, this._shape, buffers);
     console.log("changeShape: " + (performance.now() - t0));
        
     t0 = performance.now();
-    Deformer.deform(this, maximumDeformCount);
+    Deformer.deform(this, buffers, maximumDeformCount);
     console.log("deform: " + (performance.now() - t0));
     
     t0 = performance.now();
-    Deformer.warpAndScatter(this);
+    Deformer.warpAndScatter(this, buffers);
     console.log("warpAndScatter: " + (performance.now() - t0));
     
     t0 = performance.now();
-    NormalsCalculator.calculateNormals(this);
+    NormalsCalculator.calculateNormals(this, buffers);
     console.log("calculateNormals: " + (performance.now() - t0));
     
     t0 = performance.now();
-    VertexTransformer.transformVertices(this);    
+    VertexTransformer.transformVertices(this, buffers);    
     console.log("transformVertices: " + (performance.now() - t0));
     
     //LightsCalculator.calculateLights(this);
     //AOCalculator.calculateAmbientOcclusion(this);
     
     t0 = performance.now();
-    ColorCombiner.combineColors(this);
+    ColorCombiner.combineColors(this, buffers);
     console.log("combineColors: " + (performance.now() - t0));
 
     t0 = performance.now();
-    UVAssigner.assignUVs(this);
+    UVAssigner.assignUVs(this, buffers);
     console.log("assignUVs: " + (performance.now() - t0));
     
     t0 = performance.now();
-    Simplifier.simplify(this);
+    Simplifier.simplify(this, buffers);
     console.log("simplify: " + (performance.now() - t0));
     
     t0 = performance.now();
-    FaceAligner.alignFaceDiagonals(this);
+    FaceAligner.alignFaceDiagonals(this, buffers);
     console.log("alignFaceDiagonals: " + (performance.now() - t0));
   }
 
@@ -396,7 +306,7 @@ class Model {
     return bos;
   }  
   
-  _createFace(voxChunk, materials, vx, vy, vz, xShift, yShift, zShift, paletteIndex, neighborPaletteIndex, faceNameIndex, linkVertices, vertIndexLookup) {
+  _createFace(voxChunk, buffers, materials, vx, vy, vz, xShift, yShift, zShift, paletteIndex, neighborPaletteIndex, faceNameIndex, linkVertices, vertIndexLookup) {
     const color = voxChunk.colorForPaletteIndex(paletteIndex);
     const materialIndex = (color & 0xff000000) >> 24;
     const material = materials[materialIndex];
@@ -428,17 +338,18 @@ class Model {
 
     if (skipped) return false;
 
-    const { faceVertIndices, faceVertColorR, faceVertColorG, faceVertColorB, faceFlattened, faceClamped, faceSmooth, faceCulled, faceMaterials, faceNameIndices, faceVertUs, faceVertVs, faceCount} = this;
+    const { faceVertIndices, faceVertColorR, faceVertColorG, faceVertColorB, faceFlattened, faceClamped, faceSmooth, faceCulled, faceMaterials, faceNameIndices, faceVertUs, faceVertVs} = buffers;
+    const { faceCount } = model;
     const faceVertOffset = faceCount * 4;
 
     const vr = (color & 0x000000ff) / 255.0;
     const vg = ((color & 0x0000ff00) >> 8) / 255.0;
     const vb = ((color & 0x00ff0000) >> 16) / 255.0;
 
-    faceVertIndices[faceVertOffset] = this._createVertex(material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, 0, flattened, clamped, vertIndexLookup);
-    faceVertIndices[faceVertOffset + 1] = this._createVertex(material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, 1, flattened, clamped, vertIndexLookup);
-    faceVertIndices[faceVertOffset + 2] = this._createVertex(material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, 2, flattened, clamped, vertIndexLookup);
-    faceVertIndices[faceVertOffset + 3] = this._createVertex(material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, 3, flattened, clamped, vertIndexLookup);
+    faceVertIndices[faceVertOffset] = this._createVertex(buffers, material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, 0, flattened, clamped, vertIndexLookup);
+    faceVertIndices[faceVertOffset + 1] = this._createVertex(buffers, material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, 1, flattened, clamped, vertIndexLookup);
+    faceVertIndices[faceVertOffset + 2] = this._createVertex(buffers, material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, 2, flattened, clamped, vertIndexLookup);
+    faceVertIndices[faceVertOffset + 3] = this._createVertex(buffers, material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, 3, flattened, clamped, vertIndexLookup);
 
     for (let v = 0; v < 4; v++) {
       faceVertColorR[faceVertOffset + v] = vr;
@@ -468,14 +379,14 @@ class Model {
 
      // Link the vertices for deformation
     if (linkVertices)
-      VertexLinker.linkVertices(model, faceCount);
+      VertexLinker.linkVertices(model, buffers, faceCount);
 
     this.faceCount++;
 
     return true;
   }
   
-  _createVertex(material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, vi, flattened, clamped, vertIndexLookup) {
+  _createVertex(buffers, material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, vi, flattened, clamped, vertIndexLookup) {
     // Calculate the actual vertex coordinates
     const vertexOffset = SVOX._VERTEX_OFFSETS[faceNameIndex][vi];
     const x = vx + vertexOffset[0];
@@ -485,8 +396,8 @@ class Model {
     // Key is bit shifted x, y, z values as ints
     const key = ((x + xShift) << 20) | ((y + yShift) << 10) | (z + zShift);
 
-    const shape = model._shape;
-    const { vertDeformCount, vertDeformDamping, vertDeformStrength, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertX, vertY, vertZ, vertLinkCounts, vertFullyClamped, vertRing, _flatten: modelFlatten, _clamp: modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertColorR, vertColorG, vertColorB, vertColorCount, vertFlattenedX, vertFlattenedY, vertFlattenedZ } = model;
+    const shape = this._shape;
+    const { vertDeformCount, vertDeformDamping, vertDeformStrength, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertX, vertY, vertZ, vertLinkCounts, vertFullyClamped, vertRing, _flatten: modelFlatten, _clamp: modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertColorR, vertColorG, vertColorB, vertColorCount, vertFlattenedX, vertFlattenedY, vertFlattenedZ } = buffers;
 
     const { deform, warp, scatter } = material;
 
@@ -502,7 +413,7 @@ class Model {
         vertDeformStrength[vertIndex] = 0;
       }
       else if (vertDeformCount[vertIndex] !== 0 &&
-               (this._getDeformIntegral(material.deform) < this._getDeformIntegralAtVertex(vertIndex))) {
+               (this._getDeformIntegral(material.deform) < this._getDeformIntegralAtVertex(buffers, vertIndex))) {
         vertDeformStrength[vertIndex] = deform.strength;
         vertDeformDamping[vertIndex] = deform.damping;
         vertDeformCount[vertIndex] = deform.count;
@@ -579,10 +490,11 @@ class Model {
        : (deform.strength*(1-Math.pow(deform.damping,deform.count+1)))/(1-deform.damping);
   }
 
-  _getDeformIntegralAtVertex(vertIndex) {
-    const damping = this.vertDeformDamping[vertIndex];
-    const count = this.vertDeformCount[vertIndex];
-    const strength = this.vertDeformStrength[vertIndex];
+  _getDeformIntegralAtVertex(buffers, vertIndex) {
+    const { vertDeformDamping, vertDeformStrength, vertDeformCount } = buffers;
+    const damping = vertDeformDamping[vertIndex];
+    const count = vertDeformCount[vertIndex];
+    const strength = vertDeformStrength[vertIndex];
 
     // Returns the total amount of deforming done by caluclating the integral
     return (damping === 1)

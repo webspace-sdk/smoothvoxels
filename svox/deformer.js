@@ -1,7 +1,7 @@
 
 class Deformer {
   
-  static changeShape(model, shape) {
+  static changeShape(model, buffers, shape) {
     switch (shape) {
       case 'sphere' : this._circularDeform(model, 1, 1, 1); break;
       case 'cylinder-x' : this._circularDeform(model, 0, 1, 1); break;
@@ -12,14 +12,14 @@ class Deformer {
     }
   }
 
-  static _circularDeform(model, xStrength, yStrength, zStrength) {
+  static _circularDeform(model, buffers, xStrength, yStrength, zStrength) {
     const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(model.voxChunk.size);
 
     let xMid = (minX + maxX)/2 + 0.5;
     let yMid = (minY + maxY)/2 + 0.5;
     let zMid = (minZ + maxZ)/2 + 0.5;    
 
-    const { vertX, vertY, vertZ, vertRing } = model;
+    const { vertX, vertY, vertZ, vertRing } = buffers;
 
     for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
       const vx = vertX[vertIndex];
@@ -41,12 +41,12 @@ class Deformer {
       vertRing[vertIndex] = sphereSize;
     }
 
-    this._markEquidistantFaces(model);
+    this._markEquidistantFaces(model, buffers);
   }  
   
     
-  static _markEquidistantFaces(model) {
-    const { faceVertIndices, vertRing, faceEquidistant } = model;
+  static _markEquidistantFaces(model, buffers) {
+    const { faceVertIndices, vertRing, faceEquidistant } = buffers;
 
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       const faceVertIndex0 = faceIndex * 4;
@@ -69,8 +69,8 @@ class Deformer {
     return maximumCount;
   }
   
-  static deform(model, maximumDeformCount) {
-    const { vertLinkIndices, vertLinkCounts, vertDeformCount, vertDeformDamping, vertDeformStrength, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertClampedX, vertClampedY, vertClampedZ, vertX, vertY, vertZ, vertTmpX, vertTmpY, vertTmpZ, vertHasTmp } = model;
+  static deform(model, buffers, maximumDeformCount) {
+    const { vertLinkIndices, vertLinkCounts, vertDeformCount, vertDeformDamping, vertDeformStrength, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertClampedX, vertClampedY, vertClampedZ, vertX, vertY, vertZ, vertTmpX, vertTmpY, vertTmpZ, vertHasTmp } = buffers;
 
     for (let step = 0; step < maximumDeformCount; step++) {
       let hasDeforms = false;
@@ -129,13 +129,13 @@ class Deformer {
     }
   }
   
-  static warpAndScatter(model) {
+  static warpAndScatter(model, buffers) {
     let noise = SVOX.Noise().noise;
     let { nx: tnx, px: tpx, ny: tny, py: tpy, nz: tnz, pz: tpz } = model._tile;
     let tile = model._tile;
     let [vxMinX, vxMaxX, vxMinY, vxMaxY, vxMinZ, vxMaxZ] = xyzRangeForSize(model.voxChunk.size);
 
-    const { vertX, vertY, vertZ, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertClampedX, vertClampedY, vertClampedZ } = model;
+    const { vertX, vertY, vertZ, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertClampedX, vertClampedY, vertClampedZ } = buffers;
 
     vxMinX += 0.1;
     vxMinY += 0.1;

@@ -33,7 +33,7 @@ const contexti4 = {
 class Simplifier {
   
   // Combine all faces which are coplanar, have the same normals, colors, etc.
-  static simplify(model) {
+  static simplify(model, buffers) {
     
     if (!model.simplify)
       return;
@@ -46,11 +46,11 @@ class Simplifier {
     }
 
     const materials = model.materials.materials;
-    const { faceMaterials, faceCulled, faceNameIndices, vertX, vertY, vertZ } = model;
+    const { faceMaterials, faceCulled, faceNameIndices, vertX, vertY, vertZ, voxelXZYFaceIndices, voxelXYZFaceIndices, voxelYZXFaceIndices } = buffers;
 
     // Combine nx, px, nz and pz faces vertical up
-    for (let i = model.voxelXZYFaceIndices.length - model.faceCount, l = model.voxelXZYFaceIndices.length ; i < l; i++) {
-      const key = model.voxelXZYFaceIndices[i]
+    for (let i = voxelXZYFaceIndices.length - model.faceCount, l = voxelXZYFaceIndices.length ; i < l; i++) {
+      const key = voxelXZYFaceIndices[i]
       const faceIndex = key & ((1 << 28) - 1);
       if (faceCulled.get(faceIndex)) continue;
 
@@ -63,16 +63,16 @@ class Simplifier {
 
       switch (faceNameIndex) {
         case 0: // nx
-            this._mergeFaces(material, model, contexti1, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            this._mergeFaces(material, model, buffers, contexti1, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
             break;
         case 1: // px
-            this._mergeFaces(material, model, contexti2, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            this._mergeFaces(material, model, buffers, contexti2, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
             break;
         case 4: // nz
-            this._mergeFaces(material, model, contexti3, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            this._mergeFaces(material, model, buffers, contexti3, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
             break;
         case 5: // pz
-            this._mergeFaces(material, model, contexti4, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            this._mergeFaces(material, model, buffers, contexti4, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
             break;
       }
     }
@@ -80,8 +80,8 @@ class Simplifier {
     clearContexts();
 
     // Combine nx, px, ny and py faces from back to front
-    for (let i = model.voxelXYZFaceIndices.length - model.faceCount, l = model.voxelXYZFaceIndices.length ; i < l; i++) {
-      const key = model.voxelXYZFaceIndices[i]
+    for (let i = voxelXYZFaceIndices.length - model.faceCount, l = voxelXYZFaceIndices.length ; i < l; i++) {
+      const key = voxelXYZFaceIndices[i]
       const faceIndex = key & ((1 << 28) - 1);
       if (faceCulled.get(faceIndex)) continue;
 
@@ -95,16 +95,16 @@ class Simplifier {
 
       switch (faceNameIndex) {
         case 0: // nx
-            this._mergeFaces(material, model, contexti1, faceIndex, x, y, z, vertX, vertY, vertZ, 1, 2, 3, 0);
+            this._mergeFaces(material, model, buffers, contexti1, faceIndex, x, y, z, vertX, vertY, vertZ, 1, 2, 3, 0);
             break;
         case 1: // px
-            this._mergeFaces(material, model, contexti2, faceIndex, x, y, z, vertX, vertY, vertZ, 3, 0, 1, 2);
+            this._mergeFaces(material, model, buffers, contexti2, faceIndex, x, y, z, vertX, vertY, vertZ, 3, 0, 1, 2);
             break;
         case 2: // ny
-            this._mergeFaces(material, model, contexti3, faceIndex, x, y, z, vertX, vertY, vertZ, 0, 1, 2, 3);
+            this._mergeFaces(material, model, buffers, contexti3, faceIndex, x, y, z, vertX, vertY, vertZ, 0, 1, 2, 3);
             break;
         case 3: // py
-            this._mergeFaces(material, model, contexti4, faceIndex, x, y, z, vertX, vertY, vertZ, 2, 3, 0, 1);
+            this._mergeFaces(material, model, buffers, contexti4, faceIndex, x, y, z, vertX, vertY, vertZ, 2, 3, 0, 1);
             break;
       }
     }
@@ -112,8 +112,8 @@ class Simplifier {
     clearContexts();
 
     // Combine ny, py, nz and pz faces from left to right
-    for (let i = model.voxelYZXFaceIndices.length - model.faceCount, l = model.voxelYZXFaceIndices.length ; i < l; i++) {
-      const key = model.voxelYZXFaceIndices[i]
+    for (let i = voxelYZXFaceIndices.length - model.faceCount, l = voxelYZXFaceIndices.length ; i < l; i++) {
+      const key = voxelYZXFaceIndices[i]
       const faceIndex = key & ((1 << 28) - 1);
       if (faceCulled.get(faceIndex)) continue;
 
@@ -127,16 +127,16 @@ class Simplifier {
 
       switch (faceNameIndex) {
         case 2: // ny
-            this._mergeFaces(material, model, contexti1, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
+            this._mergeFaces(material, model, buffers, contexti1, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
             break;
         case 3: // py
-            this._mergeFaces(material, model, contexti2, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
+            this._mergeFaces(material, model, buffers, contexti2, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
             break;
         case 4: // nz
-            this._mergeFaces(material, model, contexti3, faceIndex, y, z, x, vertY, vertZ, vertX, 3, 0, 1, 2);
+            this._mergeFaces(material, model, buffers, contexti3, faceIndex, y, z, x, vertY, vertZ, vertX, 3, 0, 1, 2);
             break;
         case 5: // pz
-            this._mergeFaces(material, model, contexti4, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
+            this._mergeFaces(material, model, buffers, contexti4, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
             break;
       }
     }
@@ -144,8 +144,8 @@ class Simplifier {
     clearContexts();
   }
   
-  static _mergeFaces(material, model, context, faceIndex, vaxis1, vaxis2, vaxis3, axis1Arr, axis2Arr, axis3Arr, v0, v1, v2, v3) {
-    const { faceCulled, faceMaterials, vertX, vertY, vertZ, faceVertIndices, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceVertColorR, faceVertColorG, faceVertColorB, faceVertUs, faceVertVs, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = model;
+  static _mergeFaces(material, model, buffers, context, faceIndex, vaxis1, vaxis2, vaxis3, axis1Arr, axis2Arr, axis3Arr, v0, v1, v2, v3) {
+    const { faceCulled, faceMaterials, vertX, vertY, vertZ, faceVertIndices, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceVertColorR, faceVertColorG, faceVertColorB, faceVertUs, faceVertVs, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = buffers;
 
     if (context.filled && 
         context.lastVoxelAxis1 === vaxis1 && context.lastVoxelAxis2 === vaxis2 &&

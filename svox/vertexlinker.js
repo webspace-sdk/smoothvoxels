@@ -10,8 +10,8 @@ function assertAlmostEqual(x, y) {
 
 class VertexLinker {
   
-  static linkVertices(model, faceIndex) {
-    const { faceClamped, vertNrOfClampedLinks, faceVertIndices, vertLinkIndices, vertLinkCounts } = model;
+  static linkVertices(model, buffers, faceIndex) {
+    const { faceClamped, vertNrOfClampedLinks, faceVertIndices, vertLinkIndices, vertLinkCounts } = buffers;
 
     const clamped = faceClamped.get(faceIndex);
 
@@ -77,10 +77,8 @@ class VertexLinker {
 
   }
   
-  static fixClampedLinks(model) {
-    const voxels = model.voxels;
-
-    const { faceNameIndices, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertNrOfClampedLinks, vertFullyClamped, vertLinkCounts, vertLinkIndices } = model;
+  static fixClampedLinks(model, buffers) {
+    const { faceNameIndices, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertNrOfClampedLinks, vertFullyClamped, vertLinkCounts, vertLinkIndices } = buffers;
 
     // Clamped sides are ignored when deforming so the clamped side does not pull in the other sodes.
     // This results in the other sides ending up nice and peripendicular to the clamped sides.

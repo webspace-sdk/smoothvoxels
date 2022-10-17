@@ -80,8 +80,9 @@ AFRAME.registerComponent('svox', {
       //  //SvoxToThreeMeshConverter.generate(svoxmesh);
       //}
 
+        const buffers = new SVOXBuffers(1024 * 1024);
         let t0 = performance.now();
-        let svoxmesh = SvoxMeshGenerator.generate(model);
+        let svoxmesh = SvoxMeshGenerator.generate(model, buffers);
     console.log(svoxmesh);
         console.log("SvoxMeshGenerator.generate took " + (performance.now() - t0) + " ms.");
         let t1 = performance.now();

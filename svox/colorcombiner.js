@@ -1,7 +1,7 @@
 class ColorCombiner {
   
-  static combineColors(model) {
-    const { vertColorR, vertColorG, vertColorB, vertColorCount, faceVertColorR, faceVertColorG, faceVertColorB, faceVertIndices, faceMaterials } = model;
+  static combineColors(model, buffers) {
+    const { vertColorR, vertColorG, vertColorB, vertColorCount, faceVertColorR, faceVertColorG, faceVertColorB, faceVertIndices, faceMaterials } = buffers;
     const materials = model.materials.materials;
 
     // No need to fade colors when there is no material with fade

@@ -13,8 +13,8 @@ const normalZs = [null, null, null, null];
 
 class VertexTransformer {
          
-  static transformVertices(model) {
-    const { vertX, vertY, vertZ, faceVertNormalX, faceVertFlatNormalX, faceVertNormalY, faceVertFlatNormalY, faceVertNormalZ, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = model;
+  static transformVertices(model, buffers) {
+    const { vertX, vertY, vertZ, faceVertNormalX, faceVertFlatNormalX, faceVertNormalY, faceVertFlatNormalY, faceVertNormalZ, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = buffers;
     let bor = model.determineBoundsOffsetAndRescale(model.resize);
     
     // Define the transformation in reverse order to how they are carried out

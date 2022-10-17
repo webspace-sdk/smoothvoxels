@@ -1,10 +1,10 @@
 class NormalsCalculator {
  
-  static calculateNormals(model) {
+  static calculateNormals(model, buffers) {
     let tile = model.tile;
     let voxels = model.voxels;
 
-    const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, vertX, vertY, vertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertSmoothNormalX, vertSmoothNormalY, vertSmoothNormalZ, vertBothNormalX, vertBothNormalY, vertBothNormalZ } = model;
+    const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, vertX, vertY, vertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertSmoothNormalX, vertSmoothNormalY, vertSmoothNormalZ, vertBothNormalX, vertBothNormalY, vertBothNormalZ } = buffers;
 
     const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(model.voxChunk.size);
 
