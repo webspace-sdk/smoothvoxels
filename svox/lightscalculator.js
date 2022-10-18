@@ -22,9 +22,9 @@ class LightsCalculator {
         for (let v = 0; v < 4; v++) {
           const faceVertOffset = faceOffset + v;
 
-          faceVertLightR[faceVertOffset] = 0;
-          faceVertLightG[faceVertOffset] = 0;
-          faceVertLightB[faceVertOffset] = 0;
+          faceVertLightR[faceVertOffset] = 1;
+          faceVertLightG[faceVertOffset] = 1;
+          faceVertLightB[faceVertOffset] = 1;
         }
       } else {
         for (let v = 0; v < 4; v++) {

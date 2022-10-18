@@ -1,7 +1,7 @@
 class ColorCombiner {
   
   static combineColors(model, buffers) {
-    const { vertColorR, vertColorG, vertColorB, vertColorCount, faceVertColorR, faceVertColorG, faceVertColorB, faceVertIndices, faceMaterials } = buffers;
+    const { vertColorR, vertColorG, vertColorB, vertColorCount, faceVertColorR, faceVertColorG, faceVertColorB, faceVertLightR, faceVertLightG, faceVertLightB, faceVertIndices, faceMaterials } = buffers;
     const materials = model.materials.materials;
 
     // No need to fade colors when there is no material with fade
@@ -26,46 +26,40 @@ class ColorCombiner {
           let b = 0;
           let count = 0;
 
-          const vertIndex = faceVertIndices[faceIndex * 4 + v];
+          const faceVertOffset = faceIndex * 4 + v;
+          const vertIndex = faceVertIndices[faceVertOffset];
           const colorCount = vertColorCount[vertIndex];
 
           for (let c = 0; c < colorCount; c++) {
-            r += vertColorR[vertIndex * 5 + c];
-            g += vertColorG[vertIndex * 5 + c];
-            b += vertColorB[vertIndex * 5 + c];
+            const faceColorOffset = vertIndex * 5 + c;
+            r += vertColorR[faceColorOffset];
+            g += vertColorG[faceColorOffset];
+            b += vertColorB[faceColorOffset];
             count++;
           }
 
-          faceVertColorR[faceIndex * 4 + v] = r / count;
-          faceVertColorG[faceIndex * 4 + v] = g / count;
-          faceVertColorB[faceIndex * 4 + v] = b / count;
+          faceVertColorR[faceVertOffset] = r / count;
+          faceVertColorG[faceVertOffset] = g / count;
+          faceVertColorB[faceVertOffset] = b / count;
         }
-      } else {
-        // Face colors are already set to voxel color during model load
       }
     }
-  }
-       
-  static _fadeFaceColor(voxel, face) {
-    face.vertexColors = [ null, null, null, null ];
-    for (let v = 0; v < 4; v++) {
-      let vert = face.vertices[v];
-      let r = 0;
-      let g = 0;
-      let b = 0;
-      let count = 0;    
 
-      for (let c = 0, l = vert.colors.length; c < l; c++) {
-        let col = vert.colors[c];
-        if (col.material === voxel.material) {
-          r += col.r; 
-          g += col.g; 
-          b += col.b; 
-          count++;
+    if (model.lights.length > 0) {
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        // Face colors are already set to voxel color during model load
+        for (let v = 0; v < 4; v++) {
+          const faceVertOffset = faceIndex * 4 + v;
+          faceVertColorR[faceVertOffset] = faceVertColorR[faceVertOffset] * faceVertLightR[faceVertOffset];
+          faceVertColorG[faceVertOffset] = faceVertColorG[faceVertOffset] * faceVertLightG[faceVertOffset];
+          faceVertColorB[faceVertOffset] = faceVertColorB[faceVertOffset] * faceVertLightB[faceVertOffset];
+          //let vAoColor = voxel.material.ao ? voxel.material.ao.color : model.ao ? model.ao.color : vColor;
+
+          //vColor.r = vLight.r * vAo * vColor.r + vAoColor.r * (1 - vAo); 
+          //vColor.g = vLight.g * vAo * vColor.g + vAoColor.g * (1 - vAo); 
+          //vColor.b = vLight.b * vAo * vColor.b + vAoColor.b * (1 - vAo); 
         }
       }
-
-      face.vertexColors[v] = Color.fromRgb(r / count, g / count, b / count);
-    }    
+    }
   }
 }

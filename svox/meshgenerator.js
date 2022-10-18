@@ -47,10 +47,6 @@ class SvoxMeshGenerator {
     SvoxMeshGenerator._generateAll(model, mesh, buffers);
     console.log("Mesh generation took " + (performance.now() - t0) + " ms");
     
-    // t0 = performance.now();
-    // SvoxMeshGenerator._generateLights(model, mesh);
-    // console.log("Light generation took " + (performance.now() - t0) + " ms");
-
     return mesh;
   }
   
@@ -152,72 +148,6 @@ class SvoxMeshGenerator {
     }
     
     return material;
-  }
-  
-  static _generateLights(model, mesh) {
-    if (model.lights.some((light) => light.size)) {
-      
-      // The octahedron that will be subdivided depending on the light.detail
-      let vTop      = { x: 0, y: 1, z: 0 };
-      let vFront    = { x: 0, y: 0, z:-1 };
-      let vRight    = { x: 1, y: 0, z: 0 };
-      let vBack     = { x: 0, y: 0, z: 1 };
-      let vLeft     = { x:-1, y: 0, z: 0 };
-      let vBottom   = { x: 0, y:-1, z: 0 };
-
-      let start = mesh.positionIndex;
-      model.lights.filter(l => l.position).forEach(function(light) {
-        if (light.size > 0) {
-          let scale = light.size / 2;
-          let detail = light.detail;
-
-          SvoxMeshGenerator._createLightFace(light.position, light.color, scale, detail, vFront, vRight,  vTop  , mesh);
-          SvoxMeshGenerator._createLightFace(light.position, light.color, scale, detail, vRight, vBack,   vTop  , mesh);
-          SvoxMeshGenerator._createLightFace(light.position, light.color, scale, detail, vBack,  vLeft,   vTop  , mesh);
-          SvoxMeshGenerator._createLightFace(light.position, light.color, scale, detail, vLeft,  vFront,  vTop  , mesh);
-          SvoxMeshGenerator._createLightFace(light.position, light.color, scale, detail, vFront, vBottom, vRight, mesh);
-          SvoxMeshGenerator._createLightFace(light.position, light.color, scale, detail, vRight, vBottom, vBack , mesh);
-          SvoxMeshGenerator._createLightFace(light.position, light.color, scale, detail, vBack,  vBottom, vLeft , mesh);
-          SvoxMeshGenerator._createLightFace(light.position, light.color, scale, detail, vLeft,  vBottom, vFront, mesh);
-        }
-      });
-      let end = mesh.positionIndex;
-      
-      // Add the group for the lights (it always uses the first material, so index 0)
-      mesh.groups.push( { start: start/3, count: (end-start)/3, materialIndex: 0 } );           
-    }
-  }
-  
-  static _createLightFace(position, color, scale, divisions, v0, v1, v2, mesh) {
-    if (divisions === 0) {
-      mesh.positions.push(position.x + v2.x * scale, position.y + v2.y * scale, position.z + v2.z * scale); 
-      mesh.positions.push(position.x + v1.x * scale, position.y + v1.y * scale, position.z + v1.z * scale); 
-      mesh.positions.push(position.x + v0.x * scale, position.y + v0.y * scale, position.z + v0.z * scale); 
-
-      mesh.normals.push(0.0, 0.0, 1.0);
-      mesh.normals.push(0.0, 0.0, 1.0);
-      mesh.normals.push(0.0, 0.0, 1.0);
-
-      mesh.colors.push(color.r, color.g, color.b);
-      mesh.colors.push(color.r, color.g, color.b);
-      mesh.colors.push(color.r, color.g, color.b);
-
-      if (mesh.uvs) {
-        mesh.uvs.push(0.0, 0.0);
-        mesh.uvs.push(0.0, 0.0);
-        mesh.uvs.push(0.0, 0.0);
-      }    
-    }
-    else {
-      // Recursively subdivide untill we have the number of divisions we need
-      let v10 = SvoxMeshGenerator._normalize( { x:(v1.x+v0.x)/2, y:(v1.y+v0.y)/2, z:(v1.z+v0.z)/2 } );  
-      let v12 = SvoxMeshGenerator._normalize( { x:(v1.x+v2.x)/2, y:(v1.y+v2.y)/2, z:(v1.z+v2.z)/2 } );
-      let v02 = SvoxMeshGenerator._normalize( { x:(v0.x+v2.x)/2, y:(v0.y+v2.y)/2, z:(v0.z+v2.z)/2 } );
-      SvoxMeshGenerator._createLightFace(position, color, scale, divisions-1, v10, v1,  v12, mesh);
-      SvoxMeshGenerator._createLightFace(position, color, scale, divisions-1, v0,  v10, v02, mesh);
-      SvoxMeshGenerator._createLightFace(position, color, scale, divisions-1, v02, v12, v2,  mesh);
-      SvoxMeshGenerator._createLightFace(position, color, scale, divisions-1, v10, v12, v02, mesh);
-    }
   }
   
   static _generateAll(model, mesh, buffers) {
