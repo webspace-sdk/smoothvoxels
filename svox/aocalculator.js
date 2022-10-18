@@ -3,6 +3,33 @@ const TRI_VERT_OFFSETS = [
   [0, 3, 2]
 ];
 
+const OCTREE_NODE_POOL = []
+
+const aoCache = new Map();
+
+const getOctreeNode = () => {
+  return OCTREE_NODE_POOL.pop() || {
+    minx: Number.MAX_VALUE, miny: Number.MAX_VALUE, minz: Number.MAX_VALUE,
+    maxx: -Number.MAX_VALUE, maxy: -Number.MAX_VALUE, maxz: -Number.MAX_VALUE,
+    partitions: Array(8).fill(null),
+    triangles: []
+  }
+}
+
+const releaseOctreeNode = (node) => {
+  for (const partition of node.partitions) {
+    if (partition) {
+      releaseOctreeNode(partition)
+    }
+  }
+
+  node.minx = Number.MAX_VALUE; node.miny = Number.MAX_VALUE; node.minz = Number.MAX_VALUE;
+  node.maxx = -Number.MAX_VALUE; node.maxy = -Number.MAX_VALUE; node.maxz = -Number.MAX_VALUE;
+  node.partitions.fill(null);
+  node.triangles.length = 0;
+  OCTREE_NODE_POOL.push(node);
+}
+
 class AOCalculator {
   
   static calculateAmbientOcclusion(model, buffers) {
@@ -16,7 +43,6 @@ class AOCalculator {
 
     let triangles = this._getAllFaceTriangles(model, buffers);
     let octree = this._trianglesToOctree(triangles, model, buffers);
-    console.log(octree)
 
     if (model._aoSides)
       octree = this._aoSidesToOctree(model, buffers, octree);
@@ -24,12 +50,13 @@ class AOCalculator {
     let nrOfSamples = model.aoSamples;
     let samples = this._generateFibonacciSamples(nrOfSamples);
     
-    let cache = {};
+    aoCache.clear();
 
     const modelScaleX = model.scale.x;
     const modelScaleY = model.scale.y;
     const modelScaleZ = model.scale.z;
     
+    let hits = 0;
     for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
       const material = materials[faceMaterials[faceIndex]];
 
@@ -58,13 +85,17 @@ class AOCalculator {
         const ny = faceVertNormalY[faceVertOffset];
         const nz = faceVertNormalZ[faceVertOffset];
 
-        //let cacheKey = `${vx}|${vy}|${vz}|${nx}|${ny}|${nz}`;
-        //let cachedAo = cache[cacheKey];
+        const vKey = vx * 16384 + vy * 128 + vz;
+        const nKey = nx * 10000000 + ny * 100000 + nz * 1000;
+        const cacheKey = vKey * 1000000000 + nKey;
 
-        //if (cachedAo) {
-        //  faceVertAO[faceVertOffset] = cachedAo;
-        //  continue;
-        //}
+        const cachedAo = aoCache.get(cacheKey);
+
+        if (cachedAo !== undefined) {
+          hits++;
+          faceVertAO[faceVertOffset] = cachedAo;
+          continue;
+        }
 
         const oppositeVertIndex = faceVertIndices[faceOffset + ((v + 2) % 4)];
         const oppositeVertX = vertX[oppositeVertIndex];
@@ -78,32 +109,33 @@ class AOCalculator {
         let total = 0;
         let count = 0;
 
-        for (let s = 0; s < nrOfSamples; s++) {
-          let direction = samples[s];
-          let dot = direction.x*nx + direction.y*ny + direction.z*nz;
+        for (const [directionX, directionY, directionZ] of samples) {
+          const dot = directionX*nx + directionY*ny + directionZ*nz;
           if (dot <= angle) continue;
 
-          const endX = originX + direction.x * max;
-          const endY = originY + direction.y * max;
-          const endZ = originZ + direction.z * max;
+          const endX = originX + directionX * max;
+          const endY = originY + directionY * max;
+          const endZ = originZ + directionZ * max;
 
-          let distance = this._distanceToOctree(model, buffers, octree, originX, originY, originZ, direction, max, endX, endY, endZ);
+          let distance = this._distanceToOctree(model, buffers, octree, originX, originY, originZ, directionX, directionY, directionZ, max, endX, endY, endZ);
           distance = (distance || max) / max;
           total += distance; 
           count++;
         }
 
-        if (count === 0) {
-          faceVertAO[faceVertOffset] = 0;
-        } else {
+        let ao = 0;
+        if (count !== 0) {
           total = Math.max(Math.min(total/count, 1), 0);
-          const ao = 1 - Math.pow(total, strength);
-          faceVertAO[faceVertOffset] = ao;
+          ao = 1 - Math.pow(total, strength);
         }
 
-        //cache[cacheKey] = faceVertAO[faceVertOffset];
+        faceVertAO[faceVertOffset] = ao;
+        aoCache.set(cacheKey, ao);
       }
     }
+
+    console.log("hits", hits);
+    releaseOctreeNode(octree);
   }
    
   static _getAllFaceTriangles(model, buffers) {
@@ -131,12 +163,8 @@ class AOCalculator {
 
     if (length <= 32) {
       
-      let partition = { 
-        minx: Number.MAX_VALUE, miny: Number.MAX_VALUE, minz: Number.MAX_VALUE,
-        maxx: -Number.MAX_VALUE, maxy: -Number.MAX_VALUE, maxz: -Number.MAX_VALUE,
-        partitions: null,
-        triangles
-      }
+      const partition = getOctreeNode();
+      partition.triangles = triangles;
       
       for(let t=0; t<length; t++) {
         let triIndex = triangles[t];
@@ -230,20 +258,13 @@ class AOCalculator {
         }
       }
 
-      const partitions = Array(8).fill(null);
-        
-      const partition = {
-        minx: Number.MAX_VALUE, miny: Number.MAX_VALUE, minz: Number.MAX_VALUE,
-        maxx: -Number.MAX_VALUE, maxy: -Number.MAX_VALUE, maxz: -Number.MAX_VALUE,  
-        partitions,
-        triangles: []
-      };
+      const partition = getOctreeNode();
       
       for (let index = 0; index < 8; index++) {
         if (subTriangles[index] === null) continue;
 
         const subPartition = this._trianglesToOctree(subTriangles[index], model, buffers);
-        partitions[index] = subPartition;
+        partition.partitions[index] = subPartition;
         partition.minx = Math.min(partition.minx, subPartition.minx);
         partition.miny = Math.min(partition.miny, subPartition.miny);
         partition.minz = Math.min(partition.minz, subPartition.minz);
@@ -256,22 +277,25 @@ class AOCalculator {
     }
   }  
    
-  static _distanceToOctree(model, buffers, octree, originX, originY, originZ, direction, max, endX, endY, endZ) {
+  static _distanceToOctree(model, buffers, octree, originX, originY, originZ, directionX, directionY, directionZ, max, endX, endY, endZ) {
     if (this._hitsBox(originX, originY, originZ, endX, endY, endZ, octree) === false)
       return null;
 
     if (octree.triangles.length > 0) {
-      return this._distanceToModel(model, buffers, octree.triangles, originX, originY, originZ, direction, max);
+      return this._distanceToModel(model, buffers, octree.triangles, originX, originY, originZ, directionX, directionY, directionZ, max);
     }
     
     let minDistance = max;
 
-    for (const partition of octree.partitions) {
+    const partitions = octree.partitions;
+    for (let index = 0; index < 8; index++) {
+      const partition = partitions[index];
       if (partition === null) continue;
-      let dist = this._distanceToOctree(model, buffers, partition, originX, originY, originZ, direction, max, endX, endY, endZ);
+
+      let dist = this._distanceToOctree(model, buffers, partition, originX, originY, originZ, directionX, directionY, directionZ, max, endX, endY, endZ);
       if (dist) {
         minDistance = Math.min(minDistance, dist);
-      }      
+      }
     }    
     return minDistance;    
   }
@@ -327,14 +351,8 @@ class AOCalculator {
     if (sideTriangles.length > 0) {
       let sideOctree = this._trianglesToOctree(sideTriangles, model, buffers);
 
-      octree = { 
-          minx: -Number.MAX_VALUE, miny: -Number.MAX_VALUE, minz: -Number.MAX_VALUE,
-          maxx: Number.MAX_VALUE, maxy: Number.MAX_VALUE, maxz: Number.MAX_VALUE,
-          
-          // Combine the sideOctree with the octree
-          partitions: [ octree, sideOctree ],
-          triangles: []
-        }
+      const octree = getOctreeNode();
+      octree.partitions = [ octree, sideOctree ];
     }
     
     return octree;
@@ -344,23 +362,30 @@ class AOCalculator {
   // https://www.gamedev.net/forums/topic/338987-aabb-line-segment-intersection-test/3209917/
   // Rewritten for js and added the quick tests at the top to improve speed
   static _hitsBox(originX, originY, originZ, endX, endY, endZ, box) {
+    const boxMinX = box.minx;
+    const boxMinY = box.miny;
+    const boxMinZ = box.minz;
+    const boxMaxX = box.maxx;
+    const boxMaxY = box.maxy;
+    const boxMaxZ = box.maxz;
+
     // Check if the entire line is fuly outside of the box planes
-    if (originX < box.minx && endX < box.minx) return false;
-    if (originX > box.maxx && endX > box.maxx) return false;
-    if (originY < box.miny && endY < box.miny) return false;
-    if (originY > box.maxy && endY > box.maxy) return false;
-    if (originZ < box.minz && endZ < box.minz) return false;
-    if (originZ > box.maxz && endZ > box.maxz) return false;
+    if (originX < boxMinX && endX < boxMinX) return false;
+    if (originX > boxMaxX && endX > boxMaxX) return false;
+    if (originY < boxMinY && endY < boxMinY) return false;
+    if (originY > boxMaxY && endY > boxMaxY) return false;
+    if (originZ < boxMinZ && endZ < boxMinZ) return false;
+    if (originZ > boxMaxZ && endZ > boxMaxZ) return false;
     
     let dx = (endX-originX)*0.5;
     let dy = (endY-originY)*0.5;
     let dz = (endZ-originZ)*0.5;
-    let ex = (box.maxx-box.minx)*0.5;
-    let ey = (box.maxy-box.miny)*0.5;
-    let ez = (box.maxz-box.minz)*0.5;
-    let cx = originX - (box.minx + box.maxx) * 0.5;
-    let cy = originY - (box.miny + box.maxy) * 0.5;
-    let cz = originZ - (box.minz + box.maxz) * 0.5;
+    let ex = (boxMaxX-boxMinX)*0.5;
+    let ey = (boxMaxY-boxMinY)*0.5;
+    let ez = (boxMaxZ-boxMinZ)*0.5;
+    let cx = originX - (boxMinX + boxMaxX) * 0.5;
+    let cy = originY - (boxMinY + boxMaxY) * 0.5;
+    let cz = originZ - (boxMinZ + boxMaxZ) * 0.5;
     let adx = Math.abs(dx);
     let ady = Math.abs(dy);
     let adz = Math.abs(dz);
@@ -381,7 +406,7 @@ class AOCalculator {
     return true;
   }
   
-  static _distanceToModel(model, buffers, triangles, originX, originY, originZ, direction, max) {  
+  static _distanceToModel(model, buffers, triangles, originX, originY, originZ, directionX, directionY, directionZ, max) {  
     let minDistance = null;
     const { faceVertIndices } = buffers;
     
@@ -396,7 +421,7 @@ class AOCalculator {
       const vert1Index = faceVertIndices[faceVertOffset + triVertOffset[1]];
       const vert2Index = faceVertIndices[faceVertOffset + triVertOffset[2]];
       
-      let dist = this._triangleDistance(model, buffers, vert0Index, vert1Index, vert2Index, originX, originY, originZ, direction);
+      let dist = this._triangleDistance(model, buffers, vert0Index, vert1Index, vert2Index, originX, originY, originZ, directionX, directionY, directionZ);
       if (dist) {
         if (!minDistance) {
           if (dist < max)
@@ -414,7 +439,7 @@ class AOCalculator {
   // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
   // Adapted to return distance and minimize object allocations
   // Note: direction must be normalized.
-  static _triangleDistance(model, buffers, vertIndex0, vertIndex1, vertIndex2, originX, originY, originZ, direction) {
+  static _triangleDistance(model, buffers, vertIndex0, vertIndex1, vertIndex2, originX, originY, originZ, directionX, directionY, directionZ) {
     const { vertX, vertY, vertZ } = buffers;
     const vert0X = vertX[vertIndex0];
     const vert0Y = vertY[vertIndex0];
@@ -434,9 +459,9 @@ class AOCalculator {
     let edge2z = vert2Z - vert0Z;
     
     // h = crossProduct(direction, edge2)
-    let h0 = direction.y * edge2z - direction.z * edge2y;
-    let h1 = direction.z * edge2x - direction.x * edge2z; 
-    let h2 = direction.x * edge2y - direction.y * edge2x;
+    let h0 = directionY * edge2z - directionZ * edge2y;
+    let h1 = directionZ * edge2x - directionX * edge2z; 
+    let h2 = directionX * edge2y - directionY * edge2x;
     
     // a = dotProduct(edge1, h)
     let a = edge1x * h0 + edge1y * h1 + edge1z * h2;
@@ -459,7 +484,7 @@ class AOCalculator {
     let q2 = sx * edge1y - sy * edge1x;
     
     // v = f * dotProduct(direction, q);
-    let v = f * (direction.x * q0 + direction.y * q1 + direction.z * q2);
+    let v = f * (directionX * q0 + directionY * q1 + directionZ * q2);
     if (v < 0.0 || u + v > 1.0)   // > a? 
         return null;
     
@@ -500,7 +525,7 @@ class AOCalculator {
         let z = Math.sin(lon)*Math.cos(lat);
 
         //samples.push( { x:x, y:y*1.25+0.5, z:z } ); // Elongate and move up for light from above
-        samples.push( { x:x, y:y, z:z } );
+        samples.push( [x, y, z] );
     }
     
     return samples;

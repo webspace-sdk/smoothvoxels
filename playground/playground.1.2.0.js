@@ -7081,31 +7081,27 @@ GLTFExporter.Utils = {
 // /models/playgroundmodels.js
 // =====================================================
 SVOX.models.LIGHTTEST = `
-model
-size = 12 5 6
-scale = 0.1
+size = 10 10 10
+shape = box // sphere
+scale = 0.100
 origin = -y
-rotation = 0 -20 0
-
-aosides = -y
-
-// The yellow material uses the model settings for black (default) ambient occlusion
-ao = 3 1
-
-material lighting = flat
-  colors = A:#880
-
-// The black material uses yellow ambient occlusion
-material lighting = flat, ao = #880 3 2
-  colors = B:#000
-
-voxels =
-BBBBB--AAAAA B---B--A---A B---B--A---A B---B--A---A BBBBB--AAAAA
-BBBBB--AAAAA ------------ ------------ ------------ B---B--A---A
-BBBBB--AAAAA BB-BB--AA-AA BB-BB--AA-AA BB-BB--AA-AA BBBBB--AAAAA
-BBBBB--AAAAA BB-BB--AA-AA BB-BB--AA-AA BB-BB--AA-AA BBBBB--AAAAA
-BBBBB--AAAAA ------------ ------------ ------------ B---B--A---A
-BBBBB--AAAAA B---B--A---A B---B--A---A B---B--A---A BBBBB--AAAAA
+wireframe = false
+clamp = none
+ao = 3 0.5
+rotation = 0 160 0
+material lighting = flat, fade = true
+  colors = A:#FFF B:#FFF
+voxels
+AAAAAAAAAA AAAAAAAAAA AA------AA AA------AA AA------AA AA------AA AA------AA AA------AA AAAAAAAAAA AAAAAAAAAA 
+AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA 
+AAAAAAAAAA AAAAAAAAAA -AAAAAA--- -AAAAAA--- AAAAAAA--- -AAAAAAAAA AAAAAAAA-- -AAAAAAA-- AAAAAAAAAA AAAAAAAAAA 
+AAAAAAAAAA AAAAAAAAAA -AAAAAA--- -AAAAAA--- AAAAAAA--- -AAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA 
+AAAA--AAAA AAAA--AAAA AAAA--A--- AAAA--A--- AAAA--A--- -AAA--AAAA AAAA--AAAA -AAA--A--- AAAA--AAAA AAAA--AAAA 
+AAAA--AAAA AAAA--AAAA -AAA--AAAA -AAA--AAAA -AAA--AAAA AAAA--A--- AAAA--AAAA -AAA--A--- AAAA--AAAA AAAA--AAAA 
+AAAAAAAAAA AAAAAAAAAA -AAAAAAA-- -AAAAAAA-- -AAAAAAAAA AAAAAAA--- AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA 
+AAAAAAAAAA AAAAAAAAAA -AAAAAAA-- -AAAAAAA-- -AAAAAAAAA AAAAAAA--- -AAAAAAAAA -AAAAAA--- AAAAAAAAAA AAAAAAAAAA 
+AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA 
+AAAAAAAAAA AAAAAAAAAA AA------AA AA-AAAA-AA AA-AAAA-AA AA-AAAA-AA AA-AAAA-AA AA------AA AAAAAAAAAA AAAAAAAAAA
 `;
 SVOX.models.SVOX = `
 model

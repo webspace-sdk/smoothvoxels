@@ -51,7 +51,9 @@ class ColorCombiner {
     if (doAo && doLights) {
       for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
         const material = materials[faceMaterials[faceIndex]];
-        const vAoSharedColor = material.ao ? material.ao.color : model.ao.color;
+        const vAoShared = material.ao || model.ao;
+        if (!vAoShared) continue;
+        const vAoSharedColor = vAoShared.color;
 
         // Face colors are already set to voxel color during model load
         for (let v = 0; v < 4; v++) {
@@ -83,7 +85,9 @@ class ColorCombiner {
     } else if (!doLights && doAo) {
       for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
         const material = materials[faceMaterials[faceIndex]];
-        const vAoSharedColor = material.ao ? material.ao.color : model.ao.color;
+        const vAoShared = material.ao || model.ao;
+        if (!vAoShared) continue;
+        const vAoSharedColor = vAoShared.color;
 
         // Face colors are already set to voxel color during model load
         for (let v = 0; v < 4; v++) {
