@@ -220,7 +220,8 @@ class Model {
     console.log("transformVertices: " + (performance.now() - t0));
     
     LightsCalculator.calculateLights(this, buffers);
-    //AOCalculator.calculateAmbientOcclusion(this);
+    AOCalculator.calculateAmbientOcclusion(this, buffers);
+    console.log(buffers);
     
     t0 = performance.now();
     ColorCombiner.combineColors(this, buffers);
@@ -239,11 +240,11 @@ class Model {
     console.log("alignFaceDiagonals: " + (performance.now() - t0));
   }
 
-  determineBoundsOffsetAndRescale(resize) {
+  determineBoundsOffsetAndRescale(resize, buffers) {
     let bos = { bounds:null, offset:null, rescale:1 };
     
     let minX, minY, minZ, maxX, maxY, maxZ;
-    const { vertX, vertY, vertZ } = this;
+    const { vertX, vertY, vertZ } = buffers;
     
     if (resize === SVOX.BOUNDS || resize === SVOX.MODEL) {
       // Determine the actual model size if resize is set (to model or bounds)

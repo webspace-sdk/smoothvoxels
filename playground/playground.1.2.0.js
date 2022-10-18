@@ -7082,39 +7082,30 @@ GLTFExporter.Utils = {
 // =====================================================
 SVOX.models.LIGHTTEST = `
 model
-
-// An ambient filler light, not too bright
-light color = #FFF 0.33
-
-// Red, green and blue directional lights (scene coordinates!)
-light color = #F44, direction = -1.0  0.0 -1.0
-light color = #4F4, direction =  0.0 -1.0  0.0
-light color = #44F, direction =  1.0  0.0 -1.0
-
-// An bright point light with limited distance  (scene coordinates!)
-light color = #FF0 2, position = 0.0 0.4 0, distance = 0.5, size = 0.25, detail = 2
-
-model
-size = 10 10 10
+size = 12 5 6
 scale = 0.1
 origin = -y
-rotation = 0 -45 0
+rotation = 0 -20 0
 
-// A basic material, which is not affected by the lights in your scene
-material type = basic, lighting = smooth, deform = 20
-  colors = A:#FFF
+aosides = -y
 
-voxels
-AAAAAAAAAA 4(AAAAAAAAAA) 4(AAAAAAAAAA) AAAAAAAAAA
-AAAAAAAAAA 4(A--------A) 4(A--------A) AAAAAAAAAA
-AAAAAAAAAA 4(A--------A) 4(A--------A) AAAAAAAAAA
-AAAAAAAAAA 4(A--------A) 4(A--------A) AAAAAAAAAA
-AAAAAAAAAA 4(A--------A) 4(A--------A) AAAAAAAAAA
-AAAAAAAAAA 4(A--------A) 4(A---------) AAAAAAAAA-
-AAAAAAAAAA 4(A--------A) 4(A---------) AAAAAAAA--
-AAAAAAAAAA 4(A--------A) 4(A---------) AAAAAAA---
-AAAAAAAAAA 4(A--------A) 4(A---------) AAAAAA----
-AAAAAAAAAA 4(AAAAAAAAAA) 4(AAAAA-----) AAAAA-----
+// The yellow material uses the model settings for black (default) ambient occlusion
+ao = 3 1
+
+material lighting = flat
+  colors = A:#880
+
+// The black material uses yellow ambient occlusion
+material lighting = flat, ao = #880 3 2
+  colors = B:#000
+
+voxels =
+BBBBB--AAAAA B---B--A---A B---B--A---A B---B--A---A BBBBB--AAAAA
+BBBBB--AAAAA ------------ ------------ ------------ B---B--A---A
+BBBBB--AAAAA BB-BB--AA-AA BB-BB--AA-AA BB-BB--AA-AA BBBBB--AAAAA
+BBBBB--AAAAA BB-BB--AA-AA BB-BB--AA-AA BB-BB--AA-AA BBBBB--AAAAA
+BBBBB--AAAAA ------------ ------------ ------------ B---B--A---A
+BBBBB--AAAAA B---B--A---A B---B--A---A B---B--A---A BBBBB--AAAAA
 `;
 SVOX.models.SVOX = `
 model

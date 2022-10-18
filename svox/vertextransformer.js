@@ -6,7 +6,7 @@ class VertexTransformer {
          
   static transformVertices(model, buffers) {
     const { vertX, vertY, vertZ, faceVertNormalX, faceVertFlatNormalX, faceVertNormalY, faceVertFlatNormalY, faceVertNormalZ, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = buffers;
-    let bor = model.determineBoundsOffsetAndRescale(model.resize);
+    let bor = model.determineBoundsOffsetAndRescale(model.resize, buffers);
     
     // Define the transformation in reverse order to how they are carried out
     let vertexTransform = new Matrix(); 

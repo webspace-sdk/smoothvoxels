@@ -1,7 +1,7 @@
 class ColorCombiner {
   
   static combineColors(model, buffers) {
-    const { vertColorR, vertColorG, vertColorB, vertColorCount, faceVertColorR, faceVertColorG, faceVertColorB, faceVertLightR, faceVertLightG, faceVertLightB, faceVertIndices, faceMaterials } = buffers;
+    const { vertColorR, vertColorG, vertColorB, vertColorCount, faceVertColorR, faceVertColorG, faceVertColorB, faceVertLightR, faceVertLightG, faceVertLightB, faceVertIndices, faceMaterials, faceVertAO } = buffers;
     const materials = model.materials.materials;
 
     // No need to fade colors when there is no material with fade
@@ -16,7 +16,7 @@ class ColorCombiner {
     }
 
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
-      let fadeFace = fadeMaterials[faceMaterials[faceIndex]];
+      let fadeFace = fadeMaterials[faceMaterials[faceIndex]].fade;
 
       if (fadeFace) {
         // Fade vertex colors
@@ -45,7 +45,32 @@ class ColorCombiner {
       }
     }
 
-    if (model.lights.length > 0) {
+    let doAo = model.ao || model.materials.find(function(m) { return m.ao; } );
+    let doLights = model.lights.length > 0;
+
+    if (doAo && doLights) {
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        const material = materials[faceMaterials[faceIndex]];
+        const vAoSharedColor = material.ao ? material.ao.color : model.ao.color;
+
+        // Face colors are already set to voxel color during model load
+        for (let v = 0; v < 4; v++) {
+          const faceVertOffset = faceIndex * 4 + v;
+          const vR = faceVertColorR[faceVertOffset];
+          const vG = faceVertColorG[faceVertOffset];
+          const vB = faceVertColorB[faceVertOffset];
+
+          const vAoColorR = vAoSharedColor ? vAoSharedColor.r : vR;
+          const vAoColorG = vAoSharedColor ? vAoSharedColor.g : vG;
+          const vAoColorB = vAoSharedColor ? vAoSharedColor.b : vB;
+          const vAo = faceVertAO[faceVertOffset];
+
+          faceVertColorR[faceVertOffset] = vR * faceVertLightR[faceVertOffset] * vAo + vAoColorR * (1 - vAo);
+          faceVertColorG[faceVertOffset] = vG * faceVertLightG[faceVertOffset] * vAo + vAoColorG * (1 - vAo);
+          faceVertColorB[faceVertOffset] = vG * faceVertLightB[faceVertOffset] * vAo + vAoColorR * (1 - vAo);
+        }
+      }
+    } else if (doLights && !doAo) {
       for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
         // Face colors are already set to voxel color during model load
         for (let v = 0; v < 4; v++) {
@@ -53,11 +78,28 @@ class ColorCombiner {
           faceVertColorR[faceVertOffset] = faceVertColorR[faceVertOffset] * faceVertLightR[faceVertOffset];
           faceVertColorG[faceVertOffset] = faceVertColorG[faceVertOffset] * faceVertLightG[faceVertOffset];
           faceVertColorB[faceVertOffset] = faceVertColorB[faceVertOffset] * faceVertLightB[faceVertOffset];
-          //let vAoColor = voxel.material.ao ? voxel.material.ao.color : model.ao ? model.ao.color : vColor;
+        }
+      }
+    } else if (!doLights && doAo) {
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        const material = materials[faceMaterials[faceIndex]];
+        const vAoSharedColor = material.ao ? material.ao.color : model.ao.color;
 
-          //vColor.r = vLight.r * vAo * vColor.r + vAoColor.r * (1 - vAo); 
-          //vColor.g = vLight.g * vAo * vColor.g + vAoColor.g * (1 - vAo); 
-          //vColor.b = vLight.b * vAo * vColor.b + vAoColor.b * (1 - vAo); 
+        // Face colors are already set to voxel color during model load
+        for (let v = 0; v < 4; v++) {
+          const faceVertOffset = faceIndex * 4 + v;
+          const vR = faceVertColorR[faceVertOffset];
+          const vG = faceVertColorG[faceVertOffset];
+          const vB = faceVertColorB[faceVertOffset];
+
+          const vAoColorR = vAoSharedColor ? vAoSharedColor.r : vR;
+          const vAoColorG = vAoSharedColor ? vAoSharedColor.g : vG;
+          const vAoColorB = vAoSharedColor ? vAoSharedColor.b : vB;
+          const vAo = faceVertAO[faceVertOffset];
+
+          faceVertColorR[faceVertOffset] = vAo * vR + vAoColorR * (1 - vAo);
+          faceVertColorG[faceVertOffset] = vAo * vG + vAoColorG * (1 - vAo);
+          faceVertColorB[faceVertOffset] = vAo * vB + vAoColorB * (1 - vAo);
         }
       }
     }

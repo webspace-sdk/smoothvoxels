@@ -5,9 +5,10 @@ class LightsCalculator {
     if (lights.length === 0)
       return;
     
-    for (let l = 0; l < lights.length; l++) {
-      if (lights[l].direction)
-        lights[l].normalizedDirection = model._normalize( { x:lights[l].direction.x, y:lights[l].direction.y, z:lights[l].direction.z } );
+    for (const light of lights) {
+      if (light.direction && !light.normalizedDirection) {
+        light.normalizedDirection = model._normalize( { x:light.direction.x, y:light.direction.y, z:light.direction.z } );
+      }
     }
 
     const materials = model.materials.materials;
