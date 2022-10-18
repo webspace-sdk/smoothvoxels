@@ -457,6 +457,7 @@ class SvoxMeshGenerator {
     const colIdx = mesh.colorIndex;
     const colors = mesh.colors;
 
+    console.log(SVOX.clampColors);
     if (SVOX.clampColors) {
       // Normalize colors
       const col0Length = Math.sqrt(col0R*col0R + col0G*col0G + col0B*col0B);
