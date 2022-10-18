@@ -16,6 +16,7 @@ class AOCalculator {
 
     let triangles = this._getAllFaceTriangles(model, buffers);
     let octree = this._trianglesToOctree(triangles, model, buffers);
+    console.log(octree)
 
     if (model._aoSides)
       octree = this._aoSidesToOctree(model, buffers, octree);
@@ -23,9 +24,6 @@ class AOCalculator {
     let nrOfSamples = model.aoSamples;
     let samples = this._generateFibonacciSamples(nrOfSamples);
     
-    model.triCount = 0;
-    model.octCount = 0;
-
     let cache = {};
 
     const modelScaleX = model.scale.x;
@@ -43,13 +41,13 @@ class AOCalculator {
       let angle = Math.cos(ao.angle / 180 * Math.PI);
 
       const faceOffset = faceIndex * 4;
-      faceVertAO[faceIndex] = 0;
-      faceVertAO[faceIndex + 1] = 0;
-      faceVertAO[faceIndex + 2] = 0;
-      faceVertAO[faceIndex + 3] = 0;
+      faceVertAO[faceOffset] = 0;
+      faceVertAO[faceOffset + 1] = 0;
+      faceVertAO[faceOffset + 2] = 0;
+      faceVertAO[faceOffset + 3] = 0;
 
       for (let v = 0; v < 4; v++) {
-        const faceVertOffset = faceIndex * 4 + v;
+        const faceVertOffset = faceOffset + v;
         const vertIndex = faceVertIndices[faceVertOffset];
 
         const vx = vertX[vertIndex];
@@ -60,13 +58,13 @@ class AOCalculator {
         const ny = faceVertNormalY[faceVertOffset];
         const nz = faceVertNormalZ[faceVertOffset];
 
-        let cacheKey = `${vx}|${vy}|${vz}|${nx}|${ny}|${nz}`;
-        let cachedAo = cache[cacheKey];
+        //let cacheKey = `${vx}|${vy}|${vz}|${nx}|${ny}|${nz}`;
+        //let cachedAo = cache[cacheKey];
 
-        if (cachedAo) {
-          faceVertAO[faceVertOffset] = cachedAo;
-          continue;
-        }
+        //if (cachedAo) {
+        //  faceVertAO[faceVertOffset] = cachedAo;
+        //  continue;
+        //}
 
         const oppositeVertIndex = faceVertIndices[faceOffset + ((v + 2) % 4)];
         const oppositeVertX = vertX[oppositeVertIndex];
@@ -99,10 +97,11 @@ class AOCalculator {
           faceVertAO[faceVertOffset] = 0;
         } else {
           total = Math.max(Math.min(total/count, 1), 0);
-          faceVertAO[faceVertOffset] = 1 - Math.pow(total, strength);  
+          const ao = 1 - Math.pow(total, strength);
+          faceVertAO[faceVertOffset] = ao;
         }
 
-        cache[cacheKey] = faceVertAO[faceVertOffset];
+        //cache[cacheKey] = faceVertAO[faceVertOffset];
       }
     }
   }
@@ -243,13 +242,14 @@ class AOCalculator {
       for (let index = 0; index < 8; index++) {
         if (subTriangles[index] === null) continue;
 
-        partitions[index] = this._trianglesToOctree(subTriangles[index], model, buffers);
-        partition.minx = Math.min(partition.minx, partitions[index].minx);
-        partition.miny = Math.min(partition.miny, partitions[index].miny);
-        partition.minz = Math.min(partition.minz, partitions[index].minz);
-        partition.maxx = Math.max(partition.maxx, partitions[index].maxx);
-        partition.maxy = Math.max(partition.maxy, partitions[index].maxy);
-        partition.maxz = Math.max(partition.maxz, partitions[index].maxz);
+        const subPartition = this._trianglesToOctree(subTriangles[index], model, buffers);
+        partitions[index] = subPartition;
+        partition.minx = Math.min(partition.minx, subPartition.minx);
+        partition.miny = Math.min(partition.miny, subPartition.miny);
+        partition.minz = Math.min(partition.minz, subPartition.minz);
+        partition.maxx = Math.max(partition.maxx, subPartition.maxx);
+        partition.maxy = Math.max(partition.maxy, subPartition.maxy);
+        partition.maxz = Math.max(partition.maxz, subPartition.maxz);
       }
         
       return partition;        
@@ -257,23 +257,18 @@ class AOCalculator {
   }  
    
   static _distanceToOctree(model, buffers, octree, originX, originY, originZ, direction, max, endX, endY, endZ) {
-    
-    model.octCount++;
-    
-    if (!this._hitsBox(originX, originY, originZ, endX, endY, endZ, octree))
+    if (this._hitsBox(originX, originY, originZ, endX, endY, endZ, octree) === false)
       return null;
 
     if (octree.triangles.length > 0) {
-      let dist =  this._distanceToModel(model, buffers, octree.triangles, originX, originY, originZ, direction, max);
-      if (!dist) 
-        model.octMissCount++; 
-      return dist;
+      return this._distanceToModel(model, buffers, octree.triangles, originX, originY, originZ, direction, max);
     }
     
     let minDistance = max;
 
-    for (let p=0; p < octree.partitions.length; p++) { 
-      let dist = this._distanceToOctree(model, buffers, octree.partitions[p], originX, originY, originZ, direction, max, endX, endY, endZ);
+    for (const partition of octree.partitions) {
+      if (partition === null) continue;
+      let dist = this._distanceToOctree(model, buffers, partition, originX, originY, originZ, direction, max, endX, endY, endZ);
       if (dist) {
         minDistance = Math.min(minDistance, dist);
       }      
@@ -349,7 +344,6 @@ class AOCalculator {
   // https://www.gamedev.net/forums/topic/338987-aabb-line-segment-intersection-test/3209917/
   // Rewritten for js and added the quick tests at the top to improve speed
   static _hitsBox(originX, originY, originZ, endX, endY, endZ, box) {
-    
     // Check if the entire line is fuly outside of the box planes
     if (originX < box.minx && endX < box.minx) return false;
     if (originX > box.maxx && endX > box.maxx) return false;
@@ -377,11 +371,11 @@ class AOCalculator {
         return false;
     if (Math.abs(cz) > ez + adz)
         return false;
-    if (Math.abs(dy * cz - dz * cy) > ey * adz + ez * ady + EPS)
+    if (Math.abs(dy * cz - dz * cy) > ey * adz + ez * ady + Number.EPSILON)
         return false;
-    if (Math.abs(dz * cx - dx * cz) > ez * adx + ex * adz + EPS)
+    if (Math.abs(dz * cx - dx * cz) > ez * adx + ex * adz + Number.EPSILON)
         return false;
-    if (Math.abs(dx * cy - dy * cx) > ex * ady + ey * adx + EPS) 
+    if (Math.abs(dx * cy - dy * cx) > ex * ady + ey * adx + Number.EPSILON) 
        return false;        
     
     return true;
@@ -393,13 +387,14 @@ class AOCalculator {
     
     for (let t=0; t < triangles.length; t++) {
       const triIndex = triangles[t];
+      const triType = triIndex & 1;
       const faceIndex = triIndex >> 1;
-      const triVertOffset = TRI_VERT_OFFSETS[triIndex & 1];
+      const triVertOffset = TRI_VERT_OFFSETS[triType];
 
       const faceVertOffset = faceIndex * 4;
-      const vert0Index = buffers.faceVertIndices[faceVertOffset + triVertOffset[0]];
-      const vert1Index = buffers.faceVertIndices[faceVertOffset + triVertOffset[1]];
-      const vert2Index = buffers.faceVertIndices[faceVertOffset + triVertOffset[2]];
+      const vert0Index = faceVertIndices[faceVertOffset + triVertOffset[0]];
+      const vert1Index = faceVertIndices[faceVertOffset + triVertOffset[1]];
+      const vert2Index = faceVertIndices[faceVertOffset + triVertOffset[2]];
       
       let dist = this._triangleDistance(model, buffers, vert0Index, vert1Index, vert2Index, originX, originY, originZ, direction);
       if (dist) {
@@ -411,7 +406,7 @@ class AOCalculator {
           minDistance = Math.min(minDistance, dist);
       }      
     }
-    
+
     return minDistance;    
   }
   
@@ -431,8 +426,6 @@ class AOCalculator {
     const vert2Y = vertY[vertIndex2];
     const vert2Z = vertZ[vertIndex2];
 
-    model.triCount++;
-
     let edge1x = vert1X - vert0X;
     let edge1y = vert1Y - vert0Y;
     let edge1z = vert1Z - vert0Z;
@@ -447,7 +440,7 @@ class AOCalculator {
     
     // a = dotProduct(edge1, h)
     let a = edge1x * h0 + edge1y * h1 + edge1z * h2;
-    if (a < EPS)
+    if (a < Number.EPSILON)
         return null;    // This ray is parallel to this triangle.
     
     let f = 1.0/a;
@@ -473,7 +466,7 @@ class AOCalculator {
     // At this stage we can compute t to find out where the intersection point is on the line.
     // t = f * dotProduct(edge2, q)
     let t = f * (edge2x * q0 + edge2y * q1 + edge2z * q2);
-    if (t <= EPS) 
+    if (t <= Number.EPSILON) 
         return null;  // This means that there is a line intersection but not a ray intersection.
       
     // Ray intersection is at:

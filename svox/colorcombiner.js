@@ -63,7 +63,7 @@ class ColorCombiner {
           const vAoColorR = vAoSharedColor ? vAoSharedColor.r : vR;
           const vAoColorG = vAoSharedColor ? vAoSharedColor.g : vG;
           const vAoColorB = vAoSharedColor ? vAoSharedColor.b : vB;
-          const vAo = faceVertAO[faceVertOffset];
+          const vAo = 1 - faceVertAO[faceVertOffset];
 
           faceVertColorR[faceVertOffset] = vR * faceVertLightR[faceVertOffset] * vAo + vAoColorR * (1 - vAo);
           faceVertColorG[faceVertOffset] = vG * faceVertLightG[faceVertOffset] * vAo + vAoColorG * (1 - vAo);
@@ -95,7 +95,7 @@ class ColorCombiner {
           const vAoColorR = vAoSharedColor ? vAoSharedColor.r : vR;
           const vAoColorG = vAoSharedColor ? vAoSharedColor.g : vG;
           const vAoColorB = vAoSharedColor ? vAoSharedColor.b : vB;
-          const vAo = faceVertAO[faceVertOffset];
+          const vAo = 1 - faceVertAO[faceVertOffset];
 
           faceVertColorR[faceVertOffset] = vAo * vR + vAoColorR * (1 - vAo);
           faceVertColorG[faceVertOffset] = vAo * vG + vAoColorG * (1 - vAo);
