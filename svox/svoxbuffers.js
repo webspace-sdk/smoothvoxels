@@ -71,6 +71,9 @@ class SVOXBuffers {
     this.faceVertColorR = new Float32Array(maxFaceVerts);
     this.faceVertColorG = new Float32Array(maxFaceVerts);
     this.faceVertColorB = new Float32Array(maxFaceVerts);
+    this.faceVertLightR = new Float32Array(maxFaceVerts);
+    this.faceVertLightG = new Float32Array(maxFaceVerts);
+    this.faceVertLightB = new Float32Array(maxFaceVerts);
     this.faceVertUs = new Float32Array(maxFaceVerts);
     this.faceVertVs = new Float32Array(maxFaceVerts);
 

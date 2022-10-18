@@ -1,7 +1,6 @@
 class LightsCalculator {
   
-  static calculateLights(model) {
-
+  static calculateLights(model, buffers) {
     let lights = model.lights;
     if (lights.length === 0)
       return;
@@ -11,59 +10,69 @@ class LightsCalculator {
         lights[l].normalizedDirection = model._normalize( { x:lights[l].direction.x, y:lights[l].direction.y, z:lights[l].direction.z } );
     }
 
-    model.voxels.forEach(function(voxel) {
+    const materials = model.materials.materials;
 
-      // If this material is not affected by lights, no need to calculate the lights
-      if (!voxel.material.lights)
-        return;
-      
-      for (let faceName in voxel.faces) {
-        let face = voxel.faces[faceName];
-      
-        // If this face is skipped, no need to calculate the lights
-        if (face.skipped)
-          continue;
-        
-        face.light = [
-          { r:0, g:0, b:0 },
-          { r:0, g:0, b:0 }, 
-          { r:0, g:0, b:0 }, 
-          { r:0, g:0, b:0 } 
-        ];
-          
-        for (let v = 0; v<4; v++) {
+    const { faceMaterials, faceNameIndices, faceVertUs, faceVertVs, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceVertIndices, vertX, vertY, vertZ, faceVertLightR, faceVertLightG, faceVertLightB  } = buffers;
 
-          let vertex = face.vertices[v];
-          let normal = face.normals[v]; 
-          
-          for (let l = 0; l < lights.length; l++) {
-            let light = lights[l];
-            let exposure = light.strength;
-            let normalizedDirection = light.normalizedDirection;
+    for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+      const material = materials[faceMaterials[faceIndex]];
+      const faceOffset = faceIndex * 4;
+
+      if (!material.lights) {
+        for (let v = 0; v < 4; v++) {
+          const faceVertOffset = faceOffset + v;
+
+          faceVertLightR[faceVertOffset] = 0;
+          faceVertLightG[faceVertOffset] = 0;
+          faceVertLightB[faceVertOffset] = 0;
+        }
+      } else {
+        for (let v = 0; v < 4; v++) {
+          const faceVertOffset = faceOffset + v;
+
+          const vertIndex = faceVertIndices[faceVertOffset];
+          const vx = vertX[vertIndex];
+          const vy = vertY[vertIndex];
+          const vz = vertZ[vertIndex];
+
+          const nx = faceVertNormalX[faceVertOffset];
+          const ny = faceVertNormalY[faceVertOffset];
+          const nz = faceVertNormalZ[faceVertOffset];
+
+          for (const light of lights) {
+            const { color, strength, distance, normalizedDirection, position } = light;
+
+            let exposure = strength;
+
             let length = 0;
-            if (light.position) {
-              let vector = { x:light.position.x - vertex.x, 
-                             y:light.position.y - vertex.y, 
-                             z:light.position.z - vertex.z };
-              length = Math.sqrt( vector.x * vector.x + vector.y * vector. y + vector.z * vector.z );
-              normalizedDirection = { x:vector.x/length, y:vector.y/length, z:vector.z/length };
+
+            if (position) {
+              const lvx = position.x - vx;
+              const lvy = position.y - vy;
+              const lvz = position.z - vz;
+
+              length = Math.sqrt(lvx * lvx + lvy * lvy + lvz * lvz);
+              const d = 1.0 / length;
+
+              exposure = strength * Math.max(nx*lvx*d + ny*lvy*d + nz*lvz*d, 0.0);
+            } else if (normalizedDirection) {
+              exposure = strength * 
+                         Math.max(nx*normalizedDirection.x + 
+                                  ny*normalizedDirection.y + 
+                                  nz*normalizedDirection.z, 0.0);
             }
-            if (normalizedDirection) {
-              exposure = light.strength * 
-                         Math.max(normal.x*normalizedDirection.x + 
-                                  normal.y*normalizedDirection.y + 
-                                  normal.z*normalizedDirection.z, 0.0);
+
+            if (position && distance) {
+              exposure = exposure * (1 - Math.min(length / distance, 1));
             }
-            if (light.position && light.distance) {
-              exposure = exposure * (1 - Math.min(length / light.distance, 1));
-            }
-            face.light[v].r += light.color.r * exposure;
-            face.light[v].g += light.color.g * exposure;
-            face.light[v].b += light.color.b * exposure;
+
+            faceVertLightR[faceVertOffset] += color.r * exposure;
+            faceVertLightG[faceVertOffset] += color.g * exposure;
+            faceVertLightB[faceVertOffset] += color.b * exposure;
           }
         }
       }
-    }, this, true);  // true == visible voxels only 
+    }
   } 
 
 }

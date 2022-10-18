@@ -219,7 +219,7 @@ class Model {
     VertexTransformer.transformVertices(this, buffers);    
     console.log("transformVertices: " + (performance.now() - t0));
     
-    //LightsCalculator.calculateLights(this);
+    LightsCalculator.calculateLights(this, buffers);
     //AOCalculator.calculateAmbientOcclusion(this);
     
     t0 = performance.now();
@@ -541,6 +541,18 @@ class Model {
       arrY.set(vertIndex, 0);
       arrZ.set(vertIndex, 0);
     }
+  }
+
+  _normalize(vector) {
+    if (vector) {
+      let length = Math.sqrt( vector.x * vector.x + vector.y * vector. y + vector.z * vector.z );
+      if (length > 0) {
+        vector.x /= length;
+        vector.y /= length;
+        vector.z /= length;
+      }
+    }
+    return vector;
   }
 }
 
