@@ -542,11 +542,5 @@ class Model {
       arrZ.set(vertIndex, 0);
     }
   }
-    
-  _isZero(vector) {
-    return !vector || (vector.x === 0 && vector.y === 0 && vector.z === 0);
-  }
-  
-  // End of class Model
 }
 

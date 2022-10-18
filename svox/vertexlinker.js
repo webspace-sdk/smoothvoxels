@@ -1,13 +1,3 @@
-function almostEqual(x, y) {
-  return Math.abs(x - y) < 0.0001;
-}
-
-function assertAlmostEqual(x, y) {
-  console.log(x, y, almostEqual(x, y));
-  if (!almostEqual(x, y))
-    throw new Error("Assertion failed: " + x + " != " + y);
-}
-
 class VertexLinker {
   
   static linkVertices(model, buffers, faceIndex) {

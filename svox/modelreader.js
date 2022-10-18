@@ -722,7 +722,12 @@ class ModelReader {
         while (count-- > 0) {
             if (color)  {
               // Convert the color to a 32 bit integer
-              const rgbt = voxColorForRGBT(Math.floor(color.r * 255), Math.floor(color.g * 255), Math.floor(color.b * 255), materialIndex);
+              const r = Math.floor(color.r * 255);
+              const g = Math.floor(color.g * 255);
+              const b = Math.floor(color.b * 255);
+              const t = materialIndex;
+
+              const rgbt = voxColorForRGBT(r, g, b, t);
 
               const vx = context.x - shiftForSize(model.size.x);
               const vy = context.y - shiftForSize(model.size.y);

@@ -1,12 +1,3 @@
-function almostEqual(x, y) {
-  return Math.abs(x - y) < 0.0001;
-}
-
-function assertAlmostEqual(x, y) {
-  if (!almostEqual(x, y))
-    throw new Error("Assertion failed: " + x + " != " + y);
-}
-
 const normalXs = [null, null, null, null];
 const normalYs = [null, null, null, null];
 const normalZs = [null, null, null, null];
