@@ -398,7 +398,8 @@ class Model {
     const key = ((x + xShift) << 20) | ((y + yShift) << 10) | (z + zShift);
 
     const shape = this._shape;
-    const { vertDeformCount, vertDeformDamping, vertDeformStrength, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertX, vertY, vertZ, vertLinkCounts, vertFullyClamped, vertRing, _flatten: modelFlatten, _clamp: modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertColorR, vertColorG, vertColorB, vertColorCount, vertFlattenedX, vertFlattenedY, vertFlattenedZ } = buffers;
+    const { _clamp: modelClamp, _flatten: modelFlatten } = model;
+    const { vertDeformCount, vertDeformDamping, vertDeformStrength, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertX, vertY, vertZ, vertLinkCounts, vertFullyClamped, vertRing, vertClampedX, vertClampedY, vertClampedZ, vertColorR, vertColorG, vertColorB, vertColorCount, vertFlattenedX, vertFlattenedY, vertFlattenedZ } = buffers;
 
     const { deform, warp, scatter } = material;
 
@@ -472,12 +473,14 @@ class Model {
     this._setIsVertexPlanar(material, x, y, z, material._flatten, modelFlatten, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertIndex);
     this._setIsVertexPlanar(material, x, y, z, material._clamp, modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertIndex);
 
-    const vertColorIndex = vertColorCount[vertIndex];
-    const vertColorOffset = vertIndex * 5;
-    vertColorR[vertColorOffset + vertColorIndex] = vr;
-    vertColorG[vertColorOffset + vertColorIndex] = vg;
-    vertColorB[vertColorOffset + vertColorIndex] = vb;
-    vertColorCount[vertIndex] = vertColorIndex + 1;
+    if (material.fade) {
+      const vertColorIndex = vertColorCount[vertIndex];
+      const vertColorOffset = vertIndex * 6;
+      vertColorR[vertColorOffset + vertColorIndex] = vr;
+      vertColorG[vertColorOffset + vertColorIndex] = vg;
+      vertColorB[vertColorOffset + vertColorIndex] = vb;
+      vertColorCount[vertIndex]++;
+    }
 
     this.vertCount++;
 

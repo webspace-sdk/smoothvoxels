@@ -7081,27 +7081,42 @@ GLTFExporter.Utils = {
 // /models/playgroundmodels.js
 // =====================================================
 SVOX.models.LIGHTTEST = `
-size = 10 10 10
-shape = box // sphere
-scale = 0.100
+model
+size = 20 4 22
+scale = 0.06
+resize = model
 origin = -y
 wireframe = false
 clamp = none
-ao = 3 0.5
-rotation = 0 160 0
-material lighting = flat, fade = true
-  colors = A:#FFF B:#FFF
+material lighting = smooth, roughness = 1, deform = 3 1
+  colors = A:#E9BE6D 
+material lighting = smooth, roughness = 0.4, deform = 3 1, fade = true
+  colors = B:#FF7070 C:#FF9090 D:#502000 E:#803000 F:#508050 G:#80A080
+material lighting = smooth, roughness = 1, deform = 3 1, scatter = 0.15, fade = true
+  colors = H:#E9BE6D I:#FFFFFF
 voxels
-AAAAAAAAAA AAAAAAAAAA AA------AA AA------AA AA------AA AA------AA AA------AA AA------AA AAAAAAAAAA AAAAAAAAAA 
-AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA 
-AAAAAAAAAA AAAAAAAAAA -AAAAAA--- -AAAAAA--- AAAAAAA--- -AAAAAAAAA AAAAAAAA-- -AAAAAAA-- AAAAAAAAAA AAAAAAAAAA 
-AAAAAAAAAA AAAAAAAAAA -AAAAAA--- -AAAAAA--- AAAAAAA--- -AAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA 
-AAAA--AAAA AAAA--AAAA AAAA--A--- AAAA--A--- AAAA--A--- -AAA--AAAA AAAA--AAAA -AAA--A--- AAAA--AAAA AAAA--AAAA 
-AAAA--AAAA AAAA--AAAA -AAA--AAAA -AAA--AAAA -AAA--AAAA AAAA--A--- AAAA--AAAA -AAA--A--- AAAA--AAAA AAAA--AAAA 
-AAAAAAAAAA AAAAAAAAAA -AAAAAAA-- -AAAAAAA-- -AAAAAAAAA AAAAAAA--- AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA 
-AAAAAAAAAA AAAAAAAAAA -AAAAAAA-- -AAAAAAA-- -AAAAAAAAA AAAAAAA--- -AAAAAAAAA -AAAAAA--- AAAAAAAAAA AAAAAAAAAA 
-AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA AAAAAAAAAA 
-AAAAAAAAAA AAAAAAAAAA AA------AA AA-AAAA-AA AA-AAAA-AA AA-AAAA-AA AA-AAAA-AA AA------AA AAAAAAAAAA AAAAAAAAAA
+-------------------- --------AAAA-------- --------FFFF-------- --------------------
+--------AAAA-------- -------AAAAAA------- -------FFFFFF------- --------GGGG--------
+-------AA--AA------- ------AAAAAAAA------ ------FFFFFFFF------ -------GG--GG-------
+-------A----A------- ------AAA--AAA------ ------FFF--FFF------ -------G----G-------
+-------A----A------- ------AAA--AAA------ ------FFF--FFF------ -------G----G-------
+-------AA--AA------- ------AAAAAAAA------ ------FFFFFFFF------ -------GG--GG-------
+--------AAAA-------- -------AAAAAA------- -------FFFFFF------- --------GGGG--------
+-------------------- --AAAA--AAAA--AAAA-- --BBBB--FFFF--DDDD-- --------------------
+--AAAA--------AAAA-- -AAAAAA------AAAAAA- -BBBBBB------DDDDDD- --CCCC--------EEEE--
+-AA--AA------AA--AA- AAAAAAAA----AAAAAAAA BBBBBBBB----DDDDDDDD -CC--CC------EE--EE-
+-A----A------A----A- AAA--AAA----AAA--AAA BBB--BBB----DDD--DDD -C----C------E----E-
+-A----A------A----A- AAA--AAA----AAA--AAA BBB--BBB----DDD--DDD -C----C------E----E-
+-AA--AA------AA--AA- AAAAAAAA----AAAAAAAA BBBBBBBB----DDDDDDDD -CC--CC------EE--EE-
+--AAAA--------AAAA-- -AAAAAA------AAAAAA- -BBBBBB------DDDDDD- --CCCC--------EEEE--
+-------------------- --AAAA--AAAA--AAAA-- --BBBB--HHHH--DDDD-- --------------------
+--------AAAA-------- -------AAAAAA------- -------HHHHHH------- --------IIII--------
+-------AAAAAA------- ------AAAAAAAA------ ------HHHHHHHH------ -------IIIIII-------
+-------AAAAAA------- ------AAAAAAAA------ ------HHHHHHHH------ -------IIIIII-------
+-------AAAAAA------- ------AAAAAAAA------ ------HHHHHHHH------ -------IIIIII-------
+-------AAAAAA------- ------AAAAAAAA------ ------HHHHHHHH------ -------IIIIII-------
+--------AAAA-------- -------AAAAAA------- -------HHHHHH------- --------IIII--------
+-------------------- --------AAAA-------- --------HHHH-------- --------------------
 `;
 SVOX.models.SVOX = `
 model

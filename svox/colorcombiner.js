@@ -16,7 +16,7 @@ class ColorCombiner {
     }
 
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
-      let fadeFace = fadeMaterials[faceMaterials[faceIndex]].fade;
+      let fadeFace = fadeMaterials[faceMaterials[faceIndex]];
 
       if (fadeFace) {
         // Fade vertex colors
@@ -31,16 +31,17 @@ class ColorCombiner {
           const colorCount = vertColorCount[vertIndex];
 
           for (let c = 0; c < colorCount; c++) {
-            const faceColorOffset = vertIndex * 5 + c;
+            const faceColorOffset = vertIndex * 6 + c;
             r += vertColorR[faceColorOffset];
             g += vertColorG[faceColorOffset];
             b += vertColorB[faceColorOffset];
             count++;
           }
 
-          faceVertColorR[faceVertOffset] = r / count;
-          faceVertColorG[faceVertOffset] = g / count;
-          faceVertColorB[faceVertOffset] = b / count;
+          const d = 1.0 / count;
+          faceVertColorR[faceVertOffset] = r * d;
+          faceVertColorG[faceVertOffset] = g * d;
+          faceVertColorB[faceVertOffset] = b * d;
         }
       }
     }

@@ -17,10 +17,9 @@ class SVOXBuffers {
     this.vertTmpZ = new Float32Array(maxVerts);
     this.vertHasTmp = Bits.create(new Uint8Array(maxVertBits).buffer, 1, 0);
 
-    // Verts can have up to 5 colors, given it will belong to at most 5 visible faces (a corner on a flat part)
-    this.vertColorR = new Float32Array(maxVerts * 5);
-    this.vertColorG = new Float32Array(maxVerts * 5);
-    this.vertColorB = new Float32Array(maxVerts * 5);
+    this.vertColorR = new Float32Array(maxVerts * 6);
+    this.vertColorG = new Float32Array(maxVerts * 6);
+    this.vertColorB = new Float32Array(maxVerts * 6);
     this.vertColorCount = new Uint8Array(maxVerts);
 
     this.vertSmoothNormalX = new Float32Array(maxVerts);

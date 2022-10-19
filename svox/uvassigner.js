@@ -50,7 +50,7 @@ class UVAssigner {
         const faceMaterialIndex = faceMaterials[faceIndex];
         const useOffset = materialUseOffsets[faceMaterialIndex];
         const uscale = materialUScales[faceMaterialIndex];
-        const vscale = materialUScales[faceMaterialIndex];
+        const vscale = materialVScales[faceMaterialIndex];
 
         const faceUVs = SVOX._FACEINDEXUVS[faceNameIndices[faceIndex]];
 
