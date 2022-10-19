@@ -8,6 +8,22 @@ class NormalsCalculator {
 
     const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(model.voxChunk.size);
 
+    // Zero out smooth + both normals because buffers may be re-rused
+    for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+      const faceOffset = faceIndex * 4;
+
+      for (let v = 0; v < 4; v++) {
+        const vertIndex = faceVertIndices[faceOffset + v];
+        vertSmoothNormalX[vertIndex] = 0;
+        vertSmoothNormalY[vertIndex] = 0;
+        vertSmoothNormalZ[vertIndex] = 0;
+
+        vertBothNormalX[vertIndex] = 0;
+        vertBothNormalY[vertIndex] = 0;
+        vertBothNormalZ[vertIndex] = 0;
+      }
+    }
+
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       // Compute face vertex normals
       const faceNameIndex = faceNameIndices[faceIndex];
