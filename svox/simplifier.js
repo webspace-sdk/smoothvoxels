@@ -59,20 +59,19 @@ class Simplifier {
       const z = xzy >> 8 & 0xFF;
       const y = xzy & 0xFF;
       const faceNameIndex = faceNameIndices[faceIndex];
-      const material = materials[faceMaterials[faceIndex]];
 
       switch (faceNameIndex) {
         case 0: // nx
-            this._mergeFaces(material, model, buffers, contexti1, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            this._mergeFaces(materials, model, buffers, contexti1, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
             break;
         case 1: // px
-            this._mergeFaces(material, model, buffers, contexti2, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            this._mergeFaces(materials, model, buffers, contexti2, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
             break;
         case 4: // nz
-            this._mergeFaces(material, model, buffers, contexti3, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            this._mergeFaces(materials, model, buffers, contexti3, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
             break;
         case 5: // pz
-            this._mergeFaces(material, model, buffers, contexti4, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            this._mergeFaces(materials, model, buffers, contexti4, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
             break;
       }
     }
@@ -91,20 +90,19 @@ class Simplifier {
       const z = xyz & 0xFF;
 
       const faceNameIndex = faceNameIndices[faceIndex];
-      const material = materials[faceMaterials[faceIndex]];
 
       switch (faceNameIndex) {
         case 0: // nx
-            this._mergeFaces(material, model, buffers, contexti1, faceIndex, x, y, z, vertX, vertY, vertZ, 1, 2, 3, 0);
+            this._mergeFaces(materials, model, buffers, contexti1, faceIndex, x, y, z, vertX, vertY, vertZ, 1, 2, 3, 0);
             break;
         case 1: // px
-            this._mergeFaces(material, model, buffers, contexti2, faceIndex, x, y, z, vertX, vertY, vertZ, 3, 0, 1, 2);
+            this._mergeFaces(materials, model, buffers, contexti2, faceIndex, x, y, z, vertX, vertY, vertZ, 3, 0, 1, 2);
             break;
         case 2: // ny
-            this._mergeFaces(material, model, buffers, contexti3, faceIndex, x, y, z, vertX, vertY, vertZ, 0, 1, 2, 3);
+            this._mergeFaces(materials, model, buffers, contexti3, faceIndex, x, y, z, vertX, vertY, vertZ, 0, 1, 2, 3);
             break;
         case 3: // py
-            this._mergeFaces(material, model, buffers, contexti4, faceIndex, x, y, z, vertX, vertY, vertZ, 2, 3, 0, 1);
+            this._mergeFaces(materials, model, buffers, contexti4, faceIndex, x, y, z, vertX, vertY, vertZ, 2, 3, 0, 1);
             break;
       }
     }
@@ -123,20 +121,19 @@ class Simplifier {
       const x = yzx & 0xFF;
 
       const faceNameIndex = faceNameIndices[faceIndex];
-      const material = materials[faceMaterials[faceIndex]];
 
       switch (faceNameIndex) {
         case 2: // ny
-            this._mergeFaces(material, model, buffers, contexti1, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
+            this._mergeFaces(materials, model, buffers, contexti1, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
             break;
         case 3: // py
-            this._mergeFaces(material, model, buffers, contexti2, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
+            this._mergeFaces(materials, model, buffers, contexti2, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
             break;
         case 4: // nz
-            this._mergeFaces(material, model, buffers, contexti3, faceIndex, y, z, x, vertY, vertZ, vertX, 3, 0, 1, 2);
+            this._mergeFaces(materials, model, buffers, contexti3, faceIndex, y, z, x, vertY, vertZ, vertX, 3, 0, 1, 2);
             break;
         case 5: // pz
-            this._mergeFaces(material, model, buffers, contexti4, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
+            this._mergeFaces(materials, model, buffers, contexti4, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
             break;
       }
     }
@@ -144,8 +141,10 @@ class Simplifier {
     clearContexts();
   }
   
-  static _mergeFaces(material, model, buffers, context, faceIndex, vaxis1, vaxis2, vaxis3, axis1Arr, axis2Arr, axis3Arr, v0, v1, v2, v3) {
+  static _mergeFaces( materials, model, buffers, context, faceIndex, vaxis1, vaxis2, vaxis3, axis1Arr, axis2Arr, axis3Arr, v0, v1, v2, v3) {
     const { faceCulled, faceMaterials, vertX, vertY, vertZ, faceVertIndices, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceVertColorR, faceVertColorG, faceVertColorB, faceVertUs, faceVertVs, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = buffers;
+    const materialIndex = faceMaterials[faceIndex];
+    const material = materials[materialIndex];
 
     if (context.filled && 
         context.lastVoxelAxis1 === vaxis1 && context.lastVoxelAxis2 === vaxis2 &&
@@ -165,6 +164,7 @@ class Simplifier {
       const faceOffset = faceIndex * 4;
       const lastFaceIndex = context.lastFaceIndex;
       const lastFaceOffset = lastFaceIndex * 4;
+      if (faceMaterials[lastFaceIndex] !== materialIndex) return;
 
       const faceVertNormal0X = faceVertNormalX[faceOffset];
       const faceVertNormal0Y = faceVertNormalY[faceOffset];
