@@ -110,6 +110,8 @@ class Model {
     const { tmpVertIndexLookup, tmpVoxelXZYFaceIndices, tmpVoxelXYZFaceIndices, tmpVoxelYZXFaceIndices } = buffers;
     const { voxChunk } = this;
 
+    tmpVertIndexLookup.clear();
+
     this.prepareForWrite();
     
     let maximumDeformCount = Deformer.maximumDeformCount(this);
