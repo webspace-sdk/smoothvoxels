@@ -309,7 +309,7 @@ class AOCalculator {
    
   static _distanceToOctree(model, buffers, octree, originX, originY, originZ, directionX, directionY, directionZ, max, endX, endY, endZ) {
     if (this._hitsBox(originX, originY, originZ, endX, endY, endZ, octree) === false)
-      return 0;
+      return null;
 
     if (octree.triangles.length > 0) {
       return this._distanceToModel(model, buffers, octree.triangles, originX, originY, originZ, directionX, directionY, directionZ, max);
