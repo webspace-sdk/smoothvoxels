@@ -318,19 +318,23 @@ class Model {
     }
     else if (neighborPaletteIndex === 0) {
       // The voxel is next to an empty voxel, so create a face
-    }
-    else if (!material.isTransparent && !material.wireframe) {
-      // The neighbor is not see through, so skip this face
-      return false;
-    }
-    else if (!material.isTransparent && !material.wireframe) {
-      // The voxel is not see through, but the neighbor is, so create the face 
-    }
-    else if (material.isTransparent && !material.wireframe && neighborPaletteIndex !== 0 && materials[(voxChunk.colorForPaletteIndex(neighborPaletteIndex) &0xff000000) >> 24].wireframe) {
-       // The voxel is transparent and the neighbor is wireframe, create the face 
-    }
-    else {
-      return false;
+    } else {
+      const neightborMaterialIndex = (voxChunk.colorForPaletteIndex(neighborPaletteIndex) & 0xff000000) >> 24;
+      const neighborMaterial = materials[neightborMaterialIndex];
+
+      if (!neighborMaterial.isTransparent && !material.wireframe) {
+        // The neighbor is not see through, so skip this face
+        return false;
+      }
+      else if (!material.isTransparent && !material.wireframe) {
+        // The voxel is not see through, but the neighbor is, so create the face 
+      }
+      else if (material.isTransparent && !material.wireframe && neighborPaletteIndex !== 0 && materials[(voxChunk.colorForPaletteIndex(neighborPaletteIndex) &0xff000000) >> 24].wireframe) {
+         // The voxel is transparent and the neighbor is wireframe, create the face 
+      }
+      else {
+        return false;
+      }
     }
 
     let flattened = this._isFacePlanar(material, vx, vy, vz, faceNameIndex, material._flatten, this._flatten);
