@@ -497,6 +497,10 @@ class MaterialList {
       
       return material;
     }
+
+    clearMaterials() {
+      this.materials.length = 0;
+    }
   
     forEach(func, thisArg, baseOnly) {
       if (baseOnly) {

@@ -556,17 +556,5 @@ class Model {
       arrZ.set(vertIndex, 0);
     }
   }
-
-  _normalize(vector) {
-    if (vector) {
-      let length = Math.sqrt( vector.x * vector.x + vector.y * vector. y + vector.z * vector.z );
-      if (length > 0) {
-        vector.x /= length;
-        vector.y /= length;
-        vector.z /= length;
-      }
-    }
-    return vector;
-  }
 }
 

@@ -7,7 +7,13 @@ class LightsCalculator {
     
     for (const light of lights) {
       if (light.direction && !light.normalizedDirection) {
-        light.normalizedDirection = model._normalize( { x:light.direction.x, y:light.direction.y, z:light.direction.z } );
+        let length = Math.sqrt( light.direction.x * light.direction.x + light.direction.y * light.direction.y + light.direction.z * light.direction.z );
+        light.normalizedDirection = { x: light.direction.x, y: light.direction.y, z: light.direction.z };
+
+        if (length > 0) {
+          const d = 1.0 / length;
+          light.normalizedDirection.x *= d;
+        }
       }
     }
 
