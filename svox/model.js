@@ -220,7 +220,9 @@ class Model {
     console.log("transformVertices: " + (performance.now() - t0));
     
     LightsCalculator.calculateLights(this, buffers);
+    t0 = performance.now();
     AOCalculator.calculateAmbientOcclusion(this, buffers);
+    console.log("calculateAmbientOcclusion: " + (performance.now() - t0));
     console.log(buffers);
     
     t0 = performance.now();

@@ -41,14 +41,18 @@ class AOCalculator {
              
     const materials = model.materials.materials;
 
+    let t0 = performance.now();
     let triangles = this._getAllFaceTriangles(model, buffers);
     let octree = this._trianglesToOctree(triangles, model, buffers);
+    console.log("octree", performance.now() - t0);
 
+    t0 = performance.now();
     if (model._aoSides)
       octree = this._aoSidesToOctree(model, buffers, octree);
 
     let nrOfSamples = model.aoSamples;
     let samples = this._generateFibonacciSamples(nrOfSamples);
+    console.log("samples", performance.now() - t0);
     
     aoCache.clear();
 
@@ -56,6 +60,7 @@ class AOCalculator {
     const modelScaleY = model.scale.y;
     const modelScaleZ = model.scale.z;
     
+    t0 = performance.now();
     for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
       const material = materials[faceMaterials[faceIndex]];
 
@@ -132,6 +137,7 @@ class AOCalculator {
       }
     }
 
+    console.log("ao", performance.now() - t0);
     releaseOctreeNode(octree);
   }
    
