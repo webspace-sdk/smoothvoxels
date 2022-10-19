@@ -369,8 +369,12 @@ class Model {
     const faceUVsU = faceUVs[0];
     const faceUVsV = faceUVs[1];
 
-    const u = vx * faceUVsU[0] + vy * faceUVsU[1] + vz * faceUVsU[2];
-    const v = vx * faceUVsV[0] + vy * faceUVsV[1] + vz * faceUVsV[2];
+    const vxs = vx + xShift;
+    const vys = vy + yShift;
+    const vzs = vz + zShift;
+
+    const u = vxs * faceUVsU[0] + vys * faceUVsU[1] + vzs * faceUVsU[2];
+    const v = vxs * faceUVsV[0] + vys * faceUVsV[1] + vzs * faceUVsV[2];
 
     // See UVAssigner, we fill in the proper x, y, z value from the voxel for the UV mapping to be resolved later
     for (let i = 0; i < 4; i++) {
