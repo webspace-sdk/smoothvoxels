@@ -55,26 +55,37 @@ class UVAssigner {
         const faceUVs = SVOX._FACEINDEXUVS[faceNameIndices[faceIndex]];
 
         // model initializes the UV arrays to the proper vox x, y, z value
-        const voxU0 = faceVertUs[faceIndex * 4 + faceUVs.order[0]];
-        const voxV0 = faceVertVs[faceIndex * 4 + faceUVs.order[0]];
-        const voxU1 = faceVertUs[faceIndex * 4 + faceUVs.order[1]];
-        const voxV1 = faceVertVs[faceIndex * 4 + faceUVs.order[1]];
-        const voxU2 = faceVertUs[faceIndex * 4 + faceUVs.order[2]];
-        const voxV2 = faceVertVs[faceIndex * 4 + faceUVs.order[2]];
-        const voxU3 = faceVertUs[faceIndex * 4 + faceUVs.order[3]];
-        const voxV3 = faceVertVs[faceIndex * 4 + faceUVs.order[3]];
+        const faceOffset = faceIndex * 4; 
 
-        faceVertUs[faceIndex * 4 + faceUVs.order[0]] = useOffset * faceUVs.uo + (voxU0 + 0.0001) * faceUVs.ud * uscale;
-        faceVertVs[faceIndex * 4 + faceUVs.order[0]] = useOffset * faceUVs.vo + (voxV0 + 0.0001) * faceUVs.vd * vscale;
+        const voxU0 = faceVertUs[faceOffset + faceUVs.order[0]];
+        const voxV0 = faceVertVs[faceOffset + faceUVs.order[0]];
+        const voxU1 = faceVertUs[faceOffset + faceUVs.order[1]];
+        const voxV1 = faceVertVs[faceOffset + faceUVs.order[1]];
+        const voxU2 = faceVertUs[faceOffset + faceUVs.order[2]];
+        const voxV2 = faceVertVs[faceOffset + faceUVs.order[2]];
+        const voxU3 = faceVertUs[faceOffset + faceUVs.order[3]];
+        const voxV3 = faceVertVs[faceOffset + faceUVs.order[3]];
 
-        faceVertUs[faceIndex * 4 + faceUVs.order[1]] = useOffset * faceUVs.uo + (voxU1 + 0.0001) * faceUVs.ud * uscale;
-        faceVertVs[faceIndex * 4 + faceUVs.order[1]] = useOffset * faceUVs.vo + (voxV1 + 0.9999) * faceUVs.vd * vscale;
+        const uv1 = faceOffset + faceUVs.order[0];
+        const uv2 = faceOffset + faceUVs.order[1];
+        const uv3 = faceOffset + faceUVs.order[2];
+        const uv4 = faceOffset + faceUVs.order[3];
+        const uOffset = useOffset * faceUVs.uo;
+        const vOffset = useOffset * faceUVs.vo;
+        const uScale = faceUVs.ud * uscale;
+        const vScale = faceUVs.vd * vscale;
 
-        faceVertUs[faceIndex * 4 + faceUVs.order[2]] = useOffset * faceUVs.uo + (voxU2 + 0.9999) * faceUVs.ud * uscale;
-        faceVertVs[faceIndex * 4 + faceUVs.order[2]] = useOffset * faceUVs.vo + (voxV2 + 0.9999) * faceUVs.vd * vscale;
+        faceVertUs[uv1] = uOffset + (voxU0 + 0.0001) * uScale;
+        faceVertVs[uv1] = vOffset + (voxV0 + 0.0001) * vScale;
 
-        faceVertUs[faceIndex * 4 + faceUVs.order[3]] = useOffset * faceUVs.uo + (voxU3 + 0.9999) * faceUVs.ud * uscale;
-        faceVertVs[faceIndex * 4 + faceUVs.order[3]] = useOffset * faceUVs.vo + (voxV3 + 0.0001) * faceUVs.vd * vscale;
+        faceVertUs[uv2] = uOffset + (voxU1 + 0.0001) * uScale;
+        faceVertVs[uv2] = vOffset + (voxV1 + 0.9999) * vScale;
+
+        faceVertUs[uv3] = uOffset + (voxU2 + 0.9999) * uScale;
+        faceVertVs[uv3] = vOffset + (voxV2 + 0.9999) * vScale;
+
+        faceVertUs[uv4] = uOffset + (voxU3 + 0.9999) * uScale;
+        faceVertVs[uv4] = vOffset + (voxV3 + 0.0001) * vScale;
       }
   }
 }

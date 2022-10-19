@@ -3,10 +3,10 @@ class Deformer {
   
   static changeShape(model, buffers, shape) {
     switch (shape) {
-      case 'sphere' : this._circularDeform(model, 1, 1, 1); break;
-      case 'cylinder-x' : this._circularDeform(model, 0, 1, 1); break;
-      case 'cylinder-y' : this._circularDeform(model, 1, 0, 1); break;
-      case 'cylinder-z' : this._circularDeform(model, 1, 1, 0); break;
+      case 'sphere' : this._circularDeform(model, buffers, 1, 1, 1); break;
+      case 'cylinder-x' : this._circularDeform(model, buffers, 0, 1, 1); break;
+      case 'cylinder-y' : this._circularDeform(model, buffers, 1, 0, 1); break;
+      case 'cylinder-z' : this._circularDeform(model, buffers, 1, 1, 0); break;
       case 'box': break;
       default: break;
     }

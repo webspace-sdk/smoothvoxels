@@ -200,7 +200,7 @@ class Model {
     console.log("fixClampedLinks: " + (performance.now() - t0));
     
     t0 = performance.now();
-    Deformer.changeShape(this, this._shape, buffers);
+    Deformer.changeShape(this, buffers, this._shape);
     console.log("changeShape: " + (performance.now() - t0));
        
     t0 = performance.now();
