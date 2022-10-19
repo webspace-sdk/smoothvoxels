@@ -177,7 +177,7 @@ class AOCalculator {
 
         let triVertIndex0, triVertIndex1, triVertIndex2;
 
-        if (triIndex & 1 === 0) {
+        if ((triIndex & 1) === 0) {
           triVertIndex0 = faceVertIndices[faceOffset + 2];
           triVertIndex1 = faceVertIndices[faceOffset + 1];
           triVertIndex2 = faceVertIndices[faceOffset + 0];
@@ -217,9 +217,9 @@ class AOCalculator {
 
         let triVertIndex0, triVertIndex1, triVertIndex2;
 
-        if (triIndex & 1 === 0) {
+        if ((triIndex & 1) === 0) {
           triVertIndex0 = faceVertIndices[faceOffset + 2];
-          trIVertIndex1 = faceVertIndices[faceOffset + 1];
+          triVertIndex1 = faceVertIndices[faceOffset + 1];
           triVertIndex2 = faceVertIndices[faceOffset + 0];
         } else {
           triVertIndex0 = faceVertIndices[faceOffset + 0];
@@ -255,9 +255,9 @@ class AOCalculator {
         const faceOffset = faceIndex * 4;
         let triVertIndex0, triVertIndex1, triVertIndex2;
 
-        if (triIndex & 1 === 0) {
+        if ((triIndex & 1) === 0) {
           triVertIndex0 = faceVertIndices[faceOffset + 2];
-          trIVertIndex1 = faceVertIndices[faceOffset + 1];
+          triVertIndex1 = faceVertIndices[faceOffset + 1];
           triVertIndex2 = faceVertIndices[faceOffset + 0];
         } else {
           triVertIndex0 = faceVertIndices[faceOffset + 0];
@@ -453,7 +453,7 @@ class AOCalculator {
       const faceVertOffset = faceIndex * 4;
       let vert0Index, vert1Index, vert2Index;
 
-      if (triIndex & 1 === 0) {
+      if ((triIndex & 1) === 0) {
         vert0Index = faceVertIndices[faceVertOffset + 2];
         vert1Index = faceVertIndices[faceVertOffset + 1];
         vert2Index = faceVertIndices[faceVertOffset + 0];
