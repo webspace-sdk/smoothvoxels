@@ -63,7 +63,7 @@ class SvoxMeshGenerator {
         refractionRatio:   definition.refractionRatio,
         wireframe:         definition.wireframe || modeldefinition.wireframe,
         fog:               definition.fog,      
-        vertexColors:      'FaceColors',
+        vertexColors:      true,
       
         // No back, faces are reverse instead because GLTF does not support back faces
         side:              definition.side === SVOX.DOUBLE ? SVOX.DOUBLE : SVOX.FRONT
@@ -81,14 +81,9 @@ class SvoxMeshGenerator {
       //else {
       //  material.vertexColors = 'VertexColors';
       //}
-      material.vertexColors = 'VertexColors';
       material.color = "#FFF";
     }
 
-    if (definition.type !== SVOX.MATBASIC) {
-      material.vertexColors = true;
-    }
-    
     if (definition.emissive) {
       material.emissive = definition.emissive.color.toString();
       material.emissiveIntensity = definition.emissive.intensity;

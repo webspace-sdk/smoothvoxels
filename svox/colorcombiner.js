@@ -53,8 +53,7 @@ class ColorCombiner {
       for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
         const material = materials[faceMaterials[faceIndex]];
         const vAoShared = material.ao || model.ao;
-        if (!vAoShared) continue;
-        const vAoSharedColor = vAoShared.color;
+        const vAoSharedColor = vAoShared ? vAoShared.color : null;
 
         // Face colors are already set to voxel color during model load
         for (let v = 0; v < 4; v++) {
