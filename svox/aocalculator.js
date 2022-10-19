@@ -56,7 +56,6 @@ class AOCalculator {
     const modelScaleY = model.scale.y;
     const modelScaleZ = model.scale.z;
     
-    let hits = 0;
     for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
       const material = materials[faceMaterials[faceIndex]];
 
@@ -92,7 +91,6 @@ class AOCalculator {
         const cachedAo = aoCache.get(cacheKey);
 
         if (cachedAo !== undefined) {
-          hits++;
           faceVertAO[faceVertOffset] = cachedAo;
           continue;
         }
@@ -134,7 +132,6 @@ class AOCalculator {
       }
     }
 
-    console.log("hits", hits);
     releaseOctreeNode(octree);
   }
    

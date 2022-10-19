@@ -70,7 +70,7 @@ class ColorCombiner {
 
           faceVertColorR[faceVertOffset] = vR * faceVertLightR[faceVertOffset] * vAo + vAoColorR * (1 - vAo);
           faceVertColorG[faceVertOffset] = vG * faceVertLightG[faceVertOffset] * vAo + vAoColorG * (1 - vAo);
-          faceVertColorB[faceVertOffset] = vG * faceVertLightB[faceVertOffset] * vAo + vAoColorR * (1 - vAo);
+          faceVertColorB[faceVertOffset] = vB * faceVertLightB[faceVertOffset] * vAo + vAoColorB * (1 - vAo);
         }
       }
     } else if (doLights && !doAo) {
