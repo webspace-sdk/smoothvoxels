@@ -1,8 +1,3 @@
-const TRI_VERT_OFFSETS = [
-  [2, 1, 0],
-  [0, 3, 2]
-];
-
 const OCTREE_NODE_POOL = []
 
 const aoCache = new Map();
@@ -178,11 +173,20 @@ class AOCalculator {
       for(let t=0; t<length; t++) {
         let triIndex = triangles[t];
         const faceIndex = triIndex >> 1;
-        const triVertOffset = TRI_VERT_OFFSETS[triIndex & 1];
         const faceOffset = faceIndex * 4;
-        const triVertIndex0 = faceVertIndices[faceOffset + triVertOffset[0]];
-        const triVertIndex1 = faceVertIndices[faceOffset + triVertOffset[1]];
-        const triVertIndex2 = faceVertIndices[faceOffset + triVertOffset[2]];
+
+        let triVertIndex0, triVertIndex1, triVertIndex2;
+
+        if (triIndex & 1 === 0) {
+          triVertIndex0 = faceVertIndices[faceOffset + 2];
+          triVertIndex1 = faceVertIndices[faceOffset + 1];
+          triVertIndex2 = faceVertIndices[faceOffset + 0];
+        } else {
+          triVertIndex0 = faceVertIndices[faceOffset + 0];
+          triVertIndex1 = faceVertIndices[faceOffset + 3];
+          triVertIndex2 = faceVertIndices[faceOffset + 2];
+        }
+
         const x0 = vertX[triVertIndex0];
         const y0 = vertY[triVertIndex0];
         const z0 = vertZ[triVertIndex0];
@@ -209,11 +213,20 @@ class AOCalculator {
       for(let t=0; t<length; t++) {
         let triIndex = triangles[t];
         const faceIndex = triIndex >> 1;
-        const triVertOffset = TRI_VERT_OFFSETS[triIndex & 1];
         const faceOffset = faceIndex * 4;
-        const triVertIndex0 = faceVertIndices[faceOffset + triVertOffset[0]];
-        const triVertIndex1 = faceVertIndices[faceOffset + triVertOffset[1]];
-        const triVertIndex2 = faceVertIndices[faceOffset + triVertOffset[2]];
+
+        let triVertIndex0, triVertIndex1, triVertIndex2;
+
+        if (triIndex & 1 === 0) {
+          triVertIndex0 = faceVertIndices[faceOffset + 2];
+          trIVertIndex1 = faceVertIndices[faceOffset + 1];
+          triVertIndex2 = faceVertIndices[faceOffset + 0];
+        } else {
+          triVertIndex0 = faceVertIndices[faceOffset + 0];
+          triVertIndex1 = faceVertIndices[faceOffset + 3];
+          triVertIndex2 = faceVertIndices[faceOffset + 2];
+        }
+
         const x0 = vertX[triVertIndex0];
         const y0 = vertY[triVertIndex0];
         const z0 = vertZ[triVertIndex0];
@@ -239,11 +252,19 @@ class AOCalculator {
       for(let t=0; t<length; t++) {
         let triIndex = triangles[t];
         const faceIndex = triIndex >> 1;
-        const triVertOffset = TRI_VERT_OFFSETS[triIndex & 1];
         const faceOffset = faceIndex * 4;
-        const triVertIndex0 = faceVertIndices[faceOffset + triVertOffset[0]];
-        const triVertIndex1 = faceVertIndices[faceOffset + triVertOffset[1]];
-        const triVertIndex2 = faceVertIndices[faceOffset + triVertOffset[2]];
+        let triVertIndex0, triVertIndex1, triVertIndex2;
+
+        if (triIndex & 1 === 0) {
+          triVertIndex0 = faceVertIndices[faceOffset + 2];
+          trIVertIndex1 = faceVertIndices[faceOffset + 1];
+          triVertIndex2 = faceVertIndices[faceOffset + 0];
+        } else {
+          triVertIndex0 = faceVertIndices[faceOffset + 0];
+          triVertIndex1 = faceVertIndices[faceOffset + 3];
+          triVertIndex2 = faceVertIndices[faceOffset + 2];
+        }
+
         const x0 = vertX[triVertIndex0];
         const y0 = vertY[triVertIndex0];
         const z0 = vertZ[triVertIndex0];
@@ -427,14 +448,20 @@ class AOCalculator {
     
     for (let t=0; t < triangles.length; t++) {
       const triIndex = triangles[t];
-      const triType = triIndex & 1;
       const faceIndex = triIndex >> 1;
-      const triVertOffset = TRI_VERT_OFFSETS[triType];
 
       const faceVertOffset = faceIndex * 4;
-      const vert0Index = faceVertIndices[faceVertOffset + triVertOffset[0]];
-      const vert1Index = faceVertIndices[faceVertOffset + triVertOffset[1]];
-      const vert2Index = faceVertIndices[faceVertOffset + triVertOffset[2]];
+      let vert0Index, vert1Index, vert2Index;
+
+      if (triIndex & 1 === 0) {
+        vert0Index = faceVertIndices[faceVertOffset + 2];
+        vert1Index = faceVertIndices[faceVertOffset + 1];
+        vert2Index = faceVertIndices[faceVertOffset + 0];
+      } else {
+        vert0Index = faceVertIndices[faceVertOffset + 0];
+        vert1Index = faceVertIndices[faceVertOffset + 3];
+        vert2Index = faceVertIndices[faceVertOffset + 2];
+      }
       
       let dist = this._triangleDistance(model, buffers, vert0Index, vert1Index, vert2Index, originX, originY, originZ, directionX, directionY, directionZ);
       if (dist) {
