@@ -121,7 +121,13 @@ class AOCalculator {
           const endZ = originZ + directionZ * max;
 
           let distance = this._distanceToOctree(model, buffers, octree, originX, originY, originZ, directionX, directionY, directionZ, max, endX, endY, endZ);
-          distance = (distance || max) / max;
+
+          if (distance) {
+            distance = distance / max;
+          } else {
+            distance = 1;
+          }
+
           total += distance; 
           count++;
         }
@@ -282,7 +288,7 @@ class AOCalculator {
    
   static _distanceToOctree(model, buffers, octree, originX, originY, originZ, directionX, directionY, directionZ, max, endX, endY, endZ) {
     if (this._hitsBox(originX, originY, originZ, endX, endY, endZ, octree) === false)
-      return null;
+      return 0;
 
     if (octree.triangles.length > 0) {
       return this._distanceToModel(model, buffers, octree.triangles, originX, originY, originZ, directionX, directionY, directionZ, max);
@@ -365,44 +371,50 @@ class AOCalculator {
   // https://www.gamedev.net/forums/topic/338987-aabb-line-segment-intersection-test/3209917/
   // Rewritten for js and added the quick tests at the top to improve speed
   static _hitsBox(originX, originY, originZ, endX, endY, endZ, box) {
-    const boxMinX = box.minx;
-    const boxMinY = box.miny;
-    const boxMinZ = box.minz;
-    const boxMaxX = box.maxx;
-    const boxMaxY = box.maxy;
-    const boxMaxZ = box.maxz;
-
     // Check if the entire line is fuly outside of the box planes
+    const boxMinX = box.minx;
     if (originX < boxMinX && endX < boxMinX) return false;
+    const boxMaxX = box.maxx;
     if (originX > boxMaxX && endX > boxMaxX) return false;
+    const boxMinY = box.miny;
     if (originY < boxMinY && endY < boxMinY) return false;
+    const boxMaxY = box.maxy;
     if (originY > boxMaxY && endY > boxMaxY) return false;
+    const boxMinZ = box.minz;
     if (originZ < boxMinZ && endZ < boxMinZ) return false;
+    const boxMaxZ = box.maxz;
     if (originZ > boxMaxZ && endZ > boxMaxZ) return false;
     
-    let dx = (endX-originX)*0.5;
-    let dy = (endY-originY)*0.5;
-    let dz = (endZ-originZ)*0.5;
-    let ex = (boxMaxX-boxMinX)*0.5;
-    let ey = (boxMaxY-boxMinY)*0.5;
-    let ez = (boxMaxZ-boxMinZ)*0.5;
-    let cx = originX - (boxMinX + boxMaxX) * 0.5;
-    let cy = originY - (boxMinY + boxMaxY) * 0.5;
-    let cz = originZ - (boxMinZ + boxMaxZ) * 0.5;
-    let adx = Math.abs(dx);
-    let ady = Math.abs(dy);
-    let adz = Math.abs(dz);
+    const cx = originX - (boxMinX + boxMaxX) * 0.5;
+    const ex = (boxMaxX-boxMinX)*0.5;
+    const dx = (endX-originX)*0.5;
+    const adx = Math.abs(dx);
 
     if (Math.abs(cx) > ex + adx)
         return false;
+
+    const ey = (boxMaxY-boxMinY)*0.5;
+    const dy = (endY-originY)*0.5;
+    const ady = Math.abs(dy);
+    const cy = originY - (boxMinY + boxMaxY) * 0.5;
+
     if (Math.abs(cy) > ey + ady)
         return false;
+
+    const ez = (boxMaxZ-boxMinZ)*0.5;
+    const dz = (endZ-originZ)*0.5;
+    const adz = Math.abs(dz);
+    const cz = originZ - (boxMinZ + boxMaxZ) * 0.5;
+
     if (Math.abs(cz) > ez + adz)
         return false;
+
     if (Math.abs(dy * cz - dz * cy) > ey * adz + ez * ady + Number.EPSILON)
         return false;
+
     if (Math.abs(dz * cx - dx * cz) > ez * adx + ex * adz + Number.EPSILON)
         return false;
+
     if (Math.abs(dx * cy - dy * cx) > ex * ady + ey * adx + Number.EPSILON) 
        return false;        
     
