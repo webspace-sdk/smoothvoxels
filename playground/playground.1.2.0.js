@@ -7080,23 +7080,6 @@ GLTFExporter.Utils = {
 // =====================================================
 // /models/playgroundmodels.js
 // =====================================================
-SVOX.models.LIGHTTEST = `
-
-light color = #FFF 0.5, direction = 0 1 1, 
-
-model
-size = 1
-scale = 2
-origin = -y
-
-
-material type = basic, lighting = smooth, deform = 3, roughness = 0.3
-  ao = #F0F 15 -4, colors = A:#FC4
-material type = basic, lighting = smooth, deform = 5, roughness = 0.3
-  colors = B:#622
-voxels
-A
-`;
 SVOX.models.SVOX = `
 model
 size     = 20 18 20

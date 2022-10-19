@@ -2,7 +2,33 @@
 /* global SvoxMeshGenerator */
 
 // Remove '.min' if you are not working with the minified version!!
-importScripts('/smoothvoxels.1.2.0.min.js');
+importScripts("bits.js")
+importScripts("svoxbuffers.js")
+importScripts("vox_chunk.js")
+importScripts("svox.js")
+importScripts("matrix.js")
+importScripts("planar.js")
+importScripts("boundingbox.js")
+importScripts("materiallist.js")
+importScripts("noise.js")
+importScripts("deformer.js")
+importScripts("vertexlinker.js")
+importScripts("vertextransformer.js")
+importScripts("normalscalculator.js")
+importScripts("lightscalculator.js")
+importScripts("aocalculator.js")
+importScripts("colorcombiner.js")
+importScripts("uvassigner.js")
+importScripts("simplifier.js")
+importScripts("facealigner.js")
+importScripts("model.js")
+importScripts("modelreader.js")
+importScripts("meshgenerator.js")
+importScripts("svoxtothreemeshconverter.js")
+importScripts("workerpool.js")
+importScripts("smoothvoxel.js")
+
+const buffers = new SVOXBuffers(1024 * 1024);
 
 onmessage = function(event) {
   let svoxmesh = generateModel(event.data.svoxmodel);
@@ -29,7 +55,7 @@ function generateModel(svoxmodel) {
     model = ModelReader.readFromString(_ERROR);
   }
   
-  let svoxmesh = SvoxMeshGenerator.generate(model);
+  let svoxmesh = SvoxMeshGenerator.generate(model, buffers);
   svoxmesh.error = error;
   
   return svoxmesh;

@@ -108,7 +108,7 @@ class Model {
 
   prepareForRender(buffers) {
     const { tmpVertIndexLookup, tmpVoxelXZYFaceIndices, tmpVoxelXYZFaceIndices, tmpVoxelYZXFaceIndices } = buffers;
-    const { voxChunk } = model;
+    const { voxChunk } = this;
 
     this.prepareForWrite();
     
@@ -123,7 +123,7 @@ class Model {
     const allowDeform = maximumDeformCount > 0
     const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(voxChunk.size);
 
-    const materials = model.materials.materials;
+    const materials = this.materials.materials;
     const xShift = shiftForSize(voxChunk.size[0]);
     const yShift = shiftForSize(voxChunk.size[1]);
     const zShift = shiftForSize(voxChunk.size[2]);
@@ -346,7 +346,7 @@ class Model {
     if (skipped) return false;
 
     const { faceVertIndices, faceVertColorR, faceVertColorG, faceVertColorB, faceFlattened, faceClamped, faceSmooth, faceCulled, faceMaterials, faceNameIndices, faceVertUs, faceVertVs} = buffers;
-    const { faceCount } = model;
+    const { faceCount } = this;
     const faceVertOffset = faceCount * 4;
 
     const vr = (color & 0x000000ff) / 255.0;
@@ -390,7 +390,7 @@ class Model {
 
      // Link the vertices for deformation
     if (linkVertices)
-      VertexLinker.linkVertices(model, buffers, faceCount);
+      VertexLinker.linkVertices(this, buffers, faceCount);
 
     this.faceCount++;
 
@@ -408,7 +408,7 @@ class Model {
     const key = ((x + xShift) << 20) | ((y + yShift) << 10) | (z + zShift);
 
     const shape = this._shape;
-    const { _clamp: modelClamp, _flatten: modelFlatten } = model;
+    const { _clamp: modelClamp, _flatten: modelFlatten } = this;
     const { vertDeformCount, vertDeformDamping, vertDeformStrength, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertX, vertY, vertZ, vertLinkCounts, vertFullyClamped, vertRing, vertClampedX, vertClampedY, vertClampedZ, vertColorR, vertColorG, vertColorB, vertColorCount, vertFlattenedX, vertFlattenedY, vertFlattenedZ } = buffers;
 
     const { deform, warp, scatter } = material;

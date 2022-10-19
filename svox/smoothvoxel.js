@@ -23,7 +23,7 @@ SVOX.WORKERPOOL = null;
 AFRAME.registerComponent('svox', {
   schema: {
     model: { type:"string" }, 
-    worker: { type:"boolean", default:false }
+    worker: { type:"boolean", default:true }
   },
 
   /**
@@ -106,7 +106,7 @@ AFRAME.registerComponent('svox', {
     let task =  { svoxmodel, elementId:el.id };    
     
     if (!SVOX.WORKERPOOL) {
-      SVOX.WORKERPOOL = new WorkerPool("/smoothvoxelworker.1.2.0.js", this, this._processResult);
+      SVOX.WORKERPOOL = new WorkerPool("/svox/smoothvoxelworker.1.2.0.js", this, this._processResult);
     }
     SVOX.WORKERPOOL.executeTask(task);
   },
