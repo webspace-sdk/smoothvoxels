@@ -84,6 +84,10 @@ class SvoxMeshGenerator {
       material.vertexColors = 'VertexColors';
       material.color = "#FFF";
     }
+
+    if (definition.type !== SVOX.MATBASIC) {
+      material.vertexColors = true;
+    }
     
     if (definition.emissive) {
       material.emissive = definition.emissive.color.toString();
