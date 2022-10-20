@@ -96,7 +96,7 @@ class Builder {
     const contents = readFileSync(`${buildConfig.outdir}/${filename}`, { encoding: 'utf-8' })
 
     spawnSync('chmod', ['+x', `${buildConfig.outdir}/${filename}`], { stdio: 'ignore' })
-    writeFileSync(`${buildConfig.outdir}/${filename}`, `#!/usr/bin/node\n\n${contents}`, { encoding: 'utf-8' })
+    writeFileSync(`${buildConfig.outdir}/${filename}`, contents, { encoding: 'utf-8' })
     renameSync(`${buildConfig.outdir}/${filename}`, `${buildConfig.outdir}/${newFilename}`)
   }
 
