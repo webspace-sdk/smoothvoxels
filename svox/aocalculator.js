@@ -60,17 +60,18 @@ class AOCalculator {
       const material = materials[faceMaterials[faceIndex]];
 
       let ao = material.ao || model.ao;
-      if (!ao || ao.maxDistance === 0 || ao.strength === 0 || ao.angle < 1 || material.opacity === 0) continue;
-
-      let max = ao.maxDistance * Math.max(modelScaleX, modelScaleY, modelScaleZ);
-      let strength = ao.strength;
-      let angle = Math.cos(ao.angle / 180 * Math.PI);
 
       const faceOffset = faceIndex * 4;
       faceVertAO[faceOffset] = 0;
       faceVertAO[faceOffset + 1] = 0;
       faceVertAO[faceOffset + 2] = 0;
       faceVertAO[faceOffset + 3] = 0;
+
+      if (!ao || ao.maxDistance === 0 || ao.strength === 0 || ao.angle < 1 || material.opacity === 0) continue;
+
+      let max = ao.maxDistance * Math.max(modelScaleX, modelScaleY, modelScaleZ);
+      let strength = ao.strength;
+      let angle = Math.cos(ao.angle / 180 * Math.PI);
 
       for (let v = 0; v < 4; v++) {
         const faceVertOffset = faceOffset + v;
