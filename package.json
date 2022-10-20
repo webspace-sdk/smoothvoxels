@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "build": "esbuild src/index.js --define:global=window --minify --log-limit=0 --bundle --outfile=dist/svox.js"
+    "build": "node scripts/build.js --production"
   },
   "repository": {
     "type": "git",
