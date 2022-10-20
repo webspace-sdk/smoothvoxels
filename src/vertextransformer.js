@@ -3,59 +3,23 @@ const normalYs = [null, null, null, null];
 const normalZs = [null, null, null, null];
 
 class VertexTransformer {
+         
   static transformVertices(model, buffers) {
-    const {
-      vertX,
-      vertY,
-      vertZ,
-      faceVertNormalX,
-      faceVertFlatNormalX,
-      faceVertNormalY,
-      faceVertFlatNormalY,
-      faceVertNormalZ,
-      faceVertFlatNormalZ,
-      faceVertSmoothNormalX,
-      faceVertSmoothNormalY,
-      faceVertSmoothNormalZ,
-      faceVertBothNormalX,
-      faceVertBothNormalY,
-      faceVertBothNormalZ,
-    } = buffers;
+    const { vertX, vertY, vertZ, faceVertNormalX, faceVertFlatNormalX, faceVertNormalY, faceVertFlatNormalY, faceVertNormalZ, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = buffers;
     let bor = model.determineBoundsOffsetAndRescale(model.resize, buffers);
-
+    
     // Define the transformation in reverse order to how they are carried out
-    let vertexTransform = new Matrix();
+    let vertexTransform = new Matrix(); 
 
-    vertexTransform = Matrix.multiply(
-      vertexTransform,
-      Matrix.translate(model.position.x, model.position.y, model.position.z)
-    );
-    vertexTransform = Matrix.multiply(
-      vertexTransform,
-      Matrix.rotate(model.rotation.z, 0, 0, 1)
-    );
-    vertexTransform = Matrix.multiply(
-      vertexTransform,
-      Matrix.rotate(model.rotation.y, 0, 1, 0)
-    );
-    vertexTransform = Matrix.multiply(
-      vertexTransform,
-      Matrix.rotate(model.rotation.x, 1, 0, 0)
-    );
-    vertexTransform = Matrix.multiply(
-      vertexTransform,
-      Matrix.scale(model.scale.x, model.scale.y, model.scale.z)
-    );
-    vertexTransform = Matrix.multiply(
-      vertexTransform,
-      Matrix.scale(bor.rescale, bor.rescale, bor.rescale)
-    );
-    vertexTransform = Matrix.multiply(
-      vertexTransform,
-      Matrix.translate(bor.offset.x, bor.offset.y, bor.offset.z)
-    );
-
-    // Convert the vertex transform matrix in a normal transform matrix
+    vertexTransform = Matrix.multiply(vertexTransform, Matrix.translate(model.position.x, model.position.y, model.position.z));
+    vertexTransform = Matrix.multiply(vertexTransform, Matrix.rotate(model.rotation.z, 0, 0, 1));
+    vertexTransform = Matrix.multiply(vertexTransform, Matrix.rotate(model.rotation.y, 0, 1, 0));
+    vertexTransform = Matrix.multiply(vertexTransform, Matrix.rotate(model.rotation.x, 1, 0, 0)); 
+    vertexTransform = Matrix.multiply(vertexTransform, Matrix.scale(model.scale.x, model.scale.y, model.scale.z));
+    vertexTransform = Matrix.multiply(vertexTransform, Matrix.scale(bor.rescale, bor.rescale, bor.rescale));
+    vertexTransform = Matrix.multiply(vertexTransform, Matrix.translate(bor.offset.x, bor.offset.y, bor.offset.z));    
+    
+    // Convert the vertex transform matrix in a normal transform matrix 
     let normalTransform = Matrix.inverse(vertexTransform);
     normalTransform = Matrix.transpose(normalTransform);
 
@@ -82,11 +46,7 @@ class VertexTransformer {
       const faceOffset = faceIndex * 4;
 
       for (let normalIndex = 0; normalIndex < 4; normalIndex++) {
-        for (
-          let normalType = 0, c = normalXs.length;
-          normalType < c;
-          normalType++
-        ) {
+        for (let normalType = 0, c = normalXs.length; normalType < c; normalType++) {
           const xs = normalXs[normalType];
           const ys = normalYs[normalType];
           const zs = normalZs[normalType];
@@ -99,9 +59,7 @@ class VertexTransformer {
           const normalY = ys[idx];
           const normalZ = zs[idx];
 
-          const normalLength = Math.sqrt(
-            normalX * normalX + normalY * normalY + normalZ * normalZ
-          );
+          const normalLength = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
 
           if (normalLength > 0) {
             const d = 1 / normalLength;

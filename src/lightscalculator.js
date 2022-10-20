@@ -1,113 +1,83 @@
-class LightsCalculator {
-  static calculateLights(model, buffers) {
-    let lights = model.lights;
-    if (lights.length === 0) return;
+export default class LightsCalculator {
+  static calculateLights (model, buffers) {
+    const lights = model.lights
+    if (lights.length === 0) { return }
 
     for (const light of lights) {
       if (light.direction && !light.normalizedDirection) {
-        let length = Math.sqrt(
-          light.direction.x * light.direction.x +
-            light.direction.y * light.direction.y +
-            light.direction.z * light.direction.z
-        );
-        light.normalizedDirection = {
-          x: light.direction.x,
-          y: light.direction.y,
-          z: light.direction.z,
-        };
+        const length = Math.sqrt(light.direction.x * light.direction.x + light.direction.y * light.direction.y + light.direction.z * light.direction.z)
+        light.normalizedDirection = { x: light.direction.x, y: light.direction.y, z: light.direction.z }
 
         if (length > 0) {
-          const d = 1.0 / length;
-          light.normalizedDirection.x *= d;
+          const d = 1.0 / length
+          light.normalizedDirection.x *= d
         }
       }
     }
 
-    const materials = model.materials.materials;
+    const materials = model.materials.materials
 
-    const {
-      faceMaterials,
-      faceNameIndices,
-      faceVertUs,
-      faceVertVs,
-      faceVertNormalX,
-      faceVertNormalY,
-      faceVertNormalZ,
-      faceVertIndices,
-      vertX,
-      vertY,
-      vertZ,
-      faceVertLightR,
-      faceVertLightG,
-      faceVertLightB,
-    } = buffers;
+    const { faceMaterials, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceVertIndices, vertX, vertY, vertZ, faceVertLightR, faceVertLightG, faceVertLightB } = buffers
 
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
-      const material = materials[faceMaterials[faceIndex]];
-      const faceOffset = faceIndex * 4;
+      const material = materials[faceMaterials[faceIndex]]
+      const faceOffset = faceIndex * 4
 
       if (!material.lights) {
         for (let v = 0; v < 4; v++) {
-          const faceVertOffset = faceOffset + v;
+          const faceVertOffset = faceOffset + v
 
-          faceVertLightR[faceVertOffset] = 1;
-          faceVertLightG[faceVertOffset] = 1;
-          faceVertLightB[faceVertOffset] = 1;
+          faceVertLightR[faceVertOffset] = 1
+          faceVertLightG[faceVertOffset] = 1
+          faceVertLightB[faceVertOffset] = 1
         }
       } else {
         for (let v = 0; v < 4; v++) {
-          const faceVertOffset = faceOffset + v;
+          const faceVertOffset = faceOffset + v
 
-          const vertIndex = faceVertIndices[faceVertOffset];
-          const vx = vertX[vertIndex];
-          const vy = vertY[vertIndex];
-          const vz = vertZ[vertIndex];
+          const vertIndex = faceVertIndices[faceVertOffset]
+          const vx = vertX[vertIndex]
+          const vy = vertY[vertIndex]
+          const vz = vertZ[vertIndex]
 
-          const nx = faceVertNormalX[faceVertOffset];
-          const ny = faceVertNormalY[faceVertOffset];
-          const nz = faceVertNormalZ[faceVertOffset];
+          const nx = faceVertNormalX[faceVertOffset]
+          const ny = faceVertNormalY[faceVertOffset]
+          const nz = faceVertNormalZ[faceVertOffset]
 
-          faceVertLightR[faceVertOffset] = 0;
-          faceVertLightG[faceVertOffset] = 0;
-          faceVertLightB[faceVertOffset] = 0;
+          faceVertLightR[faceVertOffset] = 0
+          faceVertLightG[faceVertOffset] = 0
+          faceVertLightB[faceVertOffset] = 0
 
           for (const light of lights) {
-            const { color, strength, distance, normalizedDirection, position } =
-              light;
+            const { color, strength, distance, normalizedDirection, position } = light
 
-            let exposure = strength;
+            let exposure = strength
 
-            let length = 0;
+            let length = 0
 
             if (position) {
-              const lvx = position.x - vx;
-              const lvy = position.y - vy;
-              const lvz = position.z - vz;
+              const lvx = position.x - vx
+              const lvy = position.y - vy
+              const lvz = position.z - vz
 
-              length = Math.sqrt(lvx * lvx + lvy * lvy + lvz * lvz);
-              const d = 1.0 / length;
+              length = Math.sqrt(lvx * lvx + lvy * lvy + lvz * lvz)
+              const d = 1.0 / length
 
-              exposure =
-                strength *
-                Math.max(nx * lvx * d + ny * lvy * d + nz * lvz * d, 0.0);
+              exposure = strength * Math.max(nx * lvx * d + ny * lvy * d + nz * lvz * d, 0.0)
             } else if (normalizedDirection) {
-              exposure =
-                strength *
-                Math.max(
-                  nx * normalizedDirection.x +
-                    ny * normalizedDirection.y +
-                    nz * normalizedDirection.z,
-                  0.0
-                );
+              exposure = strength *
+                         Math.max(nx * normalizedDirection.x +
+                                  ny * normalizedDirection.y +
+                                  nz * normalizedDirection.z, 0.0)
             }
 
             if (position && distance) {
-              exposure = exposure * (1 - Math.min(length / distance, 1));
+              exposure = exposure * (1 - Math.min(length / distance, 1))
             }
 
-            faceVertLightR[faceVertOffset] += color.r * exposure;
-            faceVertLightG[faceVertOffset] += color.g * exposure;
-            faceVertLightB[faceVertOffset] += color.b * exposure;
+            faceVertLightR[faceVertOffset] += color.r * exposure
+            faceVertLightG[faceVertOffset] += color.g * exposure
+            faceVertLightB[faceVertOffset] += color.b * exposure
           }
         }
       }
