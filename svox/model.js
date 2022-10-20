@@ -546,14 +546,14 @@ class Model {
     }
     
     if (planar) {
-        // Note bounds are in voxel coordinates and vertices add from 0 0 0 to 1 1 1
-      arrX.set(vertIndex, (planar.x || (planar.nx && vx < bounds.minX + 0.5) || (planar.px && vx > bounds.maxX + 0.5 )) ? 1 : 0);
-      arrY.set(vertIndex, (planar.y || (planar.ny && vy < bounds.minY + 0.5) || (planar.py && vy > bounds.maxY + 0.5 )) ? 1 : 0);
-      arrZ.set(vertIndex, (planar.z || (planar.nz && vz < bounds.minZ + 0.5) || (planar.pz && vz > bounds.maxZ + 0.5 )) ? 1 : 0);
+      // Note bounds are in voxel coordinates and vertices add from 0 0 0 to 1 1 1
+      arrX.set(vertIndex, (planar.x || (planar.nx && vx < bounds.minX + 0.5) || (planar.px && vx > bounds.maxX + 0.5 )) ? 1 : arrX.get(vertIndex) | 0);
+      arrY.set(vertIndex, (planar.y || (planar.ny && vy < bounds.minY + 0.5) || (planar.py && vy > bounds.maxY + 0.5 )) ? 1 : arrY.get(vertIndex) | 0);
+      arrZ.set(vertIndex, (planar.z || (planar.nz && vz < bounds.minZ + 0.5) || (planar.pz && vz > bounds.maxZ + 0.5 )) ? 1 : arrZ.get(vertIndex) | 0);
     } else {
-      arrX.set(vertIndex, 0);
-      arrY.set(vertIndex, 0);
-      arrZ.set(vertIndex, 0);
+      arrX.set(vertIndex, arrX.get(vertIndex) | 0);
+      arrY.set(vertIndex, arrY.get(vertIndex) | 0);
+      arrZ.set(vertIndex, arrZ.get(vertIndex) | 0);
     }
   }
 }
