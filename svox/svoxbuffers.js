@@ -85,5 +85,85 @@ class SVOXBuffers {
     this.voxelYZXFaceIndices = null;
 
   }
+
+  clear() {
+    this.tmpVertIndexLookup.clear();
+    this.vertX.fill(0)
+    this.vertY.fill(0)
+    this.vertZ.fill(0)
+
+    this.vertTmpX.fill(0)
+    this.vertTmpY.fill(0)
+    this.vertTmpZ.fill(0)
+    this.vertHasTmp.clear();
+
+    this.vertColorR.fill(0)
+    this.vertColorG.fill(0)
+    this.vertColorB.fill(0)
+    this.vertColorCount.fill(0)
+
+    this.vertSmoothNormalX.fill(0)
+    this.vertSmoothNormalY.fill(0)
+    this.vertSmoothNormalZ.fill(0)
+    this.vertBothNormalX.fill(0)
+    this.vertBothNormalY.fill(0)
+    this.vertBothNormalZ.fill(0)
+    this.vertFlattenedX.clear()
+    this.vertFlattenedY.clear()
+    this.vertFlattenedZ.clear()
+    this.vertClampedX.clear()
+    this.vertClampedY.clear()
+    this.vertClampedZ.clear()
+    this.vertFullyClamped.clear()
+    this.vertDeformCount.fill(0)
+    this.vertDeformDamping.fill(0)
+    this.vertDeformStrength.fill(0)
+    this.vertWarpAmplitude.fill(0)
+    this.vertWarpFrequency.fill(0)
+    this.vertScatter.fill(0)
+    this.vertRing.fill(0)
+    this.vertNrOfClampedLinks.fill(0)
+    this.vertLinkCounts.fill(0)
+    this.vertLinkIndices.fill(0)
+
+    this.faceFlattened.clear()
+    this.faceClamped.clear()
+    this.faceSmooth.clear()
+    this.faceEquidistant.clear()
+    this.faceCulled.clear()
+    this.faceNameIndices.fill(0)
+    this.faceMaterials.fill(0)
+
+    this.faceVertIndices.fill(0)
+    this.faceVertNormalX.fill(0)
+    this.faceVertNormalY.fill(0)
+    this.faceVertNormalZ.fill(0)
+    this.faceVertFlatNormalX.fill(0)
+    this.faceVertFlatNormalY.fill(0)
+    this.faceVertFlatNormalZ.fill(0)
+    this.faceVertSmoothNormalX.fill(0)
+    this.faceVertSmoothNormalY.fill(0)
+    this.faceVertSmoothNormalZ.fill(0)
+    this.faceVertBothNormalX.fill(0)
+    this.faceVertBothNormalY.fill(0)
+    this.faceVertBothNormalZ.fill(0)
+    this.faceVertColorR.fill(0)
+    this.faceVertColorG.fill(0)
+    this.faceVertColorB.fill(0)
+    this.faceVertLightR.fill(0)
+    this.faceVertLightG.fill(0)
+    this.faceVertLightB.fill(0)
+    this.faceVertAO.fill(0)
+    this.faceVertUs.fill(0)
+    this.faceVertVs.fill(0)
+
+    this.tmpVoxelXZYFaceIndices.length = 0
+    this.tmpVoxelXYZFaceIndices.length = 0
+    this.tmpVoxelYZXFaceIndices.length = 0
+    this.voxelXZYFaceIndices = null;
+    this.voxelXYZFaceIndices = null;
+    this.voxelYZXFaceIndices = null;
+
+  }
 }
 
