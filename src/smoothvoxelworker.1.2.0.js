@@ -33,7 +33,7 @@ importScripts('smoothvoxel.js')
 
 const buffers = new SVOXBuffers(1024 * 1024)
 
-onmessage = function (event) {
+onmessage = function (event) { // eslint-disable-line
   const svoxmesh = generateModel(event.data.svoxmodel)
   postMessage({ svoxmesh, elementId: event.data.elementId, worker: event.data.worker })
 }
