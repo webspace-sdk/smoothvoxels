@@ -464,15 +464,21 @@ class Model {
         vertDeformStrength[vertIndex] = deform.strength;
         vertLinkCounts[vertIndex] = 0;
         vertFullyClamped.set(vertIndex, 0);
+      } else {
+        vertDeformCount[vertIndex] = 0;
       }
 
       if (warp) {
         vertWarpAmplitude[vertIndex] = warp.amplitude;
         vertWarpFrequency[vertIndex] = warp.frequency;
+      } else {
+        vertWarpAmplitude[vertIndex] = 0;
       }
 
       if (scatter) {
         vertScatter[vertIndex] = scatter;
+      } else {
+        vertScatter[vertIndex] = 0;
       }
 
       vertColorCount[vertIndex] = 0;

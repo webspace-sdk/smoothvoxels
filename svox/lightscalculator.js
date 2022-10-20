@@ -46,6 +46,10 @@ class LightsCalculator {
           const ny = faceVertNormalY[faceVertOffset];
           const nz = faceVertNormalZ[faceVertOffset];
 
+          faceVertLightR[faceVertOffset] = 0;
+          faceVertLightG[faceVertOffset] = 0;
+          faceVertLightB[faceVertOffset] = 0;
+
           for (const light of lights) {
             const { color, strength, distance, normalizedDirection, position } = light;
 
