@@ -477,6 +477,12 @@ class Model {
 
       vertColorCount[vertIndex] = 0;
       vertRing[vertIndex] = 0;
+      vertClampedX.set(vertIndex, 0);
+      vertClampedY.set(vertIndex, 0);
+      vertClampedZ.set(vertIndex, 0);
+      vertFlattenedX.set(vertIndex, 0);
+      vertFlattenedY.set(vertIndex, 0);
+      vertFlattenedZ.set(vertIndex, 0);
     }
 
     // This will || the planar values
