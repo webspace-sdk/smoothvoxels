@@ -6,6 +6,6 @@ It has been updated to use Typed Arrays and bitfields which results in a 5x or s
 
 Beyond this it also includes:
 
-- Ability to re-use memory across model loads
+- Ability to re-use memory and materials across re-meshing
 - Per-voxel colorization (not per-material)
 - A flatbuffers based SVOX binary format
