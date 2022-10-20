@@ -52,8 +52,6 @@ export default class SvoxMeshGenerator {
   }
 
   static _generateMaterial (definition, modeldefinition) {
-    const ao = definition.ao || modeldefinition.ao
-
     const material = {
       type: definition.type,
       roughness: definition.roughness,

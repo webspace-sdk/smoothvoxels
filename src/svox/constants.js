@@ -1,30 +1,28 @@
-const CONSTANTS = {}
-
 // Material type constants
-CONSTANTS.MATSTANDARD = 'standard'
-CONSTANTS.MATBASIC = 'basic'
-CONSTANTS.MATLAMBERT = 'lambert'
-CONSTANTS.MATPHONG = 'phong'
-CONSTANTS.MATMATCAP = 'matcap'
-CONSTANTS.MATTOON = 'toon'
-CONSTANTS.MATNORMAL = 'normal'
+export const MATSTANDARD = 'standard'
+export const MATBASIC = 'basic'
+export const MATLAMBERT = 'lambert'
+export const MATPHONG = 'phong'
+export const MATMATCAP = 'matcap'
+export const MATTOON = 'toon'
+export const MATNORMAL = 'normal'
 
 // Material resize constants
-CONSTANTS.BOUNDS = 'bounds' // Resize the bounds to fit the model
-CONSTANTS.MODEL = 'model' // Resize the model to fit the bounds
+export const BOUNDS = 'bounds' // Resize the bounds to fit the model
+export const MODEL = 'model' // Resize the model to fit the bounds
 
 // Material lighting constants
-CONSTANTS.FLAT = 'flat' // Flat shaded triangles
-CONSTANTS.QUAD = 'quad' // Flat shaded quads
-CONSTANTS.SMOOTH = 'smooth' // Smooth shaded triangles
-CONSTANTS.BOTH = 'both' // Smooth shaded, but flat shaded clamped / flattened
+export const FLAT = 'flat' // Flat shaded triangles
+export const QUAD = 'quad' // Flat shaded quads
+export const SMOOTH = 'smooth' // Smooth shaded triangles
+export const BOTH = 'both' // Smooth shaded, but flat shaded clamped / flattened
 
 // Material side constants
-CONSTANTS.FRONT = 'front' // Show only front side of the material
-CONSTANTS.BACK = 'back' // Show only back side of the material
-CONSTANTS.DOUBLE = 'double' // Show both sides of the material
+export const FRONT = 'front' // Show only front side of the material
+export const BACK = 'back' // Show only back side of the material
+export const DOUBLE = 'double' // Show both sides of the material
 
-CONSTANTS._FACES = ['nx', 'px', 'ny', 'py', 'nz', 'pz']
+export const _FACES = ['nx', 'px', 'ny', 'py', 'nz', 'pz']
 
 // Vertex numbering per side.
 // The shared vertices for side nx (negative x) and pz (positive z) indicated as example:
@@ -45,7 +43,7 @@ CONSTANTS._FACES = ['nx', 'px', 'ny', 'py', 'nz', 'pz']
 
 // Define the vertex offsets for each side.
 
-CONSTANTS._VERTEX_OFFSETS = [
+export const _VERTEX_OFFSETS = [
   // nx
   [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]],
   // px
@@ -61,7 +59,7 @@ CONSTANTS._VERTEX_OFFSETS = [
 ]
 
 // Define the neighbor voxels for each face
-CONSTANTS._NEIGHBORS = [
+export const _NEIGHBORS = [
   [-1, 0, 0], // nx
   [+1, 0, 0], // px
   [0, -1, 0], // ny
@@ -87,7 +85,7 @@ CONSTANTS._NEIGHBORS = [
 //     |o     |      |     o|      |
 // 0.0 -----------------------------
 //
-CONSTANTS._FACEINDEXUVS = [
+export const _FACEINDEXUVS = [
   { u: 'z', v: 'y', order: [0, 1, 2, 3], ud: 1, vd: 1, uo: 0.00, vo: 0.00 },
   { u: 'z', v: 'y', order: [3, 2, 1, 0], ud: -1, vd: 1, uo: 0.75, vo: 0.00 },
   { u: 'x', v: 'z', order: [0, 1, 2, 3], ud: 1, vd: 1, uo: 0.75, vo: 0.50 },
@@ -97,7 +95,7 @@ CONSTANTS._FACEINDEXUVS = [
 ]
 
 // Optimization over above
-CONSTANTS._FACEINDEXUV_MULTIPLIERS = [
+export const _FACEINDEXUV_MULTIPLIERS = [
   [[0, 0, 1], [0, 1, 0]],
   [[0, 0, 1], [0, 1, 0]],
   [[1, 0, 0], [0, 0, 1]],
@@ -105,5 +103,3 @@ CONSTANTS._FACEINDEXUV_MULTIPLIERS = [
   [[1, 0, 0], [0, 1, 0]],
   [[1, 0, 0], [0, 1, 0]]
 ]
-
-export default CONSTANTS

@@ -12,7 +12,7 @@ import Simplifier from './simplifier'
 import FaceAligner from './facealigner'
 import { BOUNDS, MODEL, _VERTEX_OFFSETS, _FACEINDEXUV_MULTIPLIERS, _FACES, _NEIGHBORS } from './constants'
 
-import { shiftForSize, xyzRangeForSize } from './voxchunk'
+import { shiftForSize, xyzRangeForSize } from './voxels'
 
 const SORT_NUMBERS = (a, b) => a - b
 

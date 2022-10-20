@@ -1,5 +1,5 @@
 import { SMOOTH, BOTH } from './constants'
-import { xyzRangeForSize } from './voxchunk'
+import { xyzRangeForSize } from './voxels'
 
 export default class NormalsCalculator {
   static calculateNormals (model, buffers) {

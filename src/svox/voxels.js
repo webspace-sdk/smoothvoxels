@@ -29,7 +29,7 @@ const VOX_CHUNK_FILTERS = {
 const RESERVED_PALETTE_INDEXES = 1
 const iPalOpToIPalSnap = new Map()
 
-const shiftForSize = size => Math.floor(size % 2 === 0 ? size / 2 - 1 : size / 2)
+export const shiftForSize = size => Math.floor(size % 2 === 0 ? size / 2 - 1 : size / 2)
 
 export const xyzRangeForSize = size => {
   const [x, y, z] = size
@@ -77,7 +77,7 @@ function createViewsForBitsPerIndex (size, bitsPerIndex, buffer = null) {
   return [buffer, palette, indices]
 }
 
-export default class VoxChunk {
+export default class Voxels {
   constructor (
     size = null,
     paletteBuffer = null,
@@ -194,12 +194,12 @@ export default class VoxChunk {
 
     const currentPaletteIndex = this.getPaletteIndexAtOffset(offset)
 
-    if (VoxChunk.isNonEmptyPaletteIndex(currentPaletteIndex)) {
+    if (Voxels.isNonEmptyPaletteIndex(currentPaletteIndex)) {
       // Is a color, decrement refcount
       this.decrementPaletteRefcount(currentPaletteIndex)
     }
 
-    if (VoxChunk.isNonEmptyPaletteIndex(paletteIndex)) {
+    if (Voxels.isNonEmptyPaletteIndex(paletteIndex)) {
       // Is a color, increment refcount
       this.incrementPaletteRefcount(paletteIndex)
     }
@@ -227,7 +227,7 @@ export default class VoxChunk {
     const { palette, indices } = this
 
     const currentPaletteIndex = this.getPaletteIndexAtOffset(offset)
-    const currentIsColor = VoxChunk.isNonEmptyPaletteIndex(currentPaletteIndex)
+    const currentIsColor = Voxels.isNonEmptyPaletteIndex(currentPaletteIndex)
 
     if (currentIsColor) {
       // Is a color, decrement refcount in palette
@@ -366,7 +366,7 @@ export default class VoxChunk {
     if (this.size[0] >= size[0] && this.size[1] >= size[1] && this.size[2] >= size[2]) return
 
     // Create a new chunk and cpoy this chunk into it.
-    const chunk = new VoxChunk(size)
+    const chunk = new Voxels(size)
     const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(this.size)
 
     for (let x = minX; x <= maxX; x += 1) {
@@ -396,11 +396,11 @@ export default class VoxChunk {
   }
 
   static fromJSON (json) {
-    if (typeof json === 'string') return VoxChunk.deserialize(json)
+    if (typeof json === 'string') return Voxels.deserialize(json)
 
     const { size, palette, indices } = json
     // Slow, only use for tests + debugging
-    const chunk = new VoxChunk(size)
+    const chunk = new Voxels(size)
 
     // Set colors in palette order, so palette ends up matching order specified.
     for (let i = 0; i < palette.length + RESERVED_PALETTE_INDEXES; i += 1) {
@@ -448,7 +448,7 @@ export default class VoxChunk {
   }
 
   clone () {
-    return new VoxChunk(
+    return new Voxels(
       this.size,
       this.palette.buffer.slice(0),
       this.indices.view.buffer.slice(0),
@@ -472,7 +472,7 @@ export default class VoxChunk {
     for (let i = 0, s = this.size[0] * this.size[1] * this.size[2]; i < s; i += 1) {
       const paletteIndex = this.getPaletteIndexAtOffset(i)
 
-      if (VoxChunk.isNonEmptyPaletteIndex(paletteIndex)) {
+      if (Voxels.isNonEmptyPaletteIndex(paletteIndex)) {
         this.incrementPaletteRefcount(paletteIndex)
       }
     }
@@ -578,7 +578,7 @@ export default class VoxChunk {
     const [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize)
 
     const { size } = this
-    const inverse = new VoxChunk(size)
+    const inverse = new Voxels(size)
 
     const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(size)
 

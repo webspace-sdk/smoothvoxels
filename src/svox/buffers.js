@@ -1,6 +1,6 @@
 import Bits from './bits'
 
-export default class SVOXBuffers {
+export default class Buffers {
   constructor (maxVerts) {
     const maxVertBits = Math.floor(maxVerts / 8)
     const maxFaces = maxVerts / 4

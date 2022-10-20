@@ -2,7 +2,7 @@ import Model from './model'
 import Color from './color'
 import Light from './light'
 import BoundingBox from './boundingbox'
-import VoxChunk, { voxColorForRGBT, shiftForSize } from './voxchunk'
+import Voxels, { voxColorForRGBT, shiftForSize } from './voxels'
 
 import { MATSTANDARD, FLAT, QUAD, SMOOTH, BOTH, MATBASIC, FRONT, BOUNDS, MODEL } from './constants.js'
 
@@ -355,7 +355,7 @@ export default class ModelReader {
     // Check the voxel matrix size against the specified size
     const totalSize = model.size.x * model.size.y * model.size.z
     let voxelLength = 0
-    const voxChunk = model.voxChunk = new VoxChunk([model.size.x, model.size.y, model.size.z])
+    const voxChunk = model.voxChunk = new Voxels([model.size.x, model.size.y, model.size.z])
 
     for (let i = 0; i < rleArray.length; i++) {
       voxelLength += rleArray[i][1]

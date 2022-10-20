@@ -1,4 +1,4 @@
-import { xyzRangeForSize } from './voxchunk'
+import { xyzRangeForSize } from './voxels'
 import Noise from './noise'
 
 export default class Deformer {

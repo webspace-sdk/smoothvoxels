@@ -4,7 +4,7 @@ const normalXs = [null, null, null, null]
 const normalYs = [null, null, null, null]
 const normalZs = [null, null, null, null]
 
-export class VertexTransformer {
+export default class VertexTransformer {
   static transformVertices (model, buffers) {
     const { vertX, vertY, vertZ, faceVertNormalX, faceVertFlatNormalX, faceVertNormalY, faceVertFlatNormalY, faceVertNormalZ, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = buffers
     const bor = model.determineBoundsOffsetAndRescale(model.resize, buffers)
