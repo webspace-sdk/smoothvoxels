@@ -3201,7 +3201,7 @@ function renderModel () {
   const container = document.getElementById('container')
   model = render(container, 'a-entity', {
     id: 'model',
-    svox: { model: '__playground', worker: true, workerPath: '../dist/svox.worker.js' },
+    svox: { model: '__playground' },
     shadow: { cast: shadow, receive: shadow }
   })
 }
