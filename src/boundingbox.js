@@ -1,20 +1,18 @@
 class BoundingBox {
-
-  get size() { 
-    if (this.minX > this.maxX)
-      return { x:0, y:0, z:0};
+  get size() {
+    if (this.minX > this.maxX) return { x: 0, y: 0, z: 0 };
     else
       return {
         x: this.maxX - this.minX + 1,
         y: this.maxY - this.minY + 1,
-        z: this.maxZ - this.minZ + 1
+        z: this.maxZ - this.minZ + 1,
       };
   }
-  
+
   constructor() {
     this.reset();
   }
-  
+
   reset() {
     this.minX = Number.POSITIVE_INFINITY;
     this.minY = Number.POSITIVE_INFINITY;
@@ -32,6 +30,6 @@ class BoundingBox {
     this.maxY = Math.max(this.maxY, y);
     this.maxZ = Math.max(this.maxZ, z);
   }
-        
+
   // End of class BoundingBox
 }

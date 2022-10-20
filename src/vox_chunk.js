@@ -21,15 +21,16 @@ const VOX_CHUNK_FILTERS = {
   // Filters out cells in the provided chunk that are not also in the target chunk
   PAINT: 1,
   // Filters out cells in the provided chunk that are in the target chunk
-  KEEP: 2
+  KEEP: 2,
 };
 
 const RESERVED_PALETTE_INDEXES = 1;
 const iPalOpToIPalSnap = new Map();
 
-const shiftForSize = size => Math.floor(size % 2 === 0 ? size / 2 - 1 : size / 2);
+const shiftForSize = (size) =>
+  Math.floor(size % 2 === 0 ? size / 2 - 1 : size / 2);
 
-const xyzRangeForSize = size => {
+const xyzRangeForSize = (size) => {
   const [x, y, z] = size;
   const xShift = shiftForSize(x);
   const yShift = shiftForSize(y);
@@ -92,8 +93,17 @@ class VoxChunk {
       paletteByteLength = paletteByteLength || paletteBuffer.length;
       indicesByteLength = indicesByteLength || indicesBuffer.length;
 
-      this.palette = new Uint32Array(paletteBuffer, paletteOffset || 0, paletteByteLength / 4);
-      this.indices = Bits.create(indicesBuffer, bitsPerIndex, indicesOffset, indicesByteLength);
+      this.palette = new Uint32Array(
+        paletteBuffer,
+        paletteOffset || 0,
+        paletteByteLength / 4
+      );
+      this.indices = Bits.create(
+        indicesBuffer,
+        bitsPerIndex,
+        indicesOffset,
+        indicesByteLength
+      );
       this.xShift = shiftForSize(size[0]);
       this.yShift = shiftForSize(size[1]);
       this.zShift = shiftForSize(size[2]);
@@ -155,11 +165,14 @@ class VoxChunk {
   }
 
   getPaletteColor(idx) {
-    return this.palette[(idx - RESERVED_PALETTE_INDEXES) * PALETTE_ENTRY_SIZE_INTS];
+    return this.palette[
+      (idx - RESERVED_PALETTE_INDEXES) * PALETTE_ENTRY_SIZE_INTS
+    ];
   }
 
   setPaletteColor(idx, color) {
-    this.palette[(idx - RESERVED_PALETTE_INDEXES) * PALETTE_ENTRY_SIZE_INTS] = color;
+    this.palette[(idx - RESERVED_PALETTE_INDEXES) * PALETTE_ENTRY_SIZE_INTS] =
+      color;
   }
 
   paletteHasReferences(idx) {
@@ -267,14 +280,23 @@ class VoxChunk {
   }
 
   colorForPaletteIndex(idx) {
-    return this.palette[(idx - RESERVED_PALETTE_INDEXES) * PALETTE_ENTRY_SIZE_INTS];
+    return this.palette[
+      (idx - RESERVED_PALETTE_INDEXES) * PALETTE_ENTRY_SIZE_INTS
+    ];
   }
 
   filterByChunk(targetChunk, offsetX, offsetY, offsetZ, filter) {
     if (filter === VOX_CHUNK_FILTERS.NONE) return;
 
     const targetSize = targetChunk.size;
-    const [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize);
+    const [
+      targetMinX,
+      targetMaxX,
+      targetMinY,
+      targetMaxY,
+      targetMinZ,
+      targetMaxZ,
+    ] = xyzRangeForSize(targetSize);
 
     const { size } = this;
 
@@ -299,7 +321,9 @@ class VoxChunk {
             targetZ > targetMaxZ ||
             targetZ < targetMinZ;
 
-          const targetHasVoxel = !targetOutOfRange && targetChunk.hasVoxelAt(targetX, targetY, targetZ);
+          const targetHasVoxel =
+            !targetOutOfRange &&
+            targetChunk.hasVoxelAt(targetX, targetY, targetZ);
 
           if (
             (filter === VOX_CHUNK_FILTERS.PAINT && !targetHasVoxel) ||
@@ -325,7 +349,10 @@ class VoxChunk {
 
     // Couldn't find one. Grow the buffer. Prefer bits per index power of 2.
     const newBitsPerIndex = bitsPerIndex * 2;
-    const [newBuffer, newPalette, newIndices] = createViewsForBitsPerIndex(size, newBitsPerIndex);
+    const [newBuffer, newPalette, newIndices] = createViewsForBitsPerIndex(
+      size,
+      newBitsPerIndex
+    );
 
     for (let i = 0; i < palette.length * PALETTE_ENTRY_SIZE_INTS; i += 1) {
       newPalette[i] = palette[i];
@@ -361,7 +388,12 @@ class VoxChunk {
 
   // Resizes this chunk to the specified size.
   resizeTo(size) {
-    if (this.size[0] >= size[0] && this.size[1] >= size[1] && this.size[2] >= size[2]) return;
+    if (
+      this.size[0] >= size[0] &&
+      this.size[1] >= size[1] &&
+      this.size[2] >= size[2]
+    )
+      return;
 
     // Create a new chunk and cpoy this chunk into it.
     const chunk = new VoxChunk(size);
@@ -385,7 +417,11 @@ class VoxChunk {
     const { bitsPerIndex } = chunk;
     this.bitsPerIndex = bitsPerIndex;
 
-    const [, palette, indices] = createViewsForBitsPerIndex(size, bitsPerIndex, buffer);
+    const [, palette, indices] = createViewsForBitsPerIndex(
+      size,
+      bitsPerIndex,
+      buffer
+    );
 
     this.palette = palette;
     this.indices = indices;
@@ -434,14 +470,18 @@ class VoxChunk {
       }
     }
 
-    for (let i = 0, s = this.size[0] * this.size[1] * this.size[2]; i < s; i += 1) {
+    for (
+      let i = 0, s = this.size[0] * this.size[1] * this.size[2];
+      i < s;
+      i += 1
+    ) {
       indices.push(this.indices.get(i));
     }
 
     return {
       size: [...this.size],
       palette,
-      indices
+      indices,
     };
   }
 
@@ -461,13 +501,19 @@ class VoxChunk {
   _getOffset(x, y, z) {
     const { size, xShift, yShift, zShift } = this;
 
-    return (x + xShift) * size[1] * size[2] + (y + yShift) * size[2] + (z + zShift);
+    return (
+      (x + xShift) * size[1] * size[2] + (y + yShift) * size[2] + (z + zShift)
+    );
   }
 
   _rebuildRefCounts() {
     this._refCounts = new Array(this.palette.length).fill(0);
 
-    for (let i = 0, s = this.size[0] * this.size[1] * this.size[2]; i < s; i += 1) {
+    for (
+      let i = 0, s = this.size[0] * this.size[1] * this.size[2];
+      i < s;
+      i += 1
+    ) {
       const paletteIndex = this.getPaletteIndexAtOffset(i);
 
       if (VoxChunk.isNonEmptyPaletteIndex(paletteIndex)) {
@@ -480,7 +526,14 @@ class VoxChunk {
     iPalOpToIPalSnap.clear();
 
     let targetSize = targetChunk.size;
-    let [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize);
+    let [
+      targetMinX,
+      targetMaxX,
+      targetMinY,
+      targetMaxY,
+      targetMinZ,
+      targetMaxZ,
+    ] = xyzRangeForSize(targetSize);
 
     const { size } = this;
 
@@ -528,15 +581,34 @@ class VoxChunk {
             }
 
             // If target is beyond bounds (ie, user submitted a voxel beyond range) skip it.
-            if (requiredSizeX > MAX_SIZE || requiredSizeY > MAX_SIZE || requiredSizeZ > MAX_SIZE) {
+            if (
+              requiredSizeX > MAX_SIZE ||
+              requiredSizeY > MAX_SIZE ||
+              requiredSizeZ > MAX_SIZE
+            ) {
               continue; // eslint-disable-line
             }
 
-            if (targetSize[0] < requiredSizeX || targetSize[1] < requiredSizeY || targetSize[2] < requiredSizeZ) {
-              targetChunk.resizeTo([requiredSizeX, requiredSizeY, requiredSizeZ]);
+            if (
+              targetSize[0] < requiredSizeX ||
+              targetSize[1] < requiredSizeY ||
+              targetSize[2] < requiredSizeZ
+            ) {
+              targetChunk.resizeTo([
+                requiredSizeX,
+                requiredSizeY,
+                requiredSizeZ,
+              ]);
               targetSize = targetChunk.size;
 
-              [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize);
+              [
+                targetMinX,
+                targetMaxX,
+                targetMinY,
+                targetMaxY,
+                targetMinZ,
+                targetMaxZ,
+              ] = xyzRangeForSize(targetSize);
 
               // Palette may have been re-written in resize, clear cache.
               iPalOpToIPalSnap.clear();
@@ -552,15 +624,29 @@ class VoxChunk {
                 targetChunk.setEmptyAt(targetX, targetY, targetZ);
               } else {
                 // Otherwise, set the color and potentially expand target palette.
-                const iPalSnap = targetChunk.setColorAt(targetX, targetY, targetZ, color);
+                const iPalSnap = targetChunk.setColorAt(
+                  targetX,
+                  targetY,
+                  targetZ,
+                  color
+                );
 
                 iPalOpToIPalSnap.set(iPalOp, iPalSnap);
               }
             } else {
-              const currentIPalSnap = targetChunk.getPaletteIndexAt(targetX, targetY, targetZ);
+              const currentIPalSnap = targetChunk.getPaletteIndexAt(
+                targetX,
+                targetY,
+                targetZ
+              );
 
               if (currentIPalSnap !== newIPalSnap) {
-                targetChunk.setPaletteIndexAt(targetX, targetY, targetZ, newIPalSnap);
+                targetChunk.setPaletteIndexAt(
+                  targetX,
+                  targetY,
+                  targetZ,
+                  newIPalSnap
+                );
               }
             }
           }
@@ -569,11 +655,18 @@ class VoxChunk {
     }
   }
 
-  createInverse = (targetChunk, offset) => {
+  createInverse(targetChunk, offset) {
     iPalOpToIPalSnap.clear();
 
     const targetSize = targetChunk.size;
-    const [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize);
+    const [
+      targetMinX,
+      targetMaxX,
+      targetMinY,
+      targetMaxY,
+      targetMinZ,
+      targetMaxZ,
+    ] = xyzRangeForSize(targetSize);
 
     const { size } = this;
     const inverse = new VoxChunk(size);
@@ -603,7 +696,11 @@ class VoxChunk {
           ) {
             inverse.setColorAt(x, y, z, REMOVE_VOXEL_COLOR);
           } else {
-            const currentColor = targetChunk.getColorAt(targetX, targetY, targetZ);
+            const currentColor = targetChunk.getColorAt(
+              targetX,
+              targetY,
+              targetZ
+            );
             inverse.setColorAt(x, y, z, currentColor);
           }
         }
@@ -611,7 +708,7 @@ class VoxChunk {
     }
 
     return inverse;
-  };
+  }
 
   // Given the target chunk, merge this chunk with it, where the merge operation resolves cell-level
   // conflicts by removing voxels of this patch. If targetAlwaysWins is true, then any voxel in the target
@@ -627,7 +724,14 @@ class VoxChunk {
     const offsetZ = targetOffset[2] - offset[2];
 
     const targetSize = targetChunk.size;
-    const [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize);
+    const [
+      targetMinX,
+      targetMaxX,
+      targetMinY,
+      targetMaxY,
+      targetMinZ,
+      targetMaxZ,
+    ] = xyzRangeForSize(targetSize);
 
     const { size } = this;
 
@@ -651,18 +755,29 @@ class VoxChunk {
             targetZ > targetMaxZ ||
             targetZ < targetMinZ;
 
-          const targetHasVoxel = !targetOutOfRange && targetChunk.hasVoxelAt(targetX, targetY, targetZ);
+          const targetHasVoxel =
+            !targetOutOfRange &&
+            targetChunk.hasVoxelAt(targetX, targetY, targetZ);
 
           // If the target doesn't have a voxel here, no chance of a conflict
           if (!targetHasVoxel) continue;
 
           // Conflict, take the higher cell, checking the cache if we already have a winner.
           if (thisPalIndexToWinPalIndex.has(thisPaletteIndex)) {
-            this.setPaletteIndexAt(x, y, z, thisPalIndexToWinPalIndex.get(thisPaletteIndex));
+            this.setPaletteIndexAt(
+              x,
+              y,
+              z,
+              thisPalIndexToWinPalIndex.get(thisPaletteIndex)
+            );
           } else {
             // We tie break on the highest color between the two. If the other one has a higher color, then
             // just remove this voxel from this patch.
-            if (targetAlwaysWins || targetChunk.getColorAt(targetX, targetY, targetZ) > this.getColorAt(x, y, z)) {
+            if (
+              targetAlwaysWins ||
+              targetChunk.getColorAt(targetX, targetY, targetZ) >
+                this.getColorAt(x, y, z)
+            ) {
               this.removeVoxelAt(x, y, z);
             }
 
@@ -689,6 +804,6 @@ function rgbtForVoxColor(voxColor) {
     r,
     g,
     b,
-    t
+    t,
   };
 }

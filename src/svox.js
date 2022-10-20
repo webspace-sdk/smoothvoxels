@@ -1,0 +1,160 @@
+var SVOX = {
+  clampColors: false,
+  models: {},
+};
+
+// Material type constants
+SVOX.MATSTANDARD = "standard";
+SVOX.MATBASIC = "basic";
+SVOX.MATLAMBERT = "lambert";
+SVOX.MATPHONG = "phong";
+SVOX.MATMATCAP = "matcap";
+SVOX.MATTOON = "toon";
+SVOX.MATNORMAL = "normal";
+
+// Material resize constants
+SVOX.BOUNDS = "bounds"; // Resize the bounds to fit the model
+SVOX.MODEL = "model"; // Resize the model to fit the bounds
+
+// Material lighting constants
+SVOX.FLAT = "flat"; // Flat shaded triangles
+SVOX.QUAD = "quad"; // Flat shaded quads
+SVOX.SMOOTH = "smooth"; // Smooth shaded triangles
+SVOX.BOTH = "both"; // Smooth shaded, but flat shaded clamped / flattened
+
+// Material side constants
+SVOX.FRONT = "front"; // Show only front side of the material
+SVOX.BACK = "back"; // Show only back side of the material
+SVOX.DOUBLE = "double"; // Show both sides of the material
+
+SVOX._FACES = ["nx", "px", "ny", "py", "nz", "pz"];
+
+// Vertex numbering per side.
+// The shared vertices for side nx (negative x) and pz (positive z) indicated as example:
+//
+//           --------
+//           |1    2|
+//           |  py  |
+//           |0    3|
+//    -----------------------------
+//    |1   [2|1]   2|1    2|1    2|    nx shares vertext 2 & 3
+//    |  nx  |  pz  |  px  |  nz  |
+//    |0   [3|0]   3|0    3|0    3|    with vertex 1 & 0 of pz
+//    -----------------------------
+//           |1    2|
+//           |  ny  |
+//           |0    3|
+//           --------
+
+// Define the vertex offsets for each side.
+
+SVOX._VERTEX_OFFSETS = [
+  // nx
+  [
+    [0, 0, 0],
+    [0, 1, 0],
+    [0, 1, 1],
+    [0, 0, 1],
+  ],
+  // px
+  [
+    [1, 0, 1],
+    [1, 1, 1],
+    [1, 1, 0],
+    [1, 0, 0],
+  ],
+  // ny
+  [
+    [0, 0, 0],
+    [0, 0, 1],
+    [1, 0, 1],
+    [1, 0, 0],
+  ],
+  // py
+  [
+    [0, 1, 1],
+    [0, 1, 0],
+    [1, 1, 0],
+    [1, 1, 1],
+  ],
+  // nz
+  [
+    [1, 0, 0],
+    [1, 1, 0],
+    [0, 1, 0],
+    [0, 0, 0],
+  ],
+  // pz
+  [
+    [0, 0, 1],
+    [0, 1, 1],
+    [1, 1, 1],
+    [1, 0, 1],
+  ],
+];
+
+// Define the neighbor voxels for each face
+SVOX._NEIGHBORS = [
+  [-1, 0, 0], // nx
+  [+1, 0, 0], // px
+  [0, -1, 0], // ny
+  [0, +1, 0], // py
+  [0, 0, -1], // nz
+  [0, 0, +1], // pz
+];
+
+// Define the uv's for each face
+// Textures can be shown on all sides of all voxels (allows scaling and rotating)
+// Or a textures with the layout below can be projected on all model sides (no scaling or rotating allowed)
+// NOTE: To cover a model, ensure that the model fits the voxel matrix, i.e has no empty voxels next to it
+//       (export the model to remove unused space).
+//
+//    0.0   0.25    0.5    0.75   1.0
+// 1.0 -----------------------------
+//     |      |o     |      |      |
+//     |      |  py  |      |  ny  |
+//     |      |      |      |o     |
+// 0.5 -----------------------------
+//     |      |      |      |      |
+//     |  nx  |  pz  |  px  |  nz  |
+//     |o     |      |     o|      |
+// 0.0 -----------------------------
+//
+SVOX._FACEINDEXUVS = [
+  { u: "z", v: "y", order: [0, 1, 2, 3], ud: 1, vd: 1, uo: 0.0, vo: 0.0 },
+  { u: "z", v: "y", order: [3, 2, 1, 0], ud: -1, vd: 1, uo: 0.75, vo: 0.0 },
+  { u: "x", v: "z", order: [0, 1, 2, 3], ud: 1, vd: 1, uo: 0.75, vo: 0.5 },
+  { u: "x", v: "z", order: [1, 0, 3, 2], ud: 1, vd: -1, uo: 0.25, vo: 1.0 },
+  { u: "x", v: "y", order: [3, 2, 1, 0], ud: -1, vd: 1, uo: 1.0, vo: 0.0 },
+  { u: "x", v: "y", order: [0, 1, 2, 3], ud: 1, vd: 1, uo: 0.25, vo: 0.0 },
+];
+
+// Optimization over above
+SVOX._FACEINDEXUV_MULTIPLIERS = [
+  [
+    [0, 0, 1],
+    [0, 1, 0],
+  ],
+  [
+    [0, 0, 1],
+    [0, 1, 0],
+  ],
+  [
+    [1, 0, 0],
+    [0, 0, 1],
+  ],
+  [
+    [1, 0, 0],
+    [0, 0, 1],
+  ],
+  [
+    [1, 0, 0],
+    [0, 1, 0],
+  ],
+  [
+    [1, 0, 0],
+    [0, 1, 0],
+  ],
+];
+
+const EPS = 0.0001;

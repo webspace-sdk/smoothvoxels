@@ -1,12 +1,43 @@
 class NormalsCalculator {
- 
   static calculateNormals(model, buffers) {
     let tile = model.tile;
     let voxels = model.voxels;
 
-    const { faceNameIndices, faceSkipped, faceEquidistant, faceSmooth, faceFlattened, faceClamped, vertX, vertY, vertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertSmoothNormalX, vertSmoothNormalY, vertSmoothNormalZ, vertBothNormalX, vertBothNormalY, vertBothNormalZ } = buffers;
+    const {
+      faceNameIndices,
+      faceSkipped,
+      faceEquidistant,
+      faceSmooth,
+      faceFlattened,
+      faceClamped,
+      vertX,
+      vertY,
+      vertZ,
+      faceVertFlatNormalX,
+      faceVertFlatNormalY,
+      faceVertFlatNormalZ,
+      faceVertSmoothNormalX,
+      faceVertSmoothNormalY,
+      faceVertSmoothNormalZ,
+      faceVertBothNormalX,
+      faceVertBothNormalY,
+      faceVertBothNormalZ,
+      faceVertNormalX,
+      faceVertNormalY,
+      faceVertNormalZ,
+      faceMaterials,
+      faceVertIndices,
+      vertSmoothNormalX,
+      vertSmoothNormalY,
+      vertSmoothNormalZ,
+      vertBothNormalX,
+      vertBothNormalY,
+      vertBothNormalZ,
+    } = buffers;
 
-    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(model.voxChunk.size);
+    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(
+      model.voxChunk.size
+    );
 
     // Zero out smooth + both normals because buffers may be re-rused
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
@@ -40,9 +71,24 @@ class NormalsCalculator {
       const vert3Index = faceVertIndices[faceIndex * 4 + 2];
       const vert4Index = faceVertIndices[faceIndex * 4 + 3];
 
-      const vmidX = (vertX[vert1Index] + vertX[vert2Index] + vertX[vert3Index] + vertX[vert4Index]) / 4;
-      const vmidY = (vertY[vert1Index] + vertY[vert2Index] + vertY[vert3Index] + vertY[vert4Index]) / 4;
-      const vmidZ = (vertZ[vert1Index] + vertZ[vert2Index] + vertZ[vert3Index] + vertZ[vert4Index]) / 4;
+      const vmidX =
+        (vertX[vert1Index] +
+          vertX[vert2Index] +
+          vertX[vert3Index] +
+          vertX[vert4Index]) /
+        4;
+      const vmidY =
+        (vertY[vert1Index] +
+          vertY[vert2Index] +
+          vertY[vert3Index] +
+          vertY[vert4Index]) /
+        4;
+      const vmidZ =
+        (vertZ[vert1Index] +
+          vertZ[vert2Index] +
+          vertZ[vert3Index] +
+          vertZ[vert4Index]) /
+        4;
 
       for (let v = 0; v < 4; v++) {
         const vertIndex = faceVertIndices[faceIndex * 4 + v];
@@ -105,25 +151,45 @@ class NormalsCalculator {
 
         // In case of tiling, make normals peripendicular on edges
         if (tile) {
-          if (((tile.nx && faceNameIndex === 0) || (tile.px && faceNameIndex === 1)) &&
-              (vY < voxMinYBuf || vY > voxMaxYBuf ||
-               vZ < voxMinZBuf || vZ > voxMaxZBuf)) { 
-            normalY = 0; normalZ = 0 
-          };
-          if (((tile.ny && faceNameIndex === 2) || (tile.py && faceNameIndex === 3)) &&
-              (vX < voxMinXBuf || vX > voxMaxXBuf ||
-               vZ < voxMinZBuf || vZ > voxMaxZBuf)) { 
-            normalX = 0; normalZ = 0 
-          };
-          if (((tile.nz && faceNameIndex === 4) || (tile.pz && faceNameIndex === 5)) &&
-              (vertex.x < voxMinXBuf || vertex.x > voxMaxXBuf ||
-               vertex.y < voxMinYBuf || vertex.y > voxMaxYBuf)) { 
-            normalX = 0; normalY = 0 
-          };
+          if (
+            ((tile.nx && faceNameIndex === 0) ||
+              (tile.px && faceNameIndex === 1)) &&
+            (vY < voxMinYBuf ||
+              vY > voxMaxYBuf ||
+              vZ < voxMinZBuf ||
+              vZ > voxMaxZBuf)
+          ) {
+            normalY = 0;
+            normalZ = 0;
+          }
+          if (
+            ((tile.ny && faceNameIndex === 2) ||
+              (tile.py && faceNameIndex === 3)) &&
+            (vX < voxMinXBuf ||
+              vX > voxMaxXBuf ||
+              vZ < voxMinZBuf ||
+              vZ > voxMaxZBuf)
+          ) {
+            normalX = 0;
+            normalZ = 0;
+          }
+          if (
+            ((tile.nz && faceNameIndex === 4) ||
+              (tile.pz && faceNameIndex === 5)) &&
+            (vertex.x < voxMinXBuf ||
+              vertex.x > voxMaxXBuf ||
+              vertex.y < voxMinYBuf ||
+              vertex.y > voxMaxYBuf)
+          ) {
+            normalX = 0;
+            normalY = 0;
+          }
         }
-        
+
         // Normalize normal
-        let nl = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
+        let nl = Math.sqrt(
+          normalX * normalX + normalY * normalY + normalZ * normalZ
+        );
         nl = nl === 0 ? 1 : nl;
 
         const nd = 1 / nl;
@@ -171,7 +237,9 @@ class NormalsCalculator {
       const bothY = vertBothNormalY[vertIndex];
       const bothZ = vertBothNormalZ[vertIndex];
 
-      let sl = Math.sqrt(smoothX * smoothX + smoothY * smoothY + smoothZ * smoothZ);
+      let sl = Math.sqrt(
+        smoothX * smoothX + smoothY * smoothY + smoothZ * smoothZ
+      );
       let bl = Math.sqrt(bothX * bothX + bothY * bothY + bothZ * bothZ);
 
       if (sl !== 0) {
@@ -197,33 +265,53 @@ class NormalsCalculator {
       for (let i = 0; i < 4; i++) {
         const faceVertNormalIndex = faceIndex * 4 + i;
         const vertIndex = faceVertIndices[faceIndex * 4 + i];
-        faceVertSmoothNormalX[faceVertNormalIndex] = vertSmoothNormalX[vertIndex];
-        faceVertSmoothNormalY[faceVertNormalIndex] = vertSmoothNormalY[vertIndex];
-        faceVertSmoothNormalZ[faceVertNormalIndex] = vertSmoothNormalZ[vertIndex];
+        faceVertSmoothNormalX[faceVertNormalIndex] =
+          vertSmoothNormalX[vertIndex];
+        faceVertSmoothNormalY[faceVertNormalIndex] =
+          vertSmoothNormalY[vertIndex];
+        faceVertSmoothNormalZ[faceVertNormalIndex] =
+          vertSmoothNormalZ[vertIndex];
 
-        faceVertBothNormalX[faceVertNormalIndex] = !isSmooth || vertBothNormalX[vertIndex] === 0 ? faceVertFlatNormalX[faceVertNormalIndex] : vertBothNormalX[vertIndex];
-        faceVertBothNormalY[faceVertNormalIndex] = !isSmooth || vertBothNormalY[vertIndex] === 0 ? faceVertFlatNormalY[faceVertNormalIndex] : vertBothNormalY[vertIndex];
-        faceVertBothNormalZ[faceVertNormalIndex] = !isSmooth || vertBothNormalZ[vertIndex] === 0 ? faceVertFlatNormalZ[faceVertNormalIndex] : vertBothNormalZ[vertIndex];
+        faceVertBothNormalX[faceVertNormalIndex] =
+          !isSmooth || vertBothNormalX[vertIndex] === 0
+            ? faceVertFlatNormalX[faceVertNormalIndex]
+            : vertBothNormalX[vertIndex];
+        faceVertBothNormalY[faceVertNormalIndex] =
+          !isSmooth || vertBothNormalY[vertIndex] === 0
+            ? faceVertFlatNormalY[faceVertNormalIndex]
+            : vertBothNormalY[vertIndex];
+        faceVertBothNormalZ[faceVertNormalIndex] =
+          !isSmooth || vertBothNormalZ[vertIndex] === 0
+            ? faceVertFlatNormalZ[faceVertNormalIndex]
+            : vertBothNormalZ[vertIndex];
 
         switch (material.lighting) {
           case SVOX.SMOOTH:
-            faceVertNormalX[faceVertNormalIndex] = faceVertSmoothNormalX[faceVertNormalIndex];
-            faceVertNormalY[faceVertNormalIndex] = faceVertSmoothNormalY[faceVertNormalIndex];
-            faceVertNormalZ[faceVertNormalIndex] = faceVertSmoothNormalZ[faceVertNormalIndex];
+            faceVertNormalX[faceVertNormalIndex] =
+              faceVertSmoothNormalX[faceVertNormalIndex];
+            faceVertNormalY[faceVertNormalIndex] =
+              faceVertSmoothNormalY[faceVertNormalIndex];
+            faceVertNormalZ[faceVertNormalIndex] =
+              faceVertSmoothNormalZ[faceVertNormalIndex];
             break;
           case SVOX.BOTH:
-            faceVertNormalX[faceVertNormalIndex] = faceVertBothNormalX[faceVertNormalIndex];
-            faceVertNormalY[faceVertNormalIndex] = faceVertBothNormalY[faceVertNormalIndex];
-            faceVertNormalZ[faceVertNormalIndex] = faceVertBothNormalZ[faceVertNormalIndex];
+            faceVertNormalX[faceVertNormalIndex] =
+              faceVertBothNormalX[faceVertNormalIndex];
+            faceVertNormalY[faceVertNormalIndex] =
+              faceVertBothNormalY[faceVertNormalIndex];
+            faceVertNormalZ[faceVertNormalIndex] =
+              faceVertBothNormalZ[faceVertNormalIndex];
             break;
           default:
-            faceVertNormalX[faceVertNormalIndex] = faceVertFlatNormalX[faceVertNormalIndex];
-            faceVertNormalY[faceVertNormalIndex] = faceVertFlatNormalY[faceVertNormalIndex];
-            faceVertNormalZ[faceVertNormalIndex] = faceVertFlatNormalZ[faceVertNormalIndex];
+            faceVertNormalX[faceVertNormalIndex] =
+              faceVertFlatNormalX[faceVertNormalIndex];
+            faceVertNormalY[faceVertNormalIndex] =
+              faceVertFlatNormalY[faceVertNormalIndex];
+            faceVertNormalZ[faceVertNormalIndex] =
+              faceVertFlatNormalZ[faceVertNormalIndex];
             break;
         }
       }
     }
-  }  
+  }
 }
-

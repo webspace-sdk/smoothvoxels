@@ -1,14 +1,20 @@
 class LightsCalculator {
-  
   static calculateLights(model, buffers) {
     let lights = model.lights;
-    if (lights.length === 0)
-      return;
-    
+    if (lights.length === 0) return;
+
     for (const light of lights) {
       if (light.direction && !light.normalizedDirection) {
-        let length = Math.sqrt( light.direction.x * light.direction.x + light.direction.y * light.direction.y + light.direction.z * light.direction.z );
-        light.normalizedDirection = { x: light.direction.x, y: light.direction.y, z: light.direction.z };
+        let length = Math.sqrt(
+          light.direction.x * light.direction.x +
+            light.direction.y * light.direction.y +
+            light.direction.z * light.direction.z
+        );
+        light.normalizedDirection = {
+          x: light.direction.x,
+          y: light.direction.y,
+          z: light.direction.z,
+        };
 
         if (length > 0) {
           const d = 1.0 / length;
@@ -19,7 +25,22 @@ class LightsCalculator {
 
     const materials = model.materials.materials;
 
-    const { faceMaterials, faceNameIndices, faceVertUs, faceVertVs, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceVertIndices, vertX, vertY, vertZ, faceVertLightR, faceVertLightG, faceVertLightB  } = buffers;
+    const {
+      faceMaterials,
+      faceNameIndices,
+      faceVertUs,
+      faceVertVs,
+      faceVertNormalX,
+      faceVertNormalY,
+      faceVertNormalZ,
+      faceVertIndices,
+      vertX,
+      vertY,
+      vertZ,
+      faceVertLightR,
+      faceVertLightG,
+      faceVertLightB,
+    } = buffers;
 
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       const material = materials[faceMaterials[faceIndex]];
@@ -51,7 +72,8 @@ class LightsCalculator {
           faceVertLightB[faceVertOffset] = 0;
 
           for (const light of lights) {
-            const { color, strength, distance, normalizedDirection, position } = light;
+            const { color, strength, distance, normalizedDirection, position } =
+              light;
 
             let exposure = strength;
 
@@ -65,12 +87,18 @@ class LightsCalculator {
               length = Math.sqrt(lvx * lvx + lvy * lvy + lvz * lvz);
               const d = 1.0 / length;
 
-              exposure = strength * Math.max(nx*lvx*d + ny*lvy*d + nz*lvz*d, 0.0);
+              exposure =
+                strength *
+                Math.max(nx * lvx * d + ny * lvy * d + nz * lvz * d, 0.0);
             } else if (normalizedDirection) {
-              exposure = strength * 
-                         Math.max(nx*normalizedDirection.x + 
-                                  ny*normalizedDirection.y + 
-                                  nz*normalizedDirection.z, 0.0);
+              exposure =
+                strength *
+                Math.max(
+                  nx * normalizedDirection.x +
+                    ny * normalizedDirection.y +
+                    nz * normalizedDirection.z,
+                  0.0
+                );
             }
 
             if (position && distance) {
@@ -84,7 +112,5 @@ class LightsCalculator {
         }
       }
     }
-  } 
-
+  }
 }
-

@@ -1,7 +1,12 @@
 class VertexLinker {
-  
   static linkVertices(model, buffers, faceIndex) {
-    const { faceClamped, vertNrOfClampedLinks, faceVertIndices, vertLinkIndices, vertLinkCounts } = buffers;
+    const {
+      faceClamped,
+      vertNrOfClampedLinks,
+      faceVertIndices,
+      vertLinkIndices,
+      vertLinkCounts,
+    } = buffers;
 
     const clamped = faceClamped.get(faceIndex);
 
@@ -24,7 +29,8 @@ class VertexLinker {
         }
 
         if (!hasSelfLink) {
-          vertLinkIndices[vertIndex * 6 + vertLinkCounts[vertIndex]] = vertIndex;
+          vertLinkIndices[vertIndex * 6 + vertLinkCounts[vertIndex]] =
+            vertIndex;
           vertLinkCounts[vertIndex]++;
           vertNrOfClampedLinks[vertIndex]++;
         }
@@ -33,7 +39,7 @@ class VertexLinker {
       // Link each vertex with its neighbor and back (so not diagonally)
       for (let v = 0; v < 4; v++) {
         const vertIndexFrom = faceVertIndices[faceIndex * 4 + v];
-        const vertIndexTo = faceVertIndices[faceIndex * 4 + (v + 1) % 4];
+        const vertIndexTo = faceVertIndices[faceIndex * 4 + ((v + 1) % 4)];
 
         let hasForwardLink = false;
 
@@ -45,7 +51,8 @@ class VertexLinker {
         }
 
         if (!hasForwardLink) {
-          vertLinkIndices[vertIndexFrom * 6 + vertLinkCounts[vertIndexFrom]] = vertIndexTo;
+          vertLinkIndices[vertIndexFrom * 6 + vertLinkCounts[vertIndexFrom]] =
+            vertIndexTo;
           vertLinkCounts[vertIndexFrom]++;
         }
 
@@ -59,22 +66,46 @@ class VertexLinker {
         }
 
         if (!hasBackwardLink) {
-          vertLinkIndices[vertIndexTo * 6 + vertLinkCounts[vertIndexTo]] = vertIndexFrom;
+          vertLinkIndices[vertIndexTo * 6 + vertLinkCounts[vertIndexTo]] =
+            vertIndexFrom;
           vertLinkCounts[vertIndexTo]++;
         }
       }
     }
-
   }
-  
+
   static fixClampedLinks(model, buffers) {
-    const { faceNameIndices, faceEquidistant, faceSmooth, faceFlattened, faceClamped, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertNrOfClampedLinks, vertFullyClamped, vertLinkCounts, vertLinkIndices } = buffers;
+    const {
+      faceNameIndices,
+      faceEquidistant,
+      faceSmooth,
+      faceFlattened,
+      faceClamped,
+      faceVertFlatNormalX,
+      faceVertFlatNormalY,
+      faceVertFlatNormalZ,
+      faceVertSmoothNormalX,
+      faceVertSmoothNormalY,
+      faceVertSmoothNormalZ,
+      faceVertBothNormalX,
+      faceVertBothNormalY,
+      faceVertBothNormalZ,
+      faceVertNormalX,
+      faceVertNormalY,
+      faceVertNormalZ,
+      faceMaterials,
+      faceVertIndices,
+      vertNrOfClampedLinks,
+      vertFullyClamped,
+      vertLinkCounts,
+      vertLinkIndices,
+    } = buffers;
 
     // Clamped sides are ignored when deforming so the clamped side does not pull in the other sodes.
     // This results in the other sides ending up nice and peripendicular to the clamped sides.
     // However, this als makes all of the vertices of the clamped side not deform.
     // This then results in the corners of these sides sticking out sharply with high deform counts.
-    
+
     // Find all vertices that are fully clamped (i.e. not at the edge of the clamped side)
     for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
       const nrOfClampedLinks = vertNrOfClampedLinks[vertIndex];
@@ -90,7 +121,7 @@ class VertexLinker {
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
       for (let v = 0; v < 4; v++) {
         const vertIndexFrom = faceVertIndices[faceIndex * 4 + v];
-        const vertIndexTo = faceVertIndices[faceIndex * 4 + (v + 1) % 4];
+        const vertIndexTo = faceVertIndices[faceIndex * 4 + ((v + 1) % 4)];
 
         if (vertFullyClamped.get(vertIndexFrom) === 1) {
           let hasForwardLink = false;
@@ -103,7 +134,8 @@ class VertexLinker {
           }
 
           if (!hasForwardLink) {
-            vertLinkIndices[vertIndexFrom * 6 + vertLinkCounts[vertIndexFrom]] = vertIndexTo;
+            vertLinkIndices[vertIndexFrom * 6 + vertLinkCounts[vertIndexFrom]] =
+              vertIndexTo;
             vertLinkCounts[vertIndexFrom]++;
           }
         }
@@ -119,11 +151,12 @@ class VertexLinker {
           }
 
           if (!hasBackwardLink) {
-            vertLinkIndices[vertIndexTo * 6 + vertLinkCounts[vertIndexTo]] = vertIndexFrom;
+            vertLinkIndices[vertIndexTo * 6 + vertLinkCounts[vertIndexTo]] =
+              vertIndexFrom;
             vertLinkCounts[vertIndexTo]++;
           }
         }
       }
     }
-  }   
+  }
 }
