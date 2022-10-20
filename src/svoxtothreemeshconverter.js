@@ -212,10 +212,7 @@ export default class SvoxToThreeMeshConverter {
         break
 
       default: {
-        throw {
-          name: 'SyntaxError',
-          message: `Unknown material type '${type}'.`
-        }
+        throw new Error(`SyntaxError: Unknown material type ${type}`)
       }
     }
 
