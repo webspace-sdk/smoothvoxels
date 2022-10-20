@@ -7,7 +7,6 @@ import Buffers from './buffers'
 const buffers = new Buffers(1024 * 1024)
 
 onmessage = function (event) { // eslint-disable-line
-  console.log('got message')
   const svoxmesh = generateModel(event.data.svoxmodel)
   postMessage({ svoxmesh, elementId: event.data.elementId, worker: event.data.worker })
 }
