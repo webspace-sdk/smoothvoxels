@@ -344,7 +344,6 @@ export default class ModelReader {
       const regex = /[0-9]+|[A-Z][a-z]*|-+|[()]/g
       let chunk
       while ((chunk = regex.exec(voxels)) !== null) {
-        console.log(chunk)
         chunks.push(chunk)
       }
       chunks = chunks[Symbol.iterator]()

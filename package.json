@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "build": "node scripts/build.js --production"
+    "build": "node scripts/build.mjs --production"
   },
   "repository": {
     "type": "git",
@@ -19,6 +19,7 @@
   "homepage": "https://github.com/jel-app/svox#readme",
   "devDependencies": {
     "esbuild": "^0.14.54",
+    "esbuild-plugin-inline-worker": "^0.1.1",
     "prettier": "^2.7.1",
     "prettier-standard": "^15.0.1",
     "standard": "^17.0.0",

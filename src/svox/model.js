@@ -118,7 +118,7 @@ export default class Model {
     this.faceCount = 0
     this.vertCount = 0
 
-    let t0 = performance.now()
+    // let t0 = performance.now()
 
     const allowDeform = maximumDeformCount > 0
     const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(voxChunk.size)
@@ -177,12 +177,11 @@ export default class Model {
       }
     }
 
-    console.log('createFaces: ' + (performance.now() - t0))
+    // console.log('createFaces: ' + (performance.now() - t0))
 
     this.nonCulledFaceCount = this.faceCount
     tmpVertIndexLookup.clear()
 
-    console.log(this)
     // Sort ordered faces, used for simplifier
     // NOTE this is a memory allocation we take on. Using bigint buffers was too slow.
     buffers.voxelXZYFaceIndices = tmpVoxelXZYFaceIndices.slice(0, this.faceCount)
@@ -192,51 +191,50 @@ export default class Model {
     buffers.voxelXYZFaceIndices.sort(SORT_NUMBERS)
     buffers.voxelYZXFaceIndices.sort(SORT_NUMBERS)
 
-    t0 = performance.now()
+    // t0 = performance.now()
     VertexLinker.fixClampedLinks(this, buffers)
-    console.log('fixClampedLinks: ' + (performance.now() - t0))
+    // console.log('fixClampedLinks: ' + (performance.now() - t0))
 
-    t0 = performance.now()
+    // t0 = performance.now()
     Deformer.changeShape(this, buffers, this._shape)
-    console.log('changeShape: ' + (performance.now() - t0))
+    // console.log('changeShape: ' + (performance.now() - t0))
 
-    t0 = performance.now()
+    // t0 = performance.now()
     Deformer.deform(this, buffers, maximumDeformCount)
-    console.log('deform: ' + (performance.now() - t0))
+    // console.log('deform: ' + (performance.now() - t0))
 
-    t0 = performance.now()
+    // t0 = performance.now()
     Deformer.warpAndScatter(this, buffers)
-    console.log('warpAndScatter: ' + (performance.now() - t0))
+    // console.log('warpAndScatter: ' + (performance.now() - t0))
 
-    t0 = performance.now()
+    // t0 = performance.now()
     NormalsCalculator.calculateNormals(this, buffers)
-    console.log('calculateNormals: ' + (performance.now() - t0))
+    // console.log('calculateNormals: ' + (performance.now() - t0))
 
-    t0 = performance.now()
+    // t0 = performance.now()
     VertexTransformer.transformVertices(this, buffers)
-    console.log('transformVertices: ' + (performance.now() - t0))
+    // console.log('transformVertices: ' + (performance.now() - t0))
 
     LightsCalculator.calculateLights(this, buffers)
-    t0 = performance.now()
+    // t0 = performance.now()
     AOCalculator.calculateAmbientOcclusion(this, buffers)
-    console.log('calculateAmbientOcclusion: ' + (performance.now() - t0))
-    console.log(buffers)
+    // console.log('calculateAmbientOcclusion: ' + (performance.now() - t0))
 
-    t0 = performance.now()
+    // t0 = performance.now()
     ColorCombiner.combineColors(this, buffers)
-    console.log('combineColors: ' + (performance.now() - t0))
+    // console.log('combineColors: ' + (performance.now() - t0))
 
-    t0 = performance.now()
+    // t0 = performance.now()
     UVAssigner.assignUVs(this, buffers)
-    console.log('assignUVs: ' + (performance.now() - t0))
+    // console.log('assignUVs: ' + (performance.now() - t0))
 
-    t0 = performance.now()
+    // t0 = performance.now()
     Simplifier.simplify(this, buffers)
-    console.log('simplify: ' + (performance.now() - t0))
+    // console.log('simplify: ' + (performance.now() - t0))
 
-    t0 = performance.now()
+    // t0 = performance.now()
     FaceAligner.alignFaceDiagonals(this, buffers)
-    console.log('alignFaceDiagonals: ' + (performance.now() - t0))
+    // console.log('alignFaceDiagonals: ' + (performance.now() - t0))
   }
 
   determineBoundsOffsetAndRescale (resize, buffers) {

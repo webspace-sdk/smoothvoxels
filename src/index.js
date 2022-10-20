@@ -11,6 +11,7 @@ import ModelReader from './svox/modelreader'
 import ModelWriter from './svox/modelwriter'
 import Buffers from './svox/buffers'
 import Voxels, { xyzRangeForSize, shiftForSize, voxColorForRGBT, rgbtForVoxColor } from './svox/voxels'
+import WorkerPool from './svox/workerpool'
 import './svox/smoothvoxel'
 
 export default {
@@ -30,5 +31,6 @@ export default {
   xyzRangeForSize,
   shiftForSize,
   voxColorForRGBT,
-  rgbtForVoxColor
+  rgbtForVoxColor,
+  WorkerPool
 }

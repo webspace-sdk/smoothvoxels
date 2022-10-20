@@ -3,9 +3,9 @@ import { DOUBLE, FRONT, MATNORMAL, BACK, SMOOTH, BOTH, QUAD } from './constants'
 // Generates a clean js mesh data model, which serves as the basis for transformation in the SvoxToThreeMeshConverter or the SvoxToAFrameConverter
 export default class SvoxMeshGenerator {
   static generate (model, buffers) {
-    let t0 = performance.now()
+    // let t0 = performance.now()
     model.prepareForRender(buffers)
-    console.log('prep for render: ' + (performance.now() - t0) + 'ms')
+    // console.log('prep for render: ' + (performance.now() - t0) + 'ms')
 
     const { nonCulledFaceCount } = model
 
@@ -25,14 +25,14 @@ export default class SvoxMeshGenerator {
       data: null
     }
 
-    t0 = performance.now()
+    // t0 = performance.now()
     model.materials.baseMaterials.forEach(function (material) {
       // if (material.colorUsageCount > 0) {
       material.index = mesh.materials.length
       mesh.materials.push(SvoxMeshGenerator._generateMaterial(material, model))
       // }
     }, this)
-    console.log('generate materials: ' + (performance.now() - t0) + 'ms')
+    // console.log('generate materials: ' + (performance.now() - t0) + 'ms')
 
     // TODO JEL does this matter?
     // if (model.data) {
@@ -44,9 +44,9 @@ export default class SvoxMeshGenerator {
     //   }
     // }
 
-    t0 = performance.now()
+    // t0 = performance.now()
     SvoxMeshGenerator._generateAll(model, mesh, buffers)
-    console.log('Mesh generation took ' + (performance.now() - t0) + ' ms')
+    // console.log('Mesh generation took ' + (performance.now() - t0) + ' ms')
 
     return mesh
   }

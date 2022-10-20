@@ -1,14 +1,13 @@
-/* global ModelReader */
-/* global SvoxMeshGenerator */
-/* global Buffers */
 /* global postMessage */
-/* global importScripts */
 
-importScripts('svox.js')
+import ModelReader from './modelreader'
+import SvoxMeshGenerator from './svoxmeshgenerator'
+import Buffers from './buffers'
 
 const buffers = new Buffers(1024 * 1024)
 
 onmessage = function (event) { // eslint-disable-line
+  console.log('got message')
   const svoxmesh = generateModel(event.data.svoxmodel)
   postMessage({ svoxmesh, elementId: event.data.elementId, worker: event.data.worker })
 }

@@ -1,9 +1,10 @@
-/* global event, Worker */
+/* global event */
+
+import Worker from './svox.worker.js'
 
 export default class WorkerPool {
   // workerfile: e.g. "/smoothvoxelworker.js"
-  constructor (workerFile, resultHandler, resultCallback) {
-    this._workerFile = workerFile
+  constructor (resultHandler, resultCallback) {
     this._resultHandler = resultHandler
     this._resultCallback = resultCallback
     this._nrOfWorkers = window.navigator.hardwareConcurrency
@@ -16,7 +17,7 @@ export default class WorkerPool {
     // Create max nrOfWorkers web workers
     if (this._workers.length < this._nrOfWorkers) {
       // Create a new worker and mark it as free by adding its index to the free array
-      const worker = new Worker(this._workerFile)
+      const worker = new Worker()
 
       // On message handler
       const _this = this

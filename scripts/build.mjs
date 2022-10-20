@@ -1,7 +1,12 @@
-const { join, basename } = require('path')
-const { realpathSync, readFileSync, writeFileSync, renameSync } = require('fs')
-const { spawnSync } = require('child_process')
-const esbuild = require('esbuild')
+import { join, basename, dirname } from 'path'
+import { fileURLToPath } from 'url'
+import { readFileSync, writeFileSync, renameSync } from 'fs'
+import { spawnSync } from 'child_process'
+import esbuild from 'esbuild'
+import inlineWorkerPlugin from 'esbuild-plugin-inline-worker'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+console.log('base path', join(__dirname, '..'))
 
 const buildConfig = {
   basePath: join(__dirname, '..'),
@@ -14,7 +19,7 @@ const buildConfig = {
   platform: { name: 'browser', target: 'chrome', version: 96 }
 }
 
-const pkg = require(realpathSync(`${buildConfig.basePath}/package.json`, { encoding: 'utf-8' }))
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'))
 
 class Builder {
   config = {
@@ -47,7 +52,7 @@ class Builder {
       minify: buildConfig.minify,
       outdir: buildConfig.outdir,
       platform: buildConfig.platform.name,
-      plugins: [],
+      plugins: [inlineWorkerPlugin()],
       target: `${buildConfig.platform.target}${buildConfig.platform.version}`
     })
 

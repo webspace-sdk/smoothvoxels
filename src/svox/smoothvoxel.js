@@ -85,11 +85,9 @@ if (typeof window !== 'undefined') {
         const buffers = new Buffers(1024 * 1024)
         const t0 = performance.now()
         const svoxmesh = SvoxMeshGenerator.generate(model, buffers)
-        console.log(svoxmesh)
-        console.log('SvoxMeshGenerator.generate took ' + (performance.now() - t0) + ' ms.')
+        // console.log('SvoxMeshGenerator.generate took ' + (performance.now() - t0) + ' ms.')
         const t1 = performance.now()
         this.mesh = SvoxToThreeMeshConverter.generate(svoxmesh)
-        console.log(this.mesh)
 
         // Log stats
         const statsText = `Time: ${Math.round(t1 - t0)}ms. Verts:${svoxmesh.positions.length / 3} Faces:${svoxmesh.indices.length / 3} Materials:${this.mesh.material.length}`
@@ -106,7 +104,7 @@ if (typeof window !== 'undefined') {
         const task = { svoxmodel, elementId: el.id }
 
         if (!WORKERPOOL) {
-          WORKERPOOL = new WorkerPool('/svox/smoothvoxelworker.1.2.0.js', this, this._processResult)
+          WORKERPOOL = new WorkerPool(this, this._processResult)
         }
         WORKERPOOL.executeTask(task)
       },
