@@ -9,6 +9,10 @@
     <link rel="stylesheet" type="text/css" href="smoothvoxels.css">
     <link rel="icon"       type="image/png" href="https://cdn.glitch.com/7426b469-4cb2-4027-abe8-f01d443ec980%2FFavicon.png?v=1622324946073">  
     
+    <script>
+    window.SVOX = { models: [] }
+    </script>
+
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     
     <!-- A-Frame Extras Component which (among other things) allows for the Oculus Go movement using the trackpad -->
@@ -16,31 +20,7 @@
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.0/dist/aframe-extras.min.js"></script>
 
 
-    <script src="../svox/bits.js"></script>
-    <script src="../svox/vox_chunk.js"></script>
-    <script src="../svox/svoxbuffers.js"></script>
-    <script src="../svox/svox.js"></script>
-    <script src="../svox/matrix.js"></script>
-    <script src="../svox/planar.js"></script>
-    <script src="../svox/boundingbox.js"></script>
-    <script src="../svox/materiallist.js"></script>
-    <script src="../svox/noise.js"></script>
-    <script src="../svox/deformer.js"></script>
-    <script src="../svox/vertexlinker.js"></script>
-    <script src="../svox/vertextransformer.js"></script>
-    <script src="../svox/normalscalculator.js"></script>
-    <script src="../svox/lightscalculator.js"></script>
-    <script src="../svox/aocalculator.js"></script>
-    <script src="../svox/colorcombiner.js"></script>
-    <script src="../svox/uvassigner.js"></script>
-    <script src="../svox/simplifier.js"></script>
-    <script src="../svox/facealigner.js"></script>
-    <script src="../svox/model.js"></script>
-    <script src="../svox/modelreader.js"></script>
-    <script src="../svox/meshgenerator.js"></script>
-    <script src="../svox/svoxtothreemeshconverter.js"></script>
-    <script src="../svox/workerpool.js"></script>
-    <script src="../svox/smoothvoxel.js"></script>
+    <script src="../dist/svox.js"></script>
     <script src="playground.1.2.0.js"></script>
        
     <!-- Ace Editor -->

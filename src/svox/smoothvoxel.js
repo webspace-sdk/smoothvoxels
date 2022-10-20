@@ -50,7 +50,6 @@ if (typeof window !== 'undefined') {
 
         const modelName = data.model
         let modelString = window.SVOX.models[modelName]
-        console.log('init', window.SVOX.models[modelName])
         if (!modelString) {
           this._logError({ name: 'ConfigError', message: 'Model not found' })
           modelString = this._MISSING
