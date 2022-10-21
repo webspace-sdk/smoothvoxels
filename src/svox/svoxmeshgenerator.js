@@ -16,13 +16,9 @@ export default class SvoxMeshGenerator {
       indicesIndex: 0,
       maxIndex: -1,
       positions: new Float32Array(nonCulledFaceCount * 4 * 3),
-      positionIndex: 0,
       normals: new Float32Array(nonCulledFaceCount * 4 * 3),
-      normalIndex: 0,
       colors: new Float32Array(nonCulledFaceCount * 4 * 3),
-      colorIndex: 0,
       uvs: new Float32Array(nonCulledFaceCount * 4 * 2),
-      uvIndex: 0,
       data: null
     }
 
@@ -182,6 +178,10 @@ export default class SvoxMeshGenerator {
     }, this)
 
     mesh.indices.length = mesh.indicesIndex
+    mesh.positions = new Float32Array(mesh.positions, 0, mesh.indicesIndex * 3)
+    mesh.normals = new Float32Array(mesh.normals, 0, mesh.indicesIndex * 3)
+    mesh.colors = new Float32Array(mesh.colors, 0, mesh.indicesIndex * 3)
+    mesh.uvs = new Float32Array(mesh.uvs, 0, mesh.indicesIndex * 2)
   }
 
   static _generateFace (model, buffers, faceIndex, mesh) {
@@ -319,11 +319,8 @@ export default class SvoxMeshGenerator {
     const colors = mesh.colors
     const uvs = mesh.uvs
 
-    const iIdx = mesh.indicesIndex
-    let pIdx = mesh.positionIndex
-    let nIdx = mesh.normalIndex
-    let colIdx = mesh.colorIndex
-    let uvIdx = mesh.uvIndex
+    const colIdx = mesh.colorIndex
+    const uvIdx = mesh.uvIndex
 
     const hasVert0 = false
     const hasVert1 = false
@@ -335,102 +332,92 @@ export default class SvoxMeshGenerator {
     if (hasVert0) {
     } else {
       vert0Idx = mesh.maxIndex + 1
+      const offset30 = vert0Idx * 3
+      const offset31 = offset30 + 1
+      const offset32 = offset30 + 2
+      const offset20 = vert0Idx * 2
+      const offset21 = offset20 + 1
       mesh.maxIndex = vert0Idx
-      positions[pIdx] = vert0X
-      positions[pIdx + 1] = vert0Y
-      positions[pIdx + 2] = vert0Z
-      normals[nIdx] = norm0X
-      normals[nIdx + 1] = norm0Y
-      normals[nIdx + 2] = norm0Z
-      colors[colIdx] = col0R
-      colors[colIdx + 1] = col0G
-      colors[colIdx + 2] = col0B
-      uvs[uvIdx] = uv0U
-      uvs[uvIdx + 1] = uv0V
-      pIdx += 3
-      nIdx += 3
-      colIdx += 3
-      uvIdx += 2
-      mesh.positionIndex += 3
-      mesh.normalIndex += 3
-      mesh.colorIndex += 3
-      mesh.uvIndex += 2
+      positions[offset30] = vert0X
+      positions[offset31] = vert0Y
+      positions[offset32] = vert0Z
+      normals[offset30] = norm0X
+      normals[offset31] = norm0Y
+      normals[offset32] = norm0Z
+      colors[offset30] = col0R
+      colors[offset31] = col0G
+      colors[offset32] = col0B
+      uvs[offset20] = uv0U
+      uvs[offset21] = uv0V
     }
 
     if (hasVert1) {
     } else {
       vert1Idx = mesh.maxIndex + 1
+      const offset30 = vert1Idx * 3
+      const offset31 = offset30 + 1
+      const offset32 = offset30 + 2
+      const offset20 = vert1Idx * 2
+      const offset21 = offset20 + 1
       mesh.maxIndex = vert1Idx
-      positions[pIdx] = vert1X
-      positions[pIdx + 1] = vert1Y
-      positions[pIdx + 2] = vert1Z
-      normals[nIdx] = norm1X
-      normals[nIdx + 1] = norm1Y
-      normals[nIdx + 2] = norm1Z
-      colors[colIdx] = col1R
-      colors[colIdx + 1] = col1G
-      colors[colIdx + 2] = col1B
-      uvs[uvIdx] = uv1U
-      uvs[uvIdx + 1] = uv1V
-      pIdx += 3
-      nIdx += 3
-      colIdx += 3
-      uvIdx += 2
-      mesh.positionIndex += 3
-      mesh.normalIndex += 3
-      mesh.colorIndex += 3
-      mesh.uvIndex += 2
+      positions[offset30] = vert1X
+      positions[offset31] = vert1Y
+      positions[offset32] = vert1Z
+      normals[offset30] = norm1X
+      normals[offset31] = norm1Y
+      normals[offset32] = norm1Z
+      colors[offset30] = col1R
+      colors[offset31] = col1G
+      colors[offset32] = col1B
+      uvs[offset20] = uv1U
+      uvs[offset21] = uv1V
     }
 
     if (hasVert2) {
     } else {
       vert2Idx = mesh.maxIndex + 1
+      const offset30 = vert2Idx * 3
+      const offset31 = offset30 + 1
+      const offset32 = offset30 + 2
+      const offset20 = vert2Idx * 2
+      const offset21 = offset20 + 1
       mesh.maxIndex = vert2Idx
-      positions[pIdx] = vert2X
-      positions[pIdx + 1] = vert2Y
-      positions[pIdx + 2] = vert2Z
-      normals[nIdx] = norm2X
-      normals[nIdx + 1] = norm2Y
-      normals[nIdx + 2] = norm2Z
-      colors[colIdx] = col2R
-      colors[colIdx + 1] = col2G
-      colors[colIdx + 2] = col2B
-      uvs[uvIdx] = uv2U
-      uvs[uvIdx + 1] = uv2V
-      pIdx += 3
-      nIdx += 3
-      colIdx += 3
-      uvIdx += 2
-      mesh.positionIndex += 3
-      mesh.normalIndex += 3
-      mesh.colorIndex += 3
-      mesh.uvIndex += 2
+      positions[offset30] = vert2X
+      positions[offset31] = vert2Y
+      positions[offset32] = vert2Z
+      normals[offset30] = norm2X
+      normals[offset31] = norm2Y
+      normals[offset32] = norm2Z
+      colors[offset30] = col2R
+      colors[offset31] = col2G
+      colors[offset32] = col2B
+      uvs[offset20] = uv2U
+      uvs[offset21] = uv2V
     }
 
     if (hasVert3) {
     } else {
       vert3Idx = mesh.maxIndex + 1
+      const offset30 = vert3Idx * 3
+      const offset31 = offset30 + 1
+      const offset32 = offset30 + 2
+      const offset20 = vert3Idx * 2
+      const offset21 = offset20 + 1
       mesh.maxIndex = vert3Idx
-      positions[pIdx] = vert3X
-      positions[pIdx + 1] = vert3Y
-      positions[pIdx + 2] = vert3Z
-      normals[nIdx] = norm3X
-      normals[nIdx + 1] = norm3Y
-      normals[nIdx + 2] = norm3Z
-      colors[colIdx] = col3R
-      colors[colIdx + 1] = col3G
-      colors[colIdx + 2] = col3B
-      uvs[uvIdx] = uv3U
-      uvs[uvIdx + 1] = uv3V
-      pIdx += 3
-      nIdx += 3
-      colIdx += 3
-      uvIdx += 2
-      mesh.positionIndex += 3
-      mesh.normalIndex += 3
-      mesh.colorIndex += 3
-      mesh.uvIndex += 2
+      positions[offset30] = vert3X
+      positions[offset31] = vert3Y
+      positions[offset32] = vert3Z
+      normals[offset30] = norm3X
+      normals[offset31] = norm3Y
+      normals[offset32] = norm3Z
+      colors[offset30] = col3R
+      colors[offset31] = col3G
+      colors[offset32] = col3B
+      uvs[offset20] = uv3U
+      uvs[offset21] = uv3V
     }
+
+    const iIdx = mesh.indicesIndex
 
     // Face 1
     indices[iIdx] = vert2Idx
