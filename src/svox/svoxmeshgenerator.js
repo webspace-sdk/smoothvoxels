@@ -14,6 +14,7 @@ export default class SvoxMeshGenerator {
       groups: [],
       indices: Array(nonCulledFaceCount * 6),
       indicesIndex: 0,
+      maxIndex: -1,
       positions: new Float32Array(nonCulledFaceCount * 4 * 3),
       positionIndex: 0,
       normals: new Float32Array(nonCulledFaceCount * 4 * 3),
@@ -179,6 +180,8 @@ export default class SvoxMeshGenerator {
       const end = mesh.indicesIndex
       mesh.groups.push({ start, count: (end - start), materialIndex: baseMaterial.index })
     }, this)
+
+    mesh.indices.length = mesh.indicesIndex
   }
 
   static _generateFace (model, buffers, faceIndex, mesh) {
@@ -208,15 +211,15 @@ export default class SvoxMeshGenerator {
     let norm0X = faceVertNormalX[faceIndex * 4]
     let norm0Y = faceVertNormalY[faceIndex * 4]
     let norm0Z = faceVertNormalZ[faceIndex * 4]
-    const norm1X = faceVertNormalX[faceIndex * 4 + 1]
-    const norm1Y = faceVertNormalY[faceIndex * 4 + 1]
-    const norm1Z = faceVertNormalZ[faceIndex * 4 + 1]
+    let norm1X = faceVertNormalX[faceIndex * 4 + 1]
+    let norm1Y = faceVertNormalY[faceIndex * 4 + 1]
+    let norm1Z = faceVertNormalZ[faceIndex * 4 + 1]
     let norm2X = faceVertNormalX[faceIndex * 4 + 2]
     let norm2Y = faceVertNormalY[faceIndex * 4 + 2]
     let norm2Z = faceVertNormalZ[faceIndex * 4 + 2]
-    const norm3X = faceVertNormalX[faceIndex * 4 + 3]
-    const norm3Y = faceVertNormalY[faceIndex * 4 + 3]
-    const norm3Z = faceVertNormalZ[faceIndex * 4 + 3]
+    let norm3X = faceVertNormalX[faceIndex * 4 + 3]
+    let norm3Y = faceVertNormalY[faceIndex * 4 + 3]
+    let norm3Z = faceVertNormalZ[faceIndex * 4 + 3]
 
     let col0R = faceVertColorR[faceIndex * 4]
     let col0G = faceVertColorG[faceIndex * 4]
@@ -260,58 +263,9 @@ export default class SvoxMeshGenerator {
       uv2U = swapX; uv2V = swapY
     }
 
-    const iIdx = mesh.indicesIndex
-    const indices = mesh.indices
-
-    const pIdx = mesh.positionIndex
-    const positions = mesh.positions
-    const baseIndex = iIdx === 0 ? 0 : (mesh.indices[iIdx - 2] + 1) // vert 3 of last triangle is max index
-
-    // Face 1
-    indices[iIdx] = baseIndex + 2
-    indices[iIdx + 1] = baseIndex + 1
-    indices[iIdx + 2] = baseIndex + 0
-
-    // Face 2
-    indices[iIdx + 3] = baseIndex + 0
-    indices[iIdx + 4] = baseIndex + 3
-    indices[iIdx + 5] = baseIndex + 2
-
-    mesh.indicesIndex += 6
-
-    positions[pIdx] = vert0X
-    positions[pIdx + 1] = vert0Y
-    positions[pIdx + 2] = vert0Z
-    positions[pIdx + 3] = vert1X
-    positions[pIdx + 4] = vert1Y
-    positions[pIdx + 5] = vert1Z
-    positions[pIdx + 6] = vert2X
-    positions[pIdx + 7] = vert2Y
-    positions[pIdx + 8] = vert2Z
-    positions[pIdx + 9] = vert3X
-    positions[pIdx + 10] = vert3Y
-    positions[pIdx + 11] = vert3Z
-
-    mesh.positionIndex += 12
-
-    const nIdx = mesh.normalIndex
-    const normals = mesh.normals
     const smooth = faceSmooth.get(faceIndex) === 1
 
-    if (material.lighting === SMOOTH || (material.lighting === BOTH && smooth)) {
-      normals[nIdx] = norm0X
-      normals[nIdx + 1] = norm0Y
-      normals[nIdx + 2] = norm0Z
-      normals[nIdx + 3] = norm1X
-      normals[nIdx + 4] = norm1Y
-      normals[nIdx + 5] = norm1Z
-      normals[nIdx + 6] = norm2X
-      normals[nIdx + 7] = norm2Y
-      normals[nIdx + 8] = norm2Z
-      normals[nIdx + 9] = norm3X
-      normals[nIdx + 10] = norm3Y
-      normals[nIdx + 11] = norm3Z
-    } else {
+    if (!(material.lighting === SMOOTH || (material.lighting === BOTH && smooth))) {
       // Average the normals to get the flat normals
       let normFace1X = norm2X + norm1X + norm0X
       let normFace1Y = norm2Y + norm1Y + norm0Y
@@ -345,123 +299,149 @@ export default class SvoxMeshGenerator {
 
       // Note: because of indices, this code when migrated has the wrong FLAT norm for the first and last vert of face 2
       // For now, just use QUAD
-      normals[nIdx] = normFace1X
-      normals[nIdx + 1] = normFace1Y
-      normals[nIdx + 2] = normFace1Z
-      normals[nIdx + 3] = normFace1X
-      normals[nIdx + 4] = normFace1Y
-      normals[nIdx + 5] = normFace1Z
-      normals[nIdx + 6] = normFace1X
-      normals[nIdx + 7] = normFace1Y
-      normals[nIdx + 8] = normFace1Z
-      normals[nIdx + 9] = normFace2X
-      normals[nIdx + 10] = normFace2Y
-      normals[nIdx + 11] = normFace2Z
-
-      // Code from non-indexed vertices:
-      // Face 1
-      // normals[nIdx] = normFace1X; // index + 2
-      // normals[nIdx+1] = normFace1Y;
-      // normals[nIdx+2] = normFace1Z;
-      // normals[nIdx+3] = normFace1X; // index + 1
-      // normals[nIdx+4] = normFace1Y;
-      // normals[nIdx+5] = normFace1Z;
-      // normals[nIdx+6] = normFace1X; // index + 0
-      // normals[nIdx+7] = normFace1Y;
-      // normals[nIdx+8] = normFace1Z;
-
-      /// / Face 2
-      // normals[nIdx+9] = normFace2X; // index + 0
-      // normals[nIdx+10] = normFace2Y;
-      // normals[nIdx+11] = normFace2Z;
-      // normals[nIdx+12] = normFace2X; // index + 3
-      // normals[nIdx+13] = normFace2Y;
-      // normals[nIdx+14] = normFace2Z;
-      // normals[nIdx+15] = normFace2X; // index + 2
-      // normals[nIdx+16] = normFace2Y;
-      // normals[nIdx+17] = normFace2Z;
+      norm0X = normFace1X
+      norm0Y = normFace1Y
+      norm0Z = normFace1Z
+      norm1X = normFace1X
+      norm1Y = normFace1Y
+      norm1Z = normFace1Z
+      norm2X = normFace1X
+      norm2Y = normFace1Y
+      norm2Z = normFace1Z
+      norm3X = normFace2X
+      norm3Y = normFace2Y
+      norm3Z = normFace2Z
     }
 
-    mesh.normalIndex += 12
-
-    const colIdx = mesh.colorIndex
+    const indices = mesh.indices
+    const positions = mesh.positions
+    const normals = mesh.normals
     const colors = mesh.colors
-
-    // if (SVOX.clampColors) {
-    //   // Normalize colors
-    //   const col0Length = Math.sqrt(col0R * col0R + col0G * col0G + col0B * col0B)
-    //   const col1Length = Math.sqrt(col1R * col1R + col1G * col1G + col1B * col1B)
-    //   const col2Length = Math.sqrt(col2R * col2R + col2G * col2G + col2B * col2B)
-    //   const col3Length = Math.sqrt(col3R * col3R + col3G * col3G + col3B * col3B)
-
-    //   if (col0Length > 0) {
-    //     const d = 1 / col0Length
-    //     col0R *= d
-    //     col0G *= d
-    //     col0B *= d
-    //   }
-
-    //   if (col1Length > 0) {
-    //     const d = 1 / col1Length
-    //     col1R *= d
-    //     col1G *= d
-    //     col1B *= d
-    //   }
-
-    //   if (col2Length > 0) {
-    //     const d = 1 / col2Length
-    //     col2R *= d
-    //     col2G *= d
-    //     col2B *= d
-    //   }
-
-    //   if (col3Length > 0) {
-    //     const d = 1 / col3Length
-    //     col3R *= d
-    //     col3G *= d
-    //     col3B *= d
-    //   }
-    // }
-
-    // Face 1
-    colors[colIdx] = col0R
-    colors[colIdx + 1] = col0G
-    colors[colIdx + 2] = col0B
-    colors[colIdx + 3] = col1R
-    colors[colIdx + 4] = col1G
-    colors[colIdx + 5] = col1B
-    colors[colIdx + 6] = col2R
-    colors[colIdx + 7] = col2G
-    colors[colIdx + 8] = col2B
-    colors[colIdx + 9] = col3R
-    colors[colIdx + 10] = col3G
-    colors[colIdx + 11] = col3B
-
-    mesh.colorIndex += 12
-
-    const uvIdx = mesh.uvIndex
     const uvs = mesh.uvs
 
-    uvs[uvIdx] = uv0U
-    uvs[uvIdx + 1] = uv0V
-    uvs[uvIdx + 2] = uv1U
-    uvs[uvIdx + 3] = uv1V
-    uvs[uvIdx + 4] = uv2U
-    uvs[uvIdx + 5] = uv2V
-    uvs[uvIdx + 6] = uv3U
-    uvs[uvIdx + 7] = uv3V
+    const iIdx = mesh.indicesIndex
+    let pIdx = mesh.positionIndex
+    let nIdx = mesh.normalIndex
+    let colIdx = mesh.colorIndex
+    let uvIdx = mesh.uvIndex
 
-    mesh.uvIndex += 8
+    const hasVert0 = false
+    const hasVert1 = false
+    const hasVert2 = false
+    const hasVert3 = false
 
-    // if (mesh.data) {
-    //  let data = voxel.material.data || model.data;
-    //  for (let vertex=0;vertex<6;vertex++) {
-    //    for (let d=0;d<data.length;d++) {
-    //      for (let v=0;v<data[d].values.length;v++) {
-    //        mesh.data[d].values.push(data[d].values[v]);
-    //      }
-    //    }
-    //  }
-    // }
+    let vert0Idx, vert1Idx, vert2Idx, vert3Idx
+
+    if (hasVert0) {
+    } else {
+      vert0Idx = mesh.maxIndex + 1
+      mesh.maxIndex = vert0Idx
+      positions[pIdx] = vert0X
+      positions[pIdx + 1] = vert0Y
+      positions[pIdx + 2] = vert0Z
+      normals[nIdx] = norm0X
+      normals[nIdx + 1] = norm0Y
+      normals[nIdx + 2] = norm0Z
+      colors[colIdx] = col0R
+      colors[colIdx + 1] = col0G
+      colors[colIdx + 2] = col0B
+      uvs[uvIdx] = uv0U
+      uvs[uvIdx + 1] = uv0V
+      pIdx += 3
+      nIdx += 3
+      colIdx += 3
+      uvIdx += 2
+      mesh.positionIndex += 3
+      mesh.normalIndex += 3
+      mesh.colorIndex += 3
+      mesh.uvIndex += 2
+    }
+
+    if (hasVert1) {
+    } else {
+      vert1Idx = mesh.maxIndex + 1
+      mesh.maxIndex = vert1Idx
+      positions[pIdx] = vert1X
+      positions[pIdx + 1] = vert1Y
+      positions[pIdx + 2] = vert1Z
+      normals[nIdx] = norm1X
+      normals[nIdx + 1] = norm1Y
+      normals[nIdx + 2] = norm1Z
+      colors[colIdx] = col1R
+      colors[colIdx + 1] = col1G
+      colors[colIdx + 2] = col1B
+      uvs[uvIdx] = uv1U
+      uvs[uvIdx + 1] = uv1V
+      pIdx += 3
+      nIdx += 3
+      colIdx += 3
+      uvIdx += 2
+      mesh.positionIndex += 3
+      mesh.normalIndex += 3
+      mesh.colorIndex += 3
+      mesh.uvIndex += 2
+    }
+
+    if (hasVert2) {
+    } else {
+      vert2Idx = mesh.maxIndex + 1
+      mesh.maxIndex = vert2Idx
+      positions[pIdx] = vert2X
+      positions[pIdx + 1] = vert2Y
+      positions[pIdx + 2] = vert2Z
+      normals[nIdx] = norm2X
+      normals[nIdx + 1] = norm2Y
+      normals[nIdx + 2] = norm2Z
+      colors[colIdx] = col2R
+      colors[colIdx + 1] = col2G
+      colors[colIdx + 2] = col2B
+      uvs[uvIdx] = uv2U
+      uvs[uvIdx + 1] = uv2V
+      pIdx += 3
+      nIdx += 3
+      colIdx += 3
+      uvIdx += 2
+      mesh.positionIndex += 3
+      mesh.normalIndex += 3
+      mesh.colorIndex += 3
+      mesh.uvIndex += 2
+    }
+
+    if (hasVert3) {
+    } else {
+      vert3Idx = mesh.maxIndex + 1
+      mesh.maxIndex = vert3Idx
+      positions[pIdx] = vert3X
+      positions[pIdx + 1] = vert3Y
+      positions[pIdx + 2] = vert3Z
+      normals[nIdx] = norm3X
+      normals[nIdx + 1] = norm3Y
+      normals[nIdx + 2] = norm3Z
+      colors[colIdx] = col3R
+      colors[colIdx + 1] = col3G
+      colors[colIdx + 2] = col3B
+      uvs[uvIdx] = uv3U
+      uvs[uvIdx + 1] = uv3V
+      pIdx += 3
+      nIdx += 3
+      colIdx += 3
+      uvIdx += 2
+      mesh.positionIndex += 3
+      mesh.normalIndex += 3
+      mesh.colorIndex += 3
+      mesh.uvIndex += 2
+    }
+
+    // Face 1
+    indices[iIdx] = vert2Idx
+    indices[iIdx + 1] = vert1Idx
+    indices[iIdx + 2] = vert0Idx
+
+    // Face 2
+    indices[iIdx + 3] = vert0Idx
+    indices[iIdx + 4] = vert3Idx
+    indices[iIdx + 5] = vert2Idx
+
+    mesh.indicesIndex += 6
   }
 }
