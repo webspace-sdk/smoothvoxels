@@ -8,18 +8,15 @@ export default class SvoxMeshGenerator {
     model.prepareForRender(buffers)
     // console.log('prep for render: ' + (performance.now() - t0) + 'ms')
 
-    const { nonCulledFaceCount } = model
-
     const mesh = {
       materials: [],
       groups: [],
-      indices: Array(nonCulledFaceCount * 6),
-      indicesIndex: 0,
-      maxIndex: -1,
-      positions: new Float32Array(nonCulledFaceCount * 4 * 3),
-      normals: new Float32Array(nonCulledFaceCount * 4 * 3),
-      colors: new Float32Array(nonCulledFaceCount * 4 * 3),
-      uvs: new Float32Array(nonCulledFaceCount * 4 * 2),
+      indices: [],
+      numVerts: 0,
+      positions: [],
+      normals: [],
+      colors: [],
+      uvs: [],
       data: null
     }
 
@@ -176,14 +173,9 @@ export default class SvoxMeshGenerator {
 
       // Add the group for this material
       const end = mesh.indicesIndex
+
       mesh.groups.push({ start, count: (end - start), materialIndex: baseMaterial.index })
     }, this)
-
-    mesh.indices.length = mesh.indicesIndex
-    mesh.positions = new Float32Array(mesh.positions, 0, mesh.indicesIndex * 3)
-    mesh.normals = new Float32Array(mesh.normals, 0, mesh.indicesIndex * 3)
-    mesh.colors = new Float32Array(mesh.colors, 0, mesh.indicesIndex * 3)
-    mesh.uvs = new Float32Array(mesh.uvs, 0, mesh.indicesIndex * 2)
   }
 
   static _generateFace (model, buffers, faceIndex, mesh) {
@@ -265,7 +257,14 @@ export default class SvoxMeshGenerator {
       uv2U = swapX; uv2V = swapY
     }
 
+    const indices = mesh.indices
+
     const smooth = faceSmooth.get(faceIndex) === 1
+
+    const positions = mesh.positions
+    const normals = mesh.normals
+    const colors = mesh.colors
+    const uvs = mesh.uvs
 
     if (!(material.lighting === SMOOTH || (material.lighting === BOTH && smooth))) {
       // Average the normals to get the flat normals
@@ -315,132 +314,102 @@ export default class SvoxMeshGenerator {
       norm3Z = normFace2Z
     }
 
-    const indices = mesh.indices
-    const positions = mesh.positions
-    const normals = mesh.normals
-    const colors = mesh.colors
-    const uvs = mesh.uvs
+    // Key is a composition of vert x, y, z, normal, colors, and uv
+    const vert0Key = vert0X * 3 + vert0Y * 13 + vert0Z * 23 + norm0X * 37 + norm0Y * 41 + norm0Z * 59 + col0R * 61 + col0G * 83 + col0B * 89 + uv0U * 98 + uv0V * 103
+    const vert1Key = vert1X * 3 + vert1Y * 13 + vert1Z * 23 + norm1X * 37 + norm1Y * 41 + norm1Z * 59 + col1R * 61 + col1G * 83 + col1B * 89 + uv1U * 98 + uv1V * 103
+    const vert2Key = vert2X * 3 + vert2Y * 13 + vert2Z * 23 + norm2X * 37 + norm2Y * 41 + norm2Z * 59 + col2R * 61 + col2G * 83 + col2B * 89 + uv2U * 98 + uv2V * 103
+    const vert3Key = vert3X * 3 + vert3Y * 13 + vert3Z * 23 + norm3X * 37 + norm3Y * 41 + norm3Z * 59 + col3R * 61 + col3G * 83 + col3B * 89 + uv3U * 98 + uv3V * 103
 
-    const vert0Key = vert0X * 3 + vert0Y * 61673 + vert0Z * 87119 + norm0X * 2766691 + norm0Y * 73091 + norm0Z * 5040949 + col0R * 8636137 + col0G * 2360719 + col0B * 4739729 + uv0U * 719959 + uv0V * 172741
-    const vert1Key = vert1X * 3 + vert1Y * 61673 + vert1Z * 87119 + norm1X * 2766691 + norm1Y * 73091 + norm1Z * 5040949 + col1R * 8636137 + col1G * 2360719 + col1B * 4739729 + uv1U * 719959 + uv1V * 172741
-    const vert2Key = vert2X * 3 + vert2Y * 61673 + vert2Z * 87119 + norm2X * 2766691 + norm2Y * 73091 + norm2Z * 5040949 + col2R * 8636137 + col2G * 2360719 + col2B * 4739729 + uv2U * 719959 + uv2V * 172741
-    const vert3Key = vert3X * 3 + vert3Y * 61673 + vert3Z * 87119 + norm3X * 2766691 + norm3Y * 73091 + norm3Z * 5040949 + col3R * 8636137 + col3G * 2360719 + col3B * 4739729 + uv3U * 719959 + uv3V * 172741
+    const hasVert0 = false // vertCache.has(vert0Key)
+    const hasVert1 = false // vertCache.has(vert1Key)
+    const hasVert2 = false // vertCache.has(vert2Key)
+    const hasVert3 = false // vertCache.has(vert3Key)
 
-    const hasVert0 = vertCache.has(vert0Key)
-    const hasVert1 = vertCache.has(vert1Key)
-    const hasVert2 = vertCache.has(vert2Key)
-    const hasVert3 = vertCache.has(vert3Key)
-
-    let vert0Idx, vert1Idx, vert2Idx, vert3Idx
+    let vert0MeshIndex, vert1MeshIndex, vert2MeshIndex, vert3MeshIndex
+    let newVertIndex = mesh.numVerts
 
     if (hasVert0) {
-      vert0Idx = vertCache.get(vert0Key)
+      vert0MeshIndex = vertCache.get(vert0Key)
     } else {
-      vert0Idx = mesh.maxIndex + 1
-      const offset30 = vert0Idx * 3
-      const offset31 = offset30 + 1
-      const offset32 = offset30 + 2
-      const offset20 = vert0Idx * 2
-      const offset21 = offset20 + 1
-      mesh.maxIndex = vert0Idx
-      positions[offset30] = vert0X
-      positions[offset31] = vert0Y
-      positions[offset32] = vert0Z
-      normals[offset30] = norm0X
-      normals[offset31] = norm0Y
-      normals[offset32] = norm0Z
-      colors[offset30] = col0R
-      colors[offset31] = col0G
-      colors[offset32] = col0B
-      uvs[offset20] = uv0U
-      uvs[offset21] = uv0V
-      vertCache.set(vert0Key, vert0Idx)
+      vert0MeshIndex = newVertIndex++
+      positions.push(vert0X)
+      positions.push(vert0Y)
+      positions.push(vert0Z)
+      normals.push(norm0X)
+      normals.push(norm0Y)
+      normals.push(norm0Z)
+      colors.push(col0R)
+      colors.push(col0G)
+      colors.push(col0B)
+      uvs.push(uv0U)
+      uvs.push(uv0V)
+      vertCache.set(vert0Key, vert0MeshIndex)
     }
 
     if (hasVert1) {
-      vert1Idx = vertCache.get(vert1Key)
+      vert1MeshIndex = vertCache.get(vert1Key)
     } else {
-      vert1Idx = mesh.maxIndex + 1
-      const offset30 = vert1Idx * 3
-      const offset31 = offset30 + 1
-      const offset32 = offset30 + 2
-      const offset20 = vert1Idx * 2
-      const offset21 = offset20 + 1
-      mesh.maxIndex = vert1Idx
-      positions[offset30] = vert1X
-      positions[offset31] = vert1Y
-      positions[offset32] = vert1Z
-      normals[offset30] = norm1X
-      normals[offset31] = norm1Y
-      normals[offset32] = norm1Z
-      colors[offset30] = col1R
-      colors[offset31] = col1G
-      colors[offset32] = col1B
-      uvs[offset20] = uv1U
-      uvs[offset21] = uv1V
-      vertCache.set(vert1Key, vert1Idx)
+      vert1MeshIndex = newVertIndex++
+      positions.push(vert1X)
+      positions.push(vert1Y)
+      positions.push(vert1Z)
+      normals.push(norm1X)
+      normals.push(norm1Y)
+      normals.push(norm1Z)
+      colors.push(col1R)
+      colors.push(col1G)
+      colors.push(col1B)
+      uvs.push(uv1U)
+      uvs.push(uv1V)
+      vertCache.set(vert1Key, vert1MeshIndex)
     }
 
     if (hasVert2) {
-      vert2Idx = vertCache.get(vert2Key)
+      vert2MeshIndex = vertCache.get(vert2Key)
     } else {
-      vert2Idx = mesh.maxIndex + 1
-      const offset30 = vert2Idx * 3
-      const offset31 = offset30 + 1
-      const offset32 = offset30 + 2
-      const offset20 = vert2Idx * 2
-      const offset21 = offset20 + 1
-      mesh.maxIndex = vert2Idx
-      positions[offset30] = vert2X
-      positions[offset31] = vert2Y
-      positions[offset32] = vert2Z
-      normals[offset30] = norm2X
-      normals[offset31] = norm2Y
-      normals[offset32] = norm2Z
-      colors[offset30] = col2R
-      colors[offset31] = col2G
-      colors[offset32] = col2B
-      uvs[offset20] = uv2U
-      uvs[offset21] = uv2V
-      vertCache.set(vert2Key, vert2Idx)
+      vert2MeshIndex = newVertIndex++
+      positions.push(vert2X)
+      positions.push(vert2Y)
+      positions.push(vert2Z)
+      normals.push(norm2X)
+      normals.push(norm2Y)
+      normals.push(norm2Z)
+      colors.push(col2R)
+      colors.push(col2G)
+      colors.push(col2B)
+      uvs.push(uv2U)
+      uvs.push(uv2V)
+      vertCache.set(vert2Key, vert2MeshIndex)
     }
 
     if (hasVert3) {
-      vert3Idx = vertCache.get(vert3Key)
+      vert3MeshIndex = vertCache.get(vert3Key)
     } else {
-      vert3Idx = mesh.maxIndex + 1
-      const offset30 = vert3Idx * 3
-      const offset31 = offset30 + 1
-      const offset32 = offset30 + 2
-      const offset20 = vert3Idx * 2
-      const offset21 = offset20 + 1
-      mesh.maxIndex = vert3Idx
-      positions[offset30] = vert3X
-      positions[offset31] = vert3Y
-      positions[offset32] = vert3Z
-      normals[offset30] = norm3X
-      normals[offset31] = norm3Y
-      normals[offset32] = norm3Z
-      colors[offset30] = col3R
-      colors[offset31] = col3G
-      colors[offset32] = col3B
-      uvs[offset20] = uv3U
-      uvs[offset21] = uv3V
-      vertCache.set(vert3Key, vert3Idx)
+      vert3MeshIndex = newVertIndex++
+      positions.push(vert3X)
+      positions.push(vert3Y)
+      positions.push(vert3Z)
+      normals.push(norm3X)
+      normals.push(norm3Y)
+      normals.push(norm3Z)
+      colors.push(col3R)
+      colors.push(col3G)
+      colors.push(col3B)
+      uvs.push(uv3U)
+      uvs.push(uv3V)
+      vertCache.set(vert3Key, vert3MeshIndex)
     }
 
-    const iIdx = mesh.indicesIndex
+    mesh.numVerts = newVertIndex
 
     // Face 1
-    indices[iIdx] = vert2Idx
-    indices[iIdx + 1] = vert1Idx
-    indices[iIdx + 2] = vert0Idx
+    indices.push(vert2MeshIndex)
+    indices.push(vert1MeshIndex)
+    indices.push(vert0MeshIndex)
 
     // Face 2
-    indices[iIdx + 3] = vert0Idx
-    indices[iIdx + 4] = vert3Idx
-    indices[iIdx + 5] = vert2Idx
-
-    mesh.indicesIndex += 6
+    indices.push(vert0MeshIndex)
+    indices.push(vert2MeshIndex)
+    indices.push(vert3MeshIndex)
   }
 }
