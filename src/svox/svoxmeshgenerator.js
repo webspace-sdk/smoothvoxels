@@ -1,4 +1,5 @@
 import { DOUBLE, FRONT, MATNORMAL, BACK, SMOOTH, BOTH, QUAD } from './constants'
+const vertCache = new Map()
 
 // Generates a clean js mesh data model, which serves as the basis for transformation in the SvoxToThreeMeshConverter or the SvoxToAFrameConverter
 export default class SvoxMeshGenerator {
@@ -42,6 +43,7 @@ export default class SvoxMeshGenerator {
     // }
 
     // t0 = performance.now()
+    vertCache.clear()
     SvoxMeshGenerator._generateAll(model, mesh, buffers)
     // console.log('Mesh generation took ' + (performance.now() - t0) + ' ms')
 
@@ -319,17 +321,20 @@ export default class SvoxMeshGenerator {
     const colors = mesh.colors
     const uvs = mesh.uvs
 
-    const colIdx = mesh.colorIndex
-    const uvIdx = mesh.uvIndex
+    const vert0Key = vert0X * 3 + vert0Y * 13 + vert0Z * 23 + norm0X * 37 + norm0Y * 41 + norm0Z * 59 + col0R * 61 + col0G * 83 + col0B * 89 + uv0U * 98 + uv0V * 103
+    const vert1Key = vert1X * 3 + vert1Y * 13 + vert1Z * 23 + norm1X * 37 + norm1Y * 41 + norm1Z * 59 + col1R * 61 + col1G * 83 + col1B * 89 + uv1U * 98 + uv1V * 103
+    const vert2Key = vert2X * 3 + vert2Y * 13 + vert2Z * 23 + norm2X * 37 + norm2Y * 41 + norm2Z * 59 + col2R * 61 + col2G * 83 + col2B * 89 + uv2U * 98 + uv2V * 103
+    const vert3Key = vert3X * 3 + vert3Y * 13 + vert3Z * 23 + norm3X * 37 + norm3Y * 41 + norm3Z * 59 + col3R * 61 + col3G * 83 + col3B * 89 + uv3U * 98 + uv3V * 103
 
-    const hasVert0 = false
-    const hasVert1 = false
-    const hasVert2 = false
-    const hasVert3 = false
+    const hasVert0 = vertCache.has(vert0Key)
+    const hasVert1 = vertCache.has(vert1Key)
+    const hasVert2 = vertCache.has(vert2Key)
+    const hasVert3 = vertCache.has(vert3Key)
 
     let vert0Idx, vert1Idx, vert2Idx, vert3Idx
 
     if (hasVert0) {
+      vert0Idx = vertCache.get(vert0Key)
     } else {
       vert0Idx = mesh.maxIndex + 1
       const offset30 = vert0Idx * 3
@@ -349,9 +354,11 @@ export default class SvoxMeshGenerator {
       colors[offset32] = col0B
       uvs[offset20] = uv0U
       uvs[offset21] = uv0V
+      vertCache.set(vert0Key, vert0Idx)
     }
 
     if (hasVert1) {
+      vert1Idx = vertCache.get(vert1Key)
     } else {
       vert1Idx = mesh.maxIndex + 1
       const offset30 = vert1Idx * 3
@@ -371,9 +378,11 @@ export default class SvoxMeshGenerator {
       colors[offset32] = col1B
       uvs[offset20] = uv1U
       uvs[offset21] = uv1V
+      vertCache.set(vert1Key, vert1Idx)
     }
 
     if (hasVert2) {
+      vert2Idx = vertCache.get(vert2Key)
     } else {
       vert2Idx = mesh.maxIndex + 1
       const offset30 = vert2Idx * 3
@@ -393,9 +402,11 @@ export default class SvoxMeshGenerator {
       colors[offset32] = col2B
       uvs[offset20] = uv2U
       uvs[offset21] = uv2V
+      vertCache.set(vert2Key, vert2Idx)
     }
 
     if (hasVert3) {
+      vert3Idx = vertCache.get(vert3Key)
     } else {
       vert3Idx = mesh.maxIndex + 1
       const offset30 = vert3Idx * 3
@@ -415,6 +426,7 @@ export default class SvoxMeshGenerator {
       colors[offset32] = col3B
       uvs[offset20] = uv3U
       uvs[offset21] = uv3V
+      vertCache.set(vert3Key, vert3Idx)
     }
 
     const iIdx = mesh.indicesIndex

@@ -1,32 +1,5519 @@
-(()=>{var qt="standard",Be="basic",xs="lambert",gs="phong",vs="matcap",ys="toon",Re="normal",ve="bounds",Bt="model",ue="flat",ye="quad",Dt="smooth",te="both",Mt="front",pe="back",Rt="double",Fs=["nx","px","ny","py","nz","pz"],_s=[[[0,0,0],[0,1,0],[0,1,1],[0,0,1]],[[1,0,1],[1,1,1],[1,1,0],[1,0,0]],[[0,0,0],[0,0,1],[1,0,1],[1,0,0]],[[0,1,1],[0,1,0],[1,1,0],[1,1,1]],[[1,0,0],[1,1,0],[0,1,0],[0,0,0]],[[0,0,1],[0,1,1],[1,1,1],[1,0,1]]],As=[[-1,0,0],[1,0,0],[0,-1,0],[0,1,0],[0,0,-1],[0,0,1]],Ms=[{u:"z",v:"y",order:[0,1,2,3],ud:1,vd:1,uo:0,vo:0},{u:"z",v:"y",order:[3,2,1,0],ud:-1,vd:1,uo:.75,vo:0},{u:"x",v:"z",order:[0,1,2,3],ud:1,vd:1,uo:.75,vo:.5},{u:"x",v:"z",order:[1,0,3,2],ud:1,vd:-1,uo:.25,vo:1},{u:"x",v:"y",order:[3,2,1,0],ud:-1,vd:1,uo:1,vo:0},{u:"x",v:"y",order:[0,1,2,3],ud:1,vd:1,uo:.25,vo:0}],Vs=[[[0,0,1],[0,1,0]],[[0,0,1],[0,1,0]],[[1,0,0],[0,0,1]],[[1,0,0],[0,0,1]],[[1,0,0],[0,1,0]],[[1,0,0],[0,1,0]]];var Ke=(S,t,s)=>Math.min(Math.max(S,t),s),rt=class{static fromHex(t){let s=new rt;return s._set(t),s.id="",s.exId=null,s.count=0,s}static fromRgb(t,s,e){t=Math.round(Ke(t,0,1)*255),s=Math.round(Ke(s,0,1)*255),e=Math.round(Ke(e,0,1)*255);let r="#"+(t<16?"0":"")+t.toString(16)+(s<16?"0":"")+s.toString(16)+(e<16?"0":"")+e.toString(16);return rt.fromHex(r)}clone(){let t=new rt;return t._color=this._color,t.r=this.r,t.g=this.g,t.b=this.b,t._material=this._material,t}multiply(t){return t instanceof rt?rt.fromRgb(this.r*t.r,this.g*t.g,this.b*t.b):rt.fromRgb(this.r*t,this.g*t,this.b*t)}normalize(){let t=Math.sqrt(this.r*this.r+this.g*this.g+this.b*this.b);return this.multiply(1/t)}add(...t){let s=this.r+t.reduce((a,o)=>a+o.r,0),e=this.g+t.reduce((a,o)=>a+o.g,0),r=this.b+t.reduce((a,o)=>a+o.b,0);return rt.fromRgb(s,e,r)}_setMaterial(t){if(this._material!==void 0)throw new Error("A Color can only be added once.");this._material=t,this.count=0}get material(){return this._material}_set(t){let s=t;if((typeof s=="string"||s instanceof String)&&(s=s.trim().toUpperCase(),s.match(/^#([0-9a-fA-F]{3}|#?[0-9a-fA-F]{6})$/))){s=s.replace("#",""),this._color="#"+s,s.length===3&&(s=s[0]+s[0]+s[1]+s[1]+s[2]+s[2]);let e=parseInt(s,16);this.r=(e>>16&255)/255,this.g=(e>>8&255)/255,this.b=(e&255)/255;return}throw new Error(`SyntaxError: Color ${t} is not a hexadecimal color of the form #000 or #000000.`)}toString(){return this._color}};var ee=class{constructor(t,s,e,r,a,o,n,i,l,c,h,f,m,u,g,p,_,y,v,F,d,V,w,x,M){switch(t=t||qt,t){case qt:case Be:case xs:case gs:case ys:case vs:case Re:break;default:throw new Error("SyntaxError: Unknown material type: "+t)}if(this.type=t,(m&&m.cube||u&&u.cube||g&&g.cube||p&&p.cube||_&&_.cube)&&!(d===-1&&V===-1))throw new Error("SyntaxError: Cube textures can not be combined with maptransform");if(v&&F)throw new Error("SyntaxError: One material can have a reflectionmap or a refractionmap, but not both");this.index=0,this.roughness=typeof s=="number"?s:1,this.metalness=typeof e=="number"?e:0,this.opacity=typeof r=="number"?r:1,this.alphaTest=typeof a=="number"?a:0,this.transparent=!!o,this.refractionRatio=typeof n=="number"?n:.9,this.wireframe=!!i,this.side=l||Mt,[Mt,pe,Rt].includes(this.side)||(this.side=Mt),this.setEmissive(c,h),this.fog=typeof f=="boolean"?f:!0,this.map=m,this.normalMap=u,this.roughnessMap=g,this.metalnessMap=p,this.emissiveMap=_,this.matcap=y,this.reflectionMap=v,this.refractionMap=F,this.mapTransform={uscale:d||-1,vscale:V||-1,uoffset:w||0,voffset:x||0,rotation:M||0},this.aoActive=!1,this._colors=[]}get baseId(){return this._baseId===void 0&&(this._baseId=`${this.type}|${this.roughness}|${this.metalness}|${this.opacity}|${this.alphaTest}|${this.transparent?1:0}|${this.refractionRatio}|${this.wireframe?1:0}|${this.side}|`+(this.emissive?`${this.emissive.color}|${this.emissive.intensity}|`:"||")+`${this.fog?1:0}|`+(this.map?`${this.map.id}|`:"|")+(this.normalMap?`${this.normalMap.id}|`:"|")+(this.roughnessMap?`${this.roughnessMap.id}|`:"|")+(this.metalnessMap?`${this.metalnessMap.id}|`:"|")+(this.emissiveMap?`${this.emissiveMap.id}|`:"|")+(this.matcap?`${this.matcap.id}|`:"|")+(this.reflectionMap?`${this.reflectionMap.id}|`:"|")+(this.refractionMap?`${this.refractionMap.id}|`:"|")+`${this.mapTransform.uscale}|${this.mapTransform.vscale}|${this.mapTransform.uoffset}|${this.mapTransform.voffset}|${this.mapTransform.rotation}`),this._baseId}get isTransparent(){return this.transparent||this.opacity<1}setEmissive(t,s){t===void 0||t==="#000"||t==="#000000"||!s?this._emissive=void 0:this._emissive={color:rt.fromHex(t),intensity:s}}get emissive(){return this._emissive}get colors(){return this._colors}get colorCount(){return this._colors.length}get colorUsageCount(){return this._colors.reduce((t,s)=>t+s.count,0)}};function Fe(S,t,s,e){let r=s*S;for(let a=0;a<s;){let o=r&7,n=r>>3,i=s-a,l=8-o,c=i<l?i:l,h=~(255<<c),f=t&h;t>>=c;let m=~(h<<o);e[n]=e[n]&m|f<<o,r+=c,a+=c}}var Qe=class{constructor(t){this.view=t}get(t){return this.view[t>>3]>>(t&7)&1}set(t,s){return Fe(t,s,1,this.view)}clear(){this.view.fill(0)}},Je=class{constructor(t){this.view=t}get(t){return this.view[t>>2]>>((t&3)<<1)&3}set(t,s){return Fe(t,s,2,this.view)}clear(){this.view.fill(0)}},De=class{constructor(t){this.view=t}get(t){return this.view[t>>1]>>((t&1)<<2)&15}set(t,s){return Fe(t,s,4,this.view)}clear(){this.view.fill(0)}},ts=class{constructor(t){this.view=t}get(t){return this.view[t]>>>0}set(t,s){return Fe(t,s,8,this.view)}clear(){this.view.fill(0)}},es=class{constructor(t,s){this.view=t,this.bits=s}get(t){let{view:s,bits:e}=this,r=t*e,a=0;for(let o=0;o<e;){let n=r&7,i=r>>3,l=e-o,c=8-n,h=l<c?l:c,f=s[i],m=~(255<<h);a|=(f>>n&m)<<o,r+=h,o+=h}return a>>>0}set(t,s){Fe(t,s,this.bits,this.view)}clear(){this.view.fill(0)}},it=class{static create(t,s,e,r=null){let a=r?new Uint8Array(t,e,r):new Uint8Array(t,e);switch(s){case 1:return new Qe(a);case 2:return new Je(a);case 4:return new De(a);case 8:return new ts(a);default:return new es(a)}}};var kt=class{get size(){return this.minX>this.maxX?{x:0,y:0,z:0}:{x:this.maxX-this.minX+1,y:this.maxY-this.minY+1,z:this.maxZ-this.minZ+1}}constructor(){this.reset()}reset(){this.minX=Number.POSITIVE_INFINITY,this.minY=Number.POSITIVE_INFINITY,this.minZ=Number.POSITIVE_INFINITY,this.maxX=Number.NEGATIVE_INFINITY,this.maxY=Number.NEGATIVE_INFINITY,this.maxZ=Number.NEGATIVE_INFINITY}set(t,s,e){this.minX=Math.min(this.minX,t),this.minY=Math.min(this.minY,s),this.minZ=Math.min(this.minZ,e),this.maxX=Math.max(this.maxX,t),this.maxY=Math.max(this.maxY,s),this.maxZ=Math.max(this.maxZ,e)}};var se=class{constructor(t,s,e,r,a,o,n){this.color=t,this.strength=s,this.direction=e,this.position=r,this.distance=a,this.size=o,this.detail=n}};var W=class{static parse(t){if(!t)return;if(t=" "+(t||"").toLowerCase(),t!==" "&&!/^(?!$)(\s+(?:none|-x|x|\+x|-y|y|\+y|-z|z|\+z|\s))+\s*$/.test(t))throw new Error(`SyntaxError: Planar expression '${t}' is only allowed to be 'none' or contain -x x +x -y y +y -z z +z.`);let s=t.includes("none");return{nx:!s&&t.includes("-x"),x:!s&&t.includes(" x"),px:!s&&t.includes("+x"),ny:!s&&t.includes("-y"),y:!s&&t.includes(" y"),py:!s&&t.includes("+y"),nz:!s&&t.includes("-z"),z:!s&&t.includes(" z"),pz:!s&&t.includes("+z")}}static toString(t){return t?((t.nx?" -x":"")+(t.x?" x":"")+(t.px?" +x":"")+(t.ny?" -y":"")+(t.y?" y":"")+(t.py?" +y":"")+(t.nz?" -z":"")+(t.z?" z":"")+(t.pz?" +z":"")).trim():void 0}static combine(t,s,e){return!t&&!s?e:t?!s||t===s?t:{nx:t.nx||s.nx,x:t.x||s.x,px:t.px||s.px,ny:t.ny||s.ny,y:t.y||s.y,py:t.py||s.py,nz:t.nz||s.nz,z:t.z||s.z,pz:t.pz||s.pz}:s}};var re=class{constructor(t,s,e,r,a){this._baseMaterial=t,this.lighting=s,this.fade=!!e,this.simplify=r!==!1,this._deform=void 0,this._warp=void 0,this._scatter=void 0,this._flatten=W.parse(""),this._clamp=W.parse(""),this._skip=W.parse(""),this._ao=void 0,this.lights=!0,this._side=a,this._colors=[],this.bounds=new kt}get baseId(){return this._baseMaterial.baseId}get index(){return this._baseMaterial.index}get colors(){return this._colors}get colorCount(){return this._baseMaterial.colorCount}get type(){return this._baseMaterial.type}get roughness(){return this._baseMaterial.roughness}get metalness(){return this._baseMaterial.metalness}get opacity(){return this._baseMaterial.opacity}get alphaTest(){return this._baseMaterial.alphaTest}get transparent(){return this._baseMaterial.transparent}get isTransparent(){return this._baseMaterial.isTransparent}get refractionRatio(){return this._baseMaterial.refractionRatio}get emissive(){return this._baseMaterial.emissive}get side(){return this._side}get fog(){return this._baseMaterial.fog}get map(){return this._baseMaterial.map}get normalMap(){return this._baseMaterial.normalMap}get roughnessMap(){return this._baseMaterial.roughnessMap}get metalnessMap(){return this._baseMaterial.metalnessMap}get emissiveMap(){return this._baseMaterial.emissiveMap}get matcap(){return this._baseMaterial.matcap}get reflectionMap(){return this._baseMaterial.reflectionMap}get refractionMap(){return this._baseMaterial.refractionMap}get mapTransform(){return this._baseMaterial.mapTransform}setDeform(t,s,e){t=Math.max(t??1,0),s=s??1,e=e??1,t>0&&s!==0?this._deform={count:t,strength:s,damping:e}:this._deform={count:0,strength:0,damping:0}}get deform(){return this._deform}setWarp(t,s){t=t===void 0?1:Math.abs(t),s=s===void 0?1:Math.abs(s),t>.001&&s>.001?this._warp={amplitude:t,frequency:s}:this._warp=void 0}get warp(){return this._warp}set scatter(t){t===0&&(t=void 0),this._scatter=Math.abs(t)}get scatter(){return this._scatter}set flatten(t){this._flatten=W.parse(t)}get flatten(){return W.toString(this._flatten)}set clamp(t){this._clamp=W.parse(t)}get clamp(){return W.toString(this._clamp)}set skip(t){this._skip=W.parse(t)}get skip(){return W.toString(this._skip)}setAo(t){this._ao=t}get ao(){return this._ao}set aoSides(t){this._aoSides=W.parse(t)}get aoSides(){return W.toString(this._aoSides)}addColorHEX(t){return this.addColor(rt.fromHex(t))}addColorRGB(t,s,e){return this.addColor(rt.fromRgb(t,s,e))}addColor(t){if(!(t instanceof rt))throw new Error("addColor requires a Color object, e.g. material.addColor(Color.fromHex('#FFFFFF'))");return t._setMaterial(this),this._colors.push(t),this._baseMaterial._colors.push(t),t}};var ae=class{constructor(){this.baseMaterials=[],this.materials=[]}createMaterial(t,s,e,r,a,o,n,i,l,c,h,f,m,u,g,p,_,y,v,F,d,V,w,x,M,z,C,A){f=f||Mt,[Mt,pe,Rt].includes(f)||(f=Mt);let X=f===Rt?Rt:Mt,T=new ee(t,e,r,n,i,l,c,h,X,m,u,g,p,_,y,v,F,d,V,w,x,M,z,C,A),Y=T.baseId,B=this.baseMaterials.find(N=>N.baseId===Y);B?T=B:this.baseMaterials.push(T);let O=new re(T,s,a,o,f);return this.materials.push(O),O}clearMaterials(){this.materials.length=0}forEach(t,s,e){e?this.baseMaterials.foreach(t,s):this.materials.forEach(t,s)}find(t){return this.materials.find(t)}findColorByExId(t){let s=null;return this.forEach(function(e){s||(s=e.colors.find(r=>r.exId===t))},this),s}getMaterialListIndex(t){return this.materials.indexOf(t)}};var Ot=class{static generate(t,s){t.prepareForRender(s);let{nonCulledFaceCount:e}=t,r={materials:[],groups:[],indices:Array(e*6),indicesIndex:0,positions:new Float32Array(e*4*3),positionIndex:0,normals:new Float32Array(e*4*3),normalIndex:0,colors:new Float32Array(e*4*3),colorIndex:0,uvs:new Float32Array(e*4*2),uvIndex:0,data:null};return t.materials.baseMaterials.forEach(function(a){a.index=r.materials.length,r.materials.push(Ot._generateMaterial(a,t))},this),Ot._generateAll(t,r,s),r}static _generateMaterial(t,s){let e={type:t.type,roughness:t.roughness,metalness:t.metalness,opacity:t.opacity,alphaTest:t.alphaTest,transparent:t.isTransparent,refractionRatio:t.refractionRatio,wireframe:t.wireframe||s.wireframe,fog:t.fog,vertexColors:!0,side:t.side===Rt?Rt:Mt};return t.type!==Re&&(e.color="#FFF"),t.emissive&&(e.emissive=t.emissive.color.toString(),e.emissiveIntensity=t.emissive.intensity),t.map&&(e.map={image:t.map.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.normalMap&&(e.normalMap={image:t.normalMap.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.roughnessMap&&(e.roughnessMap={image:t.roughnessMap.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.metalnessMap&&(e.metalnessMap={image:t.metalnessMap.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.emissiveMap&&(e.emissiveMap={image:t.emissiveMap.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.matcap&&(e.matcap={image:t.matcap.image}),t.reflectionMap&&(e.reflectionMap={image:t.reflectionMap.image}),t.refractionMap&&(e.refractionMap={image:t.refractionMap.image}),e}static _generateAll(t,s,e){let r=t.materials.materials,{faceMaterials:a,faceCulled:o}=e;t.materials.baseMaterials.forEach(function(n){let i=s.indicesIndex;for(let c=0,h=t.faceCount;c<h;c++)r[a[c]]._baseMaterial===n&&o.get(c)===0&&Ot._generateFace(t,e,c,s);let l=s.indicesIndex;s.groups.push({start:i,count:l-i,materialIndex:n.index})},this)}static _generateFace(t,s,e,r){let{faceVertIndices:a,faceVertNormalX:o,faceVertNormalY:n,faceVertNormalZ:i,vertX:l,vertY:c,vertZ:h,faceVertColorR:f,faceVertColorG:m,faceVertColorB:u,faceVertUs:g,faceVertVs:p,faceMaterials:_,faceSmooth:y}=s,F=t.materials.materials[_[e]],d=a[e*4],V=a[e*4+1],w=a[e*4+2],x=a[e*4+3],M=l[d],z=c[d],C=h[d],A=l[V],X=c[V],T=h[V],Y=l[w],B=c[w],O=h[w],N=l[x],k=c[x],L=h[x],P=o[e*4],$=n[e*4],E=i[e*4],U=o[e*4+1],b=n[e*4+1],q=i[e*4+1],I=o[e*4+2],R=n[e*4+2],G=i[e*4+2],H=o[e*4+3],K=n[e*4+3],tt=i[e*4+3],Z=f[e*4],ct=m[e*4],ht=u[e*4],Vt=f[e*4+1],xt=m[e*4+1],D=u[e*4+1],Ft=f[e*4+2],yt=m[e*4+2],Xt=u[e*4+2],Ct=f[e*4+3],Tt=m[e*4+3],Yt=u[e*4+3],Wt=g[e*4],Pt=p[e*4],ce=g[e*4+1],he=p[e*4+1],Lt=g[e*4+2],$t=p[e*4+2],fe=g[e*4+3],Zt=p[e*4+3];if(F.side===pe){let et,st,ot;et=M,st=z,ot=C,M=Y,z=B,C=O,Y=et,B=st,O=ot,et=P,st=$,ot=E,P=I,$=R,E=G,I=et,R=st,G=ot,et=Z,st=ct,ot=ht,Z=Ft,ct=yt,ht=Xt,Ft=et,yt=st,Xt=ot,et=Wt,st=Pt,Wt=Lt,Pt=$t,Lt=et,$t=st}let gt=r.indicesIndex,_t=r.indices,nt=r.positionIndex,lt=r.positions,At=gt===0?0:r.indices[gt-2]+1;_t[gt]=At+2,_t[gt+1]=At+1,_t[gt+2]=At+0,_t[gt+3]=At+0,_t[gt+4]=At+3,_t[gt+5]=At+2,r.indicesIndex+=6,lt[nt]=M,lt[nt+1]=z,lt[nt+2]=C,lt[nt+3]=A,lt[nt+4]=X,lt[nt+5]=T,lt[nt+6]=Y,lt[nt+7]=B,lt[nt+8]=O,lt[nt+9]=N,lt[nt+10]=k,lt[nt+11]=L,r.positionIndex+=12;let Q=r.normalIndex,J=r.normals,jt=y.get(e)===1;if(F.lighting===Dt||F.lighting===te&&jt)J[Q]=P,J[Q+1]=$,J[Q+2]=E,J[Q+3]=U,J[Q+4]=b,J[Q+5]=q,J[Q+6]=I,J[Q+7]=R,J[Q+8]=G,J[Q+9]=H,J[Q+10]=K,J[Q+11]=tt;else{let et=I+U+P,st=R+b+$,ot=G+q+E,bt=P+H+I,zt=$+K+R,Nt=E+tt+G,Ut=Math.sqrt(et*et+st*st+ot*ot),Kt=Math.sqrt(bt*bt+zt*zt+Nt*Nt),Qt=1/Ut,Et=1/Kt;if(et*=Qt,st*=Qt,ot*=Qt,bt*=Et,zt*=Et,Nt*=Et,F.lighting===ye){let qe=Math.sqrt(et*et+st*st+ot*ot)+Math.sqrt(bt*bt+zt*zt+Nt*Nt),ge=1/qe;et=bt=(et+bt)*ge,st=zt=(st+zt)*ge,ot=Nt=(ot+Nt)*ge}J[Q]=et,J[Q+1]=st,J[Q+2]=ot,J[Q+3]=et,J[Q+4]=st,J[Q+5]=ot,J[Q+6]=et,J[Q+7]=st,J[Q+8]=ot,J[Q+9]=bt,J[Q+10]=zt,J[Q+11]=Nt}r.normalIndex+=12;let dt=r.colorIndex,at=r.colors;at[dt]=Z,at[dt+1]=ct,at[dt+2]=ht,at[dt+3]=Vt,at[dt+4]=xt,at[dt+5]=D,at[dt+6]=Ft,at[dt+7]=yt,at[dt+8]=Xt,at[dt+9]=Ct,at[dt+10]=Tt,at[dt+11]=Yt,r.colorIndex+=12;let mt=r.uvIndex,ut=r.uvs;ut[mt]=Wt,ut[mt+1]=Pt,ut[mt+2]=ce,ut[mt+3]=he,ut[mt+4]=Lt,ut[mt+5]=$t,ut[mt+6]=fe,ut[mt+7]=Zt,r.uvIndex+=8}};var Ts=0,Cs=0,ss=128,_e=8,Os=0,Ys=255,Is=Ys<<24>>>0,rs={NONE:0,PAINT:1,KEEP:2},It=1,oe=new Map,pt=S=>Math.floor(S%2===0?S/2-1:S/2),ft=S=>{let[t,s,e]=S,r=pt(t),a=pt(s),o=pt(e),n=t-r-1,i=s-a-1,l=e-o-1,c=-r,h=-a,f=-o;return[c,n,h,i,f,l]},Ae=1,ws=Ae*4;function as(S,t,s=null){let e=2**t-It,r=ws*e,a=S[0]*S[1]*S[2]*t,o=Math.floor(a/8)+1,n=_e+r+o;s==null&&(typeof Buffer<"u"?s=Buffer.alloc(n).buffer:s=new ArrayBuffer(n));let i=new Uint8Array(s,0,_e),l=r/ws,c=new Uint32Array(s,_e,l),h=it.create(s,t,_e+r);return i[0]=Ts,[i[1],i[2],i[3]]=S,i[4]=t,[s,c,h]}var vt=class{constructor(t=null,s=null,e=null,r=8,a=0,o=null,n=0,i=null){if(s&&e)this.size=[t[0],t[1],t[2]],this.bitsPerIndex=r,o=o||s.length,i=i||e.length,this.palette=new Uint32Array(s,a||0,o/4),this.indices=it.create(e,r,n,i),this.xShift=pt(t[0]),this.yShift=pt(t[1]),this.zShift=pt(t[2]),this._rebuildRefCounts();else if(t){let[l,c,h]=as(t,1);this.palette=c,this.indices=h,this._refCounts=new Array(this.palette.length).fill(0),this._recomputeSizeFieldsForBuffer(l)}}_recomputeSizeFieldsForBuffer(t){let s=new Uint8Array(t,0,_e);this.size=[0,0,0],[,this.size[0],this.size[1],this.size[2],this.bitsPerIndex]=s,this.xShift=pt(this.size[0]),this.yShift=pt(this.size[1]),this.zShift=pt(this.size[2])}getPaletteIndexAt(t,s,e){let{indices:r}=this,a=this._getOffset(t,s,e);return r.get(a)}getPaletteIndexAtOffset(t){let{indices:s}=this;return s.get(t)}getColorAt(t,s,e){let r=this.getPaletteIndexAt(t,s,e);return this.colorForPaletteIndex(r)}hasVoxelAt(t,s,e){return this.getPaletteIndexAt(t,s,e)!==Cs}removeVoxelAt(t,s,e){return this.setPaletteIndexAt(t,s,e,Cs)}getTotalNonEmptyVoxels(){let t=0;for(let s=0;s<this._refCounts.length;s+=1)t+=this._refCounts[s];return t}getPaletteColor(t){return this.palette[(t-It)*Ae]}setPaletteColor(t,s){this.palette[(t-It)*Ae]=s}paletteHasReferences(t){return this._refCounts[t-It]!==0}resetPaletteRefcountToOne(t){this._refCounts[t-It]=1}incrementPaletteRefcount(t){this._refCounts[t-It]+=1}decrementPaletteRefcount(t){this._refCounts[t-It]-=1}static isNonEmptyPaletteIndex(t){return t!==0}setPaletteIndexAt(t,s,e,r){let a=this._getOffset(t,s,e);this.setPaletteIndexAtOffset(a,r)}setPaletteIndexAtOffset(t,s){let{indices:e}=this,r=this.getPaletteIndexAtOffset(t);vt.isNonEmptyPaletteIndex(r)&&this.decrementPaletteRefcount(r),vt.isNonEmptyPaletteIndex(s)&&this.incrementPaletteRefcount(s),e.set(t,s)}setEmptyAt(t,s,e){this.setPaletteIndexAt(t,s,e,0)}clear(){this.indices.clear(),this._refCounts.fill(0)}setColorAt(t,s,e,r){let a=this._getOffset(t,s,e);return this.setColorAtOffset(a,r)}setColorAtOffset(t,s){let{palette:e,indices:r}=this,a=this.getPaletteIndexAtOffset(t),o=vt.isNonEmptyPaletteIndex(a);o&&this.decrementPaletteRefcount(a);for(let i=0;i<e.length;i+=1){let l=i+It;if(this.getPaletteColor(l)===s)return this.incrementPaletteRefcount(l),r.set(t,l),l}if(o&&!this.paletteHasReferences(a))return this.setPaletteColor(a,s),this.resetPaletteRefcountToOne(a),a;let n=this._getFreePaletteIndex();return this.setPaletteColor(n,s),this.resetPaletteRefcountToOne(n),this.indices.set(t,n),n}colorForPaletteIndex(t){return this.palette[(t-It)*Ae]}filterByChunk(t,s,e,r,a){if(a===rs.NONE)return;let o=t.size,[n,i,l,c,h,f]=ft(o),{size:m}=this,[u,g,p,_,y,v]=ft(m);for(let F=u;F<=g;F+=1)for(let d=p;d<=_;d+=1)for(let V=y;V<=v;V+=1){if(this.getPaletteIndexAt(F,d,V)===0)continue;let x=F+s,M=d+e,z=V+r,A=!(x>i||x<n||M>c||M<l||z>f||z<h)&&t.hasVoxelAt(x,M,z);(a===rs.PAINT&&!A||a===rs.KEEP&&A)&&this.setEmptyAt(F,d,V)}}_getFreePaletteIndex(){let{palette:t,size:s,indices:e,bitsPerIndex:r}=this;for(let l=0;l<t.length;l+=1){let c=l+It;if(!this.paletteHasReferences(c))return c}let a=r*2,[o,n,i]=as(s,a);for(let l=0;l<t.length*Ae;l+=1)n[l]=t[l];for(;this._refCounts.length<n.length;)this._refCounts.push(0);for(let l=0,c=s[0]*s[1]*s[2];l<c;l+=1){let h=e.get(l);i.set(l,h)}return this.palette=n,this.indices=i,this._recomputeSizeFieldsForBuffer(o),this._getFreePaletteIndex()}resizeToFit(t,s,e){let{size:r}=this,a=Math.max(1,r[0],Math.abs(t)*2+1),o=Math.max(1,r[1],Math.abs(s)*2+1),n=Math.max(1,r[2],Math.abs(e)*2+1);this.resizeTo([a,o,n])}resizeTo(t){if(this.size[0]>=t[0]&&this.size[1]>=t[1]&&this.size[2]>=t[2])return;let s=new vt(t),[e,r,a,o,n,i]=ft(this.size);for(let m=e;m<=r;m+=1)for(let u=a;u<=o;u+=1)for(let g=n;g<=i;g+=1)this.getPaletteIndexAt(m,u,g)!==0&&s.setColorAt(m,u,g,this.getColorAt(m,u,g));let{buffer:l}=s.palette;[this.size[0],this.size[1],this.size[2]]=t;let{bitsPerIndex:c}=s;this.bitsPerIndex=c;let[,h,f]=as(t,c,l);this.palette=h,this.indices=f,this._refCounts=s._refCounts,this._recomputeSizeFieldsForBuffer(l)}static fromJSON(t){if(typeof t=="string")return vt.deserialize(t);let{size:s,palette:e,indices:r}=t,a=new vt(s);for(let o=0;o<e.length+It;o+=1)for(let n=0;n<r.length;n+=1){let i=r[n];if(i===o)if(i>=It){let l=e[i-It];a.setColorAtOffset(n,l)}else i===o&&a.setPaletteIndexAtOffset(n,i)}return a}toJSON(t,s){if(!s)return this.serialize();let e=[],r=[];for(let a=0;a<this.palette.length;a+=1){let o=a+It,n=this.getPaletteColor(o);n>0&&e.push(n)}for(let a=0,o=this.size[0]*this.size[1]*this.size[2];a<o;a+=1)r.push(this.indices.get(a));return{size:[...this.size],palette:e,indices:r}}clone(){return new vt(this.size,this.palette.buffer.slice(0),this.indices.view.buffer.slice(0),this.bitsPerIndex,this.palette.byteOffset,this.palette.byteLength,this.indices.view.byteOffset,this.indices.view.byteLength)}_getOffset(t,s,e){let{size:r,xShift:a,yShift:o,zShift:n}=this;return(t+a)*r[1]*r[2]+(s+o)*r[2]+(e+n)}_rebuildRefCounts(){this._refCounts=new Array(this.palette.length).fill(0);for(let t=0,s=this.size[0]*this.size[1]*this.size[2];t<s;t+=1){let e=this.getPaletteIndexAtOffset(t);vt.isNonEmptyPaletteIndex(e)&&this.incrementPaletteRefcount(e)}}applyToChunk(t,s=0,e=0,r=0){oe.clear();let a=t.size,[o,n,i,l,c,h]=ft(a),{size:f}=this,[m,u,g,p,_,y]=ft(f);for(let v=m;v<=u;v+=1)for(let F=g;F<=p;F+=1)for(let d=_;d<=y;d+=1){let V=this.getPaletteIndexAt(v,F,d);if(V!==0){let w=v+s,x=F+e,M=d+r,z=a[0],C=a[1],A=a[2];if(w>n&&(z=w*2),w<o&&(z=Math.max(z,-w*2+1)),x>l&&(C=x*2),x<i&&(C=Math.max(C,-x*2+1)),M>h&&(A=M*2),M<c&&(A=Math.max(A,-M*2+1)),z>ss||C>ss||A>ss)continue;(a[0]<z||a[1]<C||a[2]<A)&&(t.resizeTo([z,C,A]),a=t.size,[o,n,i,l,c,h]=ft(a),oe.clear());let X=oe.get(V);if(X===void 0){let T=this.getColorAt(v,F,d);if(T===Is)t.setEmptyAt(w,x,M);else{let Y=t.setColorAt(w,x,M,T);oe.set(V,Y)}}else t.getPaletteIndexAt(w,x,M)!==X&&t.setPaletteIndexAt(w,x,M,X)}}}createInverse=(t,s)=>{oe.clear();let e=t.size,[r,a,o,n,i,l]=ft(e),{size:c}=this,h=new vt(c),[f,m,u,g,p,_]=ft(c);for(let y=f;y<=m;y+=1)for(let v=u;v<=g;v+=1)for(let F=p;F<=_;F+=1){if(this.getPaletteIndexAt(y,v,F)===0)continue;let V=y+s[0],w=v+s[1],x=F+s[2];if(V>a||V<r||w>n||w<o||x>l||x<i||!t.hasVoxelAt(V,w,x))h.setColorAt(y,v,F,Is);else{let M=t.getColorAt(V,w,x);h.setColorAt(y,v,F,M)}}return h};mergeWith(t,s,e,r=!1){oe.clear();let a=oe,o=e[0]-s[0],n=e[1]-s[1],i=e[2]-s[2],l=t.size,[c,h,f,m,u,g]=ft(l),{size:p}=this,[_,y,v,F,d,V]=ft(p);for(let w=_;w<=y;w+=1)for(let x=v;x<=F;x+=1)for(let M=d;M<=V;M+=1){let z=this.getPaletteIndexAt(w,x,M);if(z===0)continue;let C=w+o,A=x+n,X=M+i;if(!!(!(C>h||C<c||A>m||A<f||X>g||X<u)&&t.hasVoxelAt(C,A,X)))if(a.has(z))this.setPaletteIndexAt(w,x,M,a.get(z));else{(r||t.getColorAt(C,A,X)>this.getColorAt(w,x,M))&&this.removeVoxelAt(w,x,M);let B=this.getPaletteIndexAt(w,x,M);a.set(z,B)}}}};function ke(S,t,s,e=Os){return(S|t<<8|s<<16|e<<24)>>>0}function bs(S){let t=S&255,s=(S&65280)>>8,e=(S&16711680)>>16,r=(S&4278190080)>>24;return{r:t,g:s,b:e,t:r}}function zs(){let S=[];for(let r=0;r<256;r++)S[r]=Math.floor(Math.random()*256),S[r+256]=S[r];function t(r){return r*r*r*(r*(r*6-15)+10)}function s(r,a,o){return a+r*(o-a)}function e(r,a,o,n){let i=r&15,l=i<8?a:o,c=i<4?o:i===12||i===14?a:n;return((i&1)===0?l:-l)+((i&2)===0?c:-c)}return{noise:function(r,a,o){let n=Math.floor(r),i=Math.floor(a),l=Math.floor(o),c=n&255,h=i&255,f=l&255;r-=n,a-=i,o-=l;let m=r-1,u=a-1,g=o-1,p=t(r),_=t(a),y=t(o),v=S[c]+h,F=S[v]+f,d=S[v+1]+f,V=S[c+1]+h,w=S[V]+f,x=S[V+1]+f;return s(y,s(_,s(p,e(S[F],r,a,o),e(S[w],m,a,o)),s(p,e(S[d],r,u,o),e(S[x],m,u,o))),s(_,s(p,e(S[F+1],r,a,g),e(S[w+1],m,a,o-1)),s(p,e(S[d+1],r,u,g),e(S[x+1],m,u,g))))}}}var Ht=class{static changeShape(t,s,e){let{faceEquidistant:r}=s;switch(e){case"sphere":this._circularDeform(t,s,1,1,1);break;case"cylinder-x":this._circularDeform(t,s,0,1,1);break;case"cylinder-y":this._circularDeform(t,s,1,0,1);break;case"cylinder-z":this._circularDeform(t,s,1,1,0);break;default:for(let a=0,o=t.faceCount;a<o;a++)r.set(a,0);break}}static _circularDeform(t,s,e,r,a){let[o,n,i,l,c,h]=ft(t.voxChunk.size),f=(o+n)/2+.5,m=(i+l)/2+.5,u=(c+h)/2+.5,{vertX:g,vertY:p,vertZ:_,vertRing:y}=s;for(let v=0,F=t.vertCount;v<F;v++){let d=g[v],V=p[v],w=_[v],x=d-f,M=V-m,z=w-u,C=Math.max(Math.abs(x*e),Math.abs(M*r),Math.abs(z*a)),A=Math.sqrt(x*x*e+M*M*r+z*z*a);if(A===0)continue;let X=C/A;g[v]=x*(1-e+e*X)+f,p[v]=M*(1-r+r*X)+m,_[v]=z*(1-a+a*X)+u,y[v]=C}this._markEquidistantFaces(t,s)}static _markEquidistantFaces(t,s){let{faceVertIndices:e,vertRing:r,faceEquidistant:a}=s;for(let o=0,n=t.faceCount;o<n;o++){let i=o*4,l=i+1,c=i+2,h=i+3;a.set(o,r[e[i]]===r[e[l]]&&r[e[i]]===r[e[c]]&&r[e[i]]===r[e[h]]?1:0)}}static maximumDeformCount(t){let s=0;return t.materials.forEach(function(e){e.deform&&(s=Math.max(s,e.deform.count))}),s}static deform(t,s,e){let{vertLinkIndices:r,vertLinkCounts:a,vertDeformCount:o,vertDeformDamping:n,vertDeformStrength:i,vertFlattenedX:l,vertFlattenedY:c,vertFlattenedZ:h,vertClampedX:f,vertClampedY:m,vertClampedZ:u,vertX:g,vertY:p,vertZ:_,vertTmpX:y,vertTmpY:v,vertTmpZ:F,vertHasTmp:d}=s;for(let V=0;V<e;V++){let w=!1;for(let x=0,M=t.vertCount;x<M;x++){if(o[x]<=V)continue;let C=a[x];if(C===0)continue;w=!0;let A=g[x],X=p[x],T=_[x],Y=n[x],B=i[x],O=1-(f.get(x)|l.get(x)),N=1-(m.get(x)|c.get(x)),k=1-(u.get(x)|h.get(x)),L=0,P=0,$=0;for(let I=0;I<C;I++){let R=r[x*6+I];L+=g[R],P+=p[R],$+=_[R]}let E=Math.pow(Y,V)*B,U=L/C-A,b=P/C-X,q=$/C-T;y[x]=A+O*U*E,v[x]=X+N*b*E,F[x]=T+k*q*E,d.set(x,O|N|k)}if(w){for(let x=0,M=t.vertCount;x<M;x++)d.get(x)!==0&&(g[x]=y[x],p[x]=v[x],_[x]=F[x]);d.clear()}}}static warpAndScatter(t,s){let e=zs().noise,{nx:r,px:a,ny:o,py:n,nz:i,pz:l}=t._tile,[c,h,f,m,u,g]=ft(t.voxChunk.size),{vertX:p,vertY:_,vertZ:y,vertWarpAmplitude:v,vertWarpFrequency:F,vertScatter:d,vertFlattenedX:V,vertFlattenedY:w,vertFlattenedZ:x,vertClampedX:M,vertClampedY:z,vertClampedZ:C}=s;c+=.1,f+=.1,u+=.1,h+=.9,m+=.9,g+=.9;for(let A=0,X=t.vertCount;A<X;A++){let T=p[A],Y=_[A],B=y[A];if(r&&T<c||a&&T>h||o&&Y<f||n&&Y>m||i&&B<u||l&&B>g)continue;let O=v[A],N=F[A],k=d[A],L=O>0,P=k>0;if(L||P){let $=0,E=0,U=0;L&&($=e((T+.19)*N,Y*N,B*N)*O,E=e((Y+.17)*N,B*N,T*N)*O,U=e((B+.13)*N,T*N,Y*N)*O),P&&($+=(Math.random()*2-1)*k,E+=(Math.random()*2-1)*k,U+=(Math.random()*2-1)*k);let b=1-(M.get(A)|V.get(A)),q=1-(z.get(A)|w.get(A)),I=1-(C.get(A)|x.get(A));p[A]=T+b*$,_[A]=Y+q*E,y[A]=B+I*U}}}};var de=class{static linkVertices(t,s,e){let{faceClamped:r,vertNrOfClampedLinks:a,faceVertIndices:o,vertLinkIndices:n,vertLinkCounts:i}=s;if(r.get(e)===1)for(let c=0;c<4;c++){let h=o[e*4+c],f=!1;for(let m=0,u=i[h];m<u;m++)if(n[h*6+m]===h){f=!0;break}f||(n[h*6+i[h]]=h,i[h]++,a[h]++)}else for(let c=0;c<4;c++){let h=o[e*4+c],f=o[e*4+(c+1)%4],m=!1;for(let g=0,p=i[h];g<p;g++)if(n[h*6+g]===f){m=!0;break}m||(n[h*6+i[h]]=f,i[h]++);let u=!1;for(let g=0,p=i[f];g<p;g++)if(n[f*6+g]===h){u=!0;break}u||(n[f*6+i[f]]=h,i[f]++)}}static fixClampedLinks(t,s){let{faceVertIndices:e,vertNrOfClampedLinks:r,vertFullyClamped:a,vertLinkCounts:o,vertLinkIndices:n}=s;for(let i=0,l=t.vertCount;i<l;i++){let c=r[i],h=o[i];c===h&&(a.set(i,1),o[i]=0)}for(let i=0,l=t.faceCount;i<l;i++)for(let c=0;c<4;c++){let h=e[i*4+c],f=e[i*4+(c+1)%4];if(a.get(h)===1){let m=!1;for(let u=0,g=o[h];u<g;u++)if(n[h*6+u]===f){m=!0;break}m||(n[h*6+o[h]]=f,o[h]++)}if(a.get(f)===1){let m=!1;for(let u=0,g=o[f];u<g;u++)if(n[f*6+u]===h){m=!0;break}m||(n[f*6+o[f]]=h,o[f]++)}}}};var Me=class{static calculateNormals(t,s){let e=t.tile,{faceNameIndices:r,faceEquidistant:a,faceSmooth:o,faceFlattened:n,faceClamped:i,vertX:l,vertY:c,vertZ:h,faceVertFlatNormalX:f,faceVertFlatNormalY:m,faceVertFlatNormalZ:u,faceVertSmoothNormalX:g,faceVertSmoothNormalY:p,faceVertSmoothNormalZ:_,faceVertBothNormalX:y,faceVertBothNormalY:v,faceVertBothNormalZ:F,faceVertNormalX:d,faceVertNormalY:V,faceVertNormalZ:w,faceMaterials:x,faceVertIndices:M,vertSmoothNormalX:z,vertSmoothNormalY:C,vertSmoothNormalZ:A,vertBothNormalX:X,vertBothNormalY:T,vertBothNormalZ:Y}=s,[B,O,N,k,L,P]=ft(t.voxChunk.size);for(let E=0,U=t.faceCount;E<U;E++){let b=E*4;for(let q=0;q<4;q++){let I=M[b+q];z[I]=0,C[I]=0,A[I]=0,X[I]=0,T[I]=0,Y[I]=0}}for(let E=0,U=t.faceCount;E<U;E++){let b=r[E],q=a.get(E),I=n.get(E),R=i.get(E),G=q|1-(I|R);o.set(E,G);let H=M[E*4],K=M[E*4+1],tt=M[E*4+2],Z=M[E*4+3],ct=(l[H]+l[K]+l[tt]+l[Z])/4,ht=(c[H]+c[K]+c[tt]+c[Z])/4,Vt=(h[H]+h[K]+h[tt]+h[Z])/4;for(let xt=0;xt<4;xt++){let D=M[E*4+xt],Ft=M[E*4+(xt+3)%4],yt=l[D],Xt=l[Ft],Ct=c[D],Tt=c[Ft],Yt=h[D],Wt=h[Ft],Pt=z[D],ce=C[D],he=A[D],Lt=X[D],$t=T[D],fe=Y[D],Zt=Xt-yt,gt=Tt-Ct,_t=Wt-Yt,nt=ct-yt,lt=ht-Ct,At=Vt-Yt,Q=Math.sqrt(Zt*Zt+gt*gt+_t*_t),J=Math.sqrt(nt*nt+lt*lt+At*At);Q=Q===0?1:Q,J=J===0?1:J;let jt=1/Q;Zt*=jt,gt*=jt,_t*=jt;let dt=1/J;nt*=dt,lt*=dt,At*=dt;let at=gt*At-_t*lt,mt=_t*nt-Zt*At,ut=Zt*lt-gt*nt,et=B+.1,st=O+.9,ot=N+.1,bt=k+.9,zt=L+.1,Nt=P+.9;e&&((e.nx&&b===0||e.px&&b===1)&&(Ct<ot||Ct>bt||Yt<zt||Yt>Nt)&&(mt=0,ut=0),(e.ny&&b===2||e.py&&b===3)&&(yt<et||yt>st||Yt<zt||Yt>Nt)&&(at=0,ut=0),(e.nz&&b===4||e.pz&&b===5)&&(yt<et||yt>st||Ct<ot||Ct>bt)&&(at=0,mt=0));let Ut=Math.sqrt(at*at+mt*mt+ut*ut);Ut=Ut===0?1:Ut;let Kt=1/Ut;at*=Kt,mt*=Kt,ut*=Kt,f[E*4+xt]=at,m[E*4+xt]=mt,u[E*4+xt]=ut;let Qt=Zt*nt+gt*lt+_t*At,Et=Math.acos(Qt);Pt+=at*Et,ce+=mt*Et,he+=ut*Et,Lt+=G*(at*Et),$t+=G*(mt*Et),fe+=G*(ut*Et),z[D]=Pt,C[D]=ce,A[D]=he,X[D]=Lt,T[D]=$t,Y[D]=fe}}for(let E=0,U=t.vertCount;E<U;E++){let b=z[E],q=C[E],I=A[E],R=X[E],G=T[E],H=Y[E],K=Math.sqrt(b*b+q*q+I*I),tt=Math.sqrt(R*R+G*G+H*H);K!==0&&(z[E]=b/K,C[E]=q/K,A[E]=I/K),tt!==0&&(X[E]=R/tt,T[E]=G/tt,Y[E]=H/tt)}let $=t.materials.materials;for(let E=0,U=t.faceCount;E<U;E++){let b=o.get(E)===1,q=$[x[E]];for(let I=0;I<4;I++){let R=E*4+I,G=M[E*4+I];switch(g[R]=z[G],p[R]=C[G],_[R]=A[G],y[R]=!b||X[G]===0?f[R]:X[G],v[R]=!b||T[G]===0?m[R]:T[G],F[R]=!b||Y[G]===0?u[R]:Y[G],q.lighting){case Dt:d[R]=g[R],V[R]=p[R],w[R]=_[R];break;case te:d[R]=y[R],V[R]=v[R],w[R]=F[R];break;default:d[R]=f[R],V[R]=m[R],w[R]=u[R];break}}}}};var j=class{constructor(){let t=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];this.m=new Float32Array(t)}transformPoint(t){let s=this.m,e=s[12]*t.x+s[13]*t.y+s[14]*t.z+s[15],r=(s[0]*t.x+s[1]*t.y+s[2]*t.z+s[3])/e,a=(s[4]*t.x+s[5]*t.y+s[6]*t.z+s[7])/e,o=(s[8]*t.x+s[9]*t.y+s[10]*t.z+s[11])/e;t.x=r,t.y=a,t.z=o}transformPointInline(t,s,e,r){let a=t[r],o=s[r],n=e[r],i=this.m,l=i[12]*a+i[13]*o+i[14]*n+i[15],c=(i[0]*a+i[1]*o+i[2]*n+i[3])/l,h=(i[4]*a+i[5]*o+i[6]*n+i[7])/l,f=(i[8]*a+i[9]*o+i[10]*n+i[11])/l;t[r]=c,s[r]=h,e[r]=f}transformVector(t){let s=this.m,e=s[0]*t.x+s[1]*t.y+s[2]*t.z,r=s[4]*t.x+s[5]*t.y+s[6]*t.z,a=s[8]*t.x+s[9]*t.y+s[10]*t.z;t.x=e,t.y=r,t.z=a}transformVectorInline(t,s,e,r){let a=t[r],o=s[r],n=e[r],i=this.m,l=i[0]*a+i[1]*o+i[2]*n,c=i[4]*a+i[5]*o+i[6]*n,h=i[8]*a+i[9]*o+i[10]*n;t[r]=l,s[r]=c,e[r]=h}static identity(t){t=t||new j;let s=t.m;return s[0]=s[5]=s[10]=s[15]=1,s[1]=s[2]=s[3]=s[4]=s[6]=s[7]=s[8]=s[9]=s[11]=s[12]=s[13]=s[14]=0,t}static multiply(t,s,e){e=e||new j;let r=t.m,a=s.m,o=e.m;return o[0]=r[0]*a[0]+r[1]*a[4]+r[2]*a[8]+r[3]*a[12],o[1]=r[0]*a[1]+r[1]*a[5]+r[2]*a[9]+r[3]*a[13],o[2]=r[0]*a[2]+r[1]*a[6]+r[2]*a[10]+r[3]*a[14],o[3]=r[0]*a[3]+r[1]*a[7]+r[2]*a[11]+r[3]*a[15],o[4]=r[4]*a[0]+r[5]*a[4]+r[6]*a[8]+r[7]*a[12],o[5]=r[4]*a[1]+r[5]*a[5]+r[6]*a[9]+r[7]*a[13],o[6]=r[4]*a[2]+r[5]*a[6]+r[6]*a[10]+r[7]*a[14],o[7]=r[4]*a[3]+r[5]*a[7]+r[6]*a[11]+r[7]*a[15],o[8]=r[8]*a[0]+r[9]*a[4]+r[10]*a[8]+r[11]*a[12],o[9]=r[8]*a[1]+r[9]*a[5]+r[10]*a[9]+r[11]*a[13],o[10]=r[8]*a[2]+r[9]*a[6]+r[10]*a[10]+r[11]*a[14],o[11]=r[8]*a[3]+r[9]*a[7]+r[10]*a[11]+r[11]*a[15],o[12]=r[12]*a[0]+r[13]*a[4]+r[14]*a[8]+r[15]*a[12],o[13]=r[12]*a[1]+r[13]*a[5]+r[14]*a[9]+r[15]*a[13],o[14]=r[12]*a[2]+r[13]*a[6]+r[14]*a[10]+r[15]*a[14],o[15]=r[12]*a[3]+r[13]*a[7]+r[14]*a[11]+r[15]*a[15],e}static transpose(t,s){s=s||new j;let e=t.m,r=s.m;return r[0]=e[0],r[1]=e[4],r[2]=e[8],r[3]=e[12],r[4]=e[1],r[5]=e[5],r[6]=e[9],r[7]=e[13],r[8]=e[2],r[9]=e[6],r[10]=e[10],r[11]=e[14],r[12]=e[3],r[13]=e[7],r[14]=e[11],r[15]=e[15],s}static inverse(t,s){s=s||new j;let e=t.m,r=s.m;r[0]=e[5]*e[10]*e[15]-e[5]*e[14]*e[11]-e[6]*e[9]*e[15]+e[6]*e[13]*e[11]+e[7]*e[9]*e[14]-e[7]*e[13]*e[10],r[1]=-e[1]*e[10]*e[15]+e[1]*e[14]*e[11]+e[2]*e[9]*e[15]-e[2]*e[13]*e[11]-e[3]*e[9]*e[14]+e[3]*e[13]*e[10],r[2]=e[1]*e[6]*e[15]-e[1]*e[14]*e[7]-e[2]*e[5]*e[15]+e[2]*e[13]*e[7]+e[3]*e[5]*e[14]-e[3]*e[13]*e[6],r[3]=-e[1]*e[6]*e[11]+e[1]*e[10]*e[7]+e[2]*e[5]*e[11]-e[2]*e[9]*e[7]-e[3]*e[5]*e[10]+e[3]*e[9]*e[6],r[4]=-e[4]*e[10]*e[15]+e[4]*e[14]*e[11]+e[6]*e[8]*e[15]-e[6]*e[12]*e[11]-e[7]*e[8]*e[14]+e[7]*e[12]*e[10],r[5]=e[0]*e[10]*e[15]-e[0]*e[14]*e[11]-e[2]*e[8]*e[15]+e[2]*e[12]*e[11]+e[3]*e[8]*e[14]-e[3]*e[12]*e[10],r[6]=-e[0]*e[6]*e[15]+e[0]*e[14]*e[7]+e[2]*e[4]*e[15]-e[2]*e[12]*e[7]-e[3]*e[4]*e[14]+e[3]*e[12]*e[6],r[7]=e[0]*e[6]*e[11]-e[0]*e[10]*e[7]-e[2]*e[4]*e[11]+e[2]*e[8]*e[7]+e[3]*e[4]*e[10]-e[3]*e[8]*e[6],r[8]=e[4]*e[9]*e[15]-e[4]*e[13]*e[11]-e[5]*e[8]*e[15]+e[5]*e[12]*e[11]+e[7]*e[8]*e[13]-e[7]*e[12]*e[9],r[9]=-e[0]*e[9]*e[15]+e[0]*e[13]*e[11]+e[1]*e[8]*e[15]-e[1]*e[12]*e[11]-e[3]*e[8]*e[13]+e[3]*e[12]*e[9],r[10]=e[0]*e[5]*e[15]-e[0]*e[13]*e[7]-e[1]*e[4]*e[15]+e[1]*e[12]*e[7]+e[3]*e[4]*e[13]-e[3]*e[12]*e[5],r[11]=-e[0]*e[5]*e[11]+e[0]*e[9]*e[7]+e[1]*e[4]*e[11]-e[1]*e[8]*e[7]-e[3]*e[4]*e[9]+e[3]*e[8]*e[5],r[12]=-e[4]*e[9]*e[14]+e[4]*e[13]*e[10]+e[5]*e[8]*e[14]-e[5]*e[12]*e[10]-e[6]*e[8]*e[13]+e[6]*e[12]*e[9],r[13]=e[0]*e[9]*e[14]-e[0]*e[13]*e[10]-e[1]*e[8]*e[14]+e[1]*e[12]*e[10]+e[2]*e[8]*e[13]-e[2]*e[12]*e[9],r[14]=-e[0]*e[5]*e[14]+e[0]*e[13]*e[6]+e[1]*e[4]*e[14]-e[1]*e[12]*e[6]-e[2]*e[4]*e[13]+e[2]*e[12]*e[5],r[15]=e[0]*e[5]*e[10]-e[0]*e[9]*e[6]-e[1]*e[4]*e[10]+e[1]*e[8]*e[6]+e[2]*e[4]*e[9]-e[2]*e[8]*e[5];let a=e[0]*r[0]+e[1]*r[4]+e[2]*r[8]+e[3]*r[12];for(let o=0;o<16;o++)r[o]/=a;return s}static scale(t,s,e,r){r=r||new j;let a=r.m;return a[0]=t,a[1]=0,a[2]=0,a[3]=0,a[4]=0,a[5]=s,a[6]=0,a[7]=0,a[8]=0,a[9]=0,a[10]=e,a[11]=0,a[12]=0,a[13]=0,a[14]=0,a[15]=1,r}static translate(t,s,e,r){r=r||new j;let a=r.m;return a[0]=1,a[1]=0,a[2]=0,a[3]=t,a[4]=0,a[5]=1,a[6]=0,a[7]=s,a[8]=0,a[9]=0,a[10]=1,a[11]=e,a[12]=0,a[13]=0,a[14]=0,a[15]=1,r}static rotate(t,s,e,r,a){if(!t||!s&&!e&&!r)return j.identity(a);a=a||new j;let o=a.m,n=Math.sqrt(s*s+e*e+r*r);t*=Math.PI/180,s/=n,e/=n,r/=n;let i=Math.cos(t),l=Math.sin(t),c=1-i;return o[0]=s*s*c+i,o[1]=s*e*c-r*l,o[2]=s*r*c+e*l,o[3]=0,o[4]=e*s*c+r*l,o[5]=e*e*c+i,o[6]=e*r*c-s*l,o[7]=0,o[8]=r*s*c-e*l,o[9]=r*e*c+s*l,o[10]=r*r*c+i,o[11]=0,o[12]=0,o[13]=0,o[14]=0,o[15]=1,a}static lookAtORIGINAL(t,s,e,r,a,o,n,i,l,c){c=c||new j;let h=c.m,f=t-r,m=s-a,u=e-o,g=Math.sqrt(f*f+m*m+u*u);f/=g,m/=g,u/=g;let p=i*u-l*m,_=l*f-n*u,y=n*m-i*f;g=Math.sqrt(p*p+_*_+y*y),p/=g,_/=g,y/=g;let v=m*y-u*_,F=u*p-f*y,d=f*_-m*p;return g=Math.sqrt(v*v+F*F+d*d),v/=g,F/=g,d/=g,h[0]=p,h[1]=_,h[2]=y,h[3]=-(p*t+_*s+y*e),h[4]=v,h[5]=F,h[6]=d,h[7]=-(v*t+F*s+d*e),h[8]=f,h[9]=m,h[10]=u,h[11]=-(f*t+m*s+u*e),h[12]=0,h[13]=0,h[14]=0,h[15]=1,c}static lookAtTRYOUT(t,s,e,r){r=r||new j;let a=r.m,o=Math.sqrt(t*t+e*e);return a[0]=e/o,a[1]=0,a[2]=-t/o,a[3]=0,a[4]=t*s/o,a[5]=-o,a[6]=e*s/o,a[7]=0,a[8]=t,a[9]=s,a[10]=e,a[11]=0,a[12]=0,a[13]=0,a[14]=0,a[15]=1,r}static lookAt(t,s,e,r){r=r||new j;let a=r.m,o=Math.sqrt(t*t+e*e),n=o?t/o:1,i=o?e/o:0;return a[0]=t,a[1]=-i,a[2]=-e*n,a[3]=0,a[4]=s,a[5]=0,a[6]=o,a[7]=0,a[8]=e,a[9]=n,a[10]=-e*i,a[11]=0,a[12]=0,a[13]=0,a[14]=0,a[15]=1,r}};var xe=[null,null,null,null],Ve=[null,null,null,null],Ce=[null,null,null,null],Ie=class{static transformVertices(t,s){let{vertX:e,vertY:r,vertZ:a,faceVertNormalX:o,faceVertFlatNormalX:n,faceVertNormalY:i,faceVertFlatNormalY:l,faceVertNormalZ:c,faceVertFlatNormalZ:h,faceVertSmoothNormalX:f,faceVertSmoothNormalY:m,faceVertSmoothNormalZ:u,faceVertBothNormalX:g,faceVertBothNormalY:p,faceVertBothNormalZ:_}=s,y=t.determineBoundsOffsetAndRescale(t.resize,s),v=new j;v=j.multiply(v,j.translate(t.position.x,t.position.y,t.position.z)),v=j.multiply(v,j.rotate(t.rotation.z,0,0,1)),v=j.multiply(v,j.rotate(t.rotation.y,0,1,0)),v=j.multiply(v,j.rotate(t.rotation.x,1,0,0)),v=j.multiply(v,j.scale(t.scale.x,t.scale.y,t.scale.z)),v=j.multiply(v,j.scale(y.rescale,y.rescale,y.rescale)),v=j.multiply(v,j.translate(y.offset.x,y.offset.y,y.offset.z));let F=j.inverse(v);F=j.transpose(F);for(let d=0,V=t.vertCount;d<V;d++)v.transformPointInline(e,r,a,d);xe[0]=o,Ve[0]=i,Ce[0]=c,xe[1]=n,Ve[1]=l,Ce[1]=h,xe[2]=f,Ve[2]=m,Ce[2]=u,xe[3]=g,Ve[3]=p,Ce[3]=_;for(let d=0,V=t.faceCount;d<V;d++){let w=d*4;for(let x=0;x<4;x++)for(let M=0,z=xe.length;M<z;M++){let C=xe[M],A=Ve[M],X=Ce[M],T=w+x;F.transformVectorInline(C,A,X,T);let Y=C[T],B=A[T],O=X[T],N=Math.sqrt(Y*Y+B*B+O*O);if(N>0){let k=1/N;C[T]=Y*k,A[T]=B*k,X[T]=O*k}}}}};var we=class{static calculateLights(t,s){let e=t.lights;if(e.length===0)return;for(let p of e)if(p.direction&&!p.normalizedDirection){let _=Math.sqrt(p.direction.x*p.direction.x+p.direction.y*p.direction.y+p.direction.z*p.direction.z);if(p.normalizedDirection={x:p.direction.x,y:p.direction.y,z:p.direction.z},_>0){let y=1/_;p.normalizedDirection.x*=y}}let r=t.materials.materials,{faceMaterials:a,faceVertNormalX:o,faceVertNormalY:n,faceVertNormalZ:i,faceVertIndices:l,vertX:c,vertY:h,vertZ:f,faceVertLightR:m,faceVertLightG:u,faceVertLightB:g}=s;for(let p=0,_=t.faceCount;p<_;p++){let y=r[a[p]],v=p*4;if(y.lights)for(let F=0;F<4;F++){let d=v+F,V=l[d],w=c[V],x=h[V],M=f[V],z=o[d],C=n[d],A=i[d];m[d]=0,u[d]=0,g[d]=0;for(let X of e){let{color:T,strength:Y,distance:B,normalizedDirection:O,position:N}=X,k=Y,L=0;if(N){let P=N.x-w,$=N.y-x,E=N.z-M;L=Math.sqrt(P*P+$*$+E*E);let U=1/L;k=Y*Math.max(z*P*U+C*$*U+A*E*U,0)}else O&&(k=Y*Math.max(z*O.x+C*O.y+A*O.z,0));N&&B&&(k=k*(1-Math.min(L/B,1))),m[d]+=T.r*k,u[d]+=T.g*k,g[d]+=T.b*k}}else for(let F=0;F<4;F++){let d=v+F;m[d]=1,u[d]=1,g[d]=1}}}};var Ns=[],os=new Map,is=()=>Ns.pop()||{minx:Number.MAX_VALUE,miny:Number.MAX_VALUE,minz:Number.MAX_VALUE,maxx:-Number.MAX_VALUE,maxy:-Number.MAX_VALUE,maxz:-Number.MAX_VALUE,partitions:Array(8).fill(null),triangles:[]},Es=S=>{for(let t of S.partitions)t&&Es(t);S.minx=Number.MAX_VALUE,S.miny=Number.MAX_VALUE,S.minz=Number.MAX_VALUE,S.maxx=-Number.MAX_VALUE,S.maxy=-Number.MAX_VALUE,S.maxz=-Number.MAX_VALUE,S.partitions.fill(null),S.triangles.length=0,Ns.push(S)},be=class{static calculateAmbientOcclusion(t,s){if(!(t.ao||t.materials.find(function(V){return V.ao})))return;let{faceMaterials:r,faceVertIndices:a,faceVertAO:o,vertX:n,vertY:i,vertZ:l,faceVertNormalX:c,faceVertNormalY:h,faceVertNormalZ:f}=s,{faceCount:m}=t,u=t.materials.materials,g=this._getAllFaceTriangles(t,s),p=this._trianglesToOctree(g,t,s);t._aoSides&&(p=this._aoSidesToOctree(t,s,p));let _=t.aoSamples,y=this._generateFibonacciSamples(_);os.clear();let v=t.scale.x,F=t.scale.y,d=t.scale.z;for(let V=0;V<m;V++){let w=u[r[V]],x=w.ao||t.ao,M=V*4;if(o[M]=0,o[M+1]=0,o[M+2]=0,o[M+3]=0,!x||x.maxDistance===0||x.strength===0||x.angle<1||w.opacity===0)continue;let z=x.maxDistance*Math.max(v,F,d),C=x.strength,A=Math.cos(x.angle/180*Math.PI);for(let X=0;X<4;X++){let T=M+X,Y=a[T],B=n[Y],O=i[Y],N=l[Y],k=c[T],L=h[T],P=f[T],$=B*16384+O*128+N,E=k*1e7+L*1e5+P*1e3,U=$*1e9+E,b=os.get(U);if(b!==void 0){o[T]=b;continue}let q=a[M+(X+2)%4],I=n[q],R=i[q],G=l[q],H=B*.99999+I*1e-5+k*1e-5,K=O*.99999+R*1e-5+L*1e-5,tt=N*.99999+G*1e-5+P*1e-5,Z=0,ct=0;for(let[Vt,xt,D]of y){if(Vt*k+xt*L+D*P<=A)continue;let yt=H+Vt*z,Xt=K+xt*z,Ct=tt+D*z,Tt=this._distanceToOctree(t,s,p,H,K,tt,Vt,xt,D,z,yt,Xt,Ct);Tt?Tt=Tt/z:Tt=1,Z+=Tt,ct++}let ht=0;ct!==0&&(Z=Math.max(Math.min(Z/ct,1),0),ht=1-Math.pow(Z,C)),o[T]=ht,os.set(U,ht)}}Es(p)}static _getAllFaceTriangles(t,s){let{faceMaterials:e}=s,{faceCount:r}=t,a=[],o=t.materials.materials;for(let n=0;n<r;n++){if(o[e[n]].opacity<.75)continue;let l=n*2;a.push(l),a.push(l+1)}return a}static _trianglesToOctree(t,s,e){let{faceVertIndices:r,vertX:a,vertY:o,vertZ:n}=e,i=t.length;if(i<=32){let l=is();l.triangles=t;for(let c=0;c<i;c++){let h=t[c],m=(h>>1)*4,u,g,p;(h&1)===0?(u=r[m+2],g=r[m+1],p=r[m+0]):(u=r[m+0],g=r[m+3],p=r[m+2]);let _=a[u],y=o[u],v=n[u],F=a[g],d=o[g],V=n[g],w=a[p],x=o[p],M=n[p];l.minx=Math.min(l.minx,_,F,w),l.miny=Math.min(l.miny,y,d,x),l.minz=Math.min(l.minz,v,V,M),l.maxx=Math.max(l.maxx,_,F,w),l.maxy=Math.max(l.maxy,y,d,x),l.maxz=Math.max(l.maxz,v,V,M)}return l}else{let l=0,c=0,h=0;for(let g=0;g<i;g++){let p=t[g],y=(p>>1)*4,v,F,d;(p&1)===0?(v=r[y+2],F=r[y+1],d=r[y+0]):(v=r[y+0],F=r[y+3],d=r[y+2]);let V=a[v],w=o[v],x=n[v],M=a[F],z=o[F],C=n[F],A=a[d],X=o[d],T=n[d];l+=V+M+A,c+=w+z+X,h+=x+C+T}let f=1/i;l*=f,c*=f,h*=f;let m=Array(8).fill(null);for(let g=0;g<i;g++){let p=t[g],y=(p>>1)*4,v,F,d;(p&1)===0?(v=r[y+2],F=r[y+1],d=r[y+0]):(v=r[y+0],F=r[y+3],d=r[y+2]);let V=a[v],w=o[v],x=n[v],M=a[F],z=o[F],C=n[F],A=a[d],X=o[d],T=n[d],Y=V+M+A<l?0:1,B=w+z+X<c?0:1,O=x+C+T<h?0:1,N=Y+B*2+O*4;m[N]===null?m[N]=[p]:m[N].push(p)}let u=is();for(let g=0;g<8;g++){if(m[g]===null)continue;let p=this._trianglesToOctree(m[g],s,e);u.partitions[g]=p,u.minx=Math.min(u.minx,p.minx),u.miny=Math.min(u.miny,p.miny),u.minz=Math.min(u.minz,p.minz),u.maxx=Math.max(u.maxx,p.maxx),u.maxy=Math.max(u.maxy,p.maxy),u.maxz=Math.max(u.maxz,p.maxz)}return u}}static _distanceToOctree(t,s,e,r,a,o,n,i,l,c,h,f,m){if(this._hitsBox(r,a,o,h,f,m,e)===!1)return null;if(e.triangles.length>0)return this._distanceToModel(t,s,e.triangles,r,a,o,n,i,l,c);let u=c,g=e.partitions;for(let p=0;p<8;p++){let _=g[p];if(_===null)continue;let y=this._distanceToOctree(t,s,_,r,a,o,n,i,l,c,h,f,m);y&&(u=Math.min(u,y))}return u}static _aoSidesToOctree(t,s,e){let r=t.determineBoundsOffsetAndRescale(Bt,s).bounds,{vertCount:a,faceCount:o}=t,{faceVertIndices:n,faceCulled:i,vertX:l,vertY:c,vertZ:h}=s,f=(u,g,p,_,y,v,F,d,V)=>{let w=o*4;l[a]=u,c[a]=g,h[a]=p,l[a+1]=_,c[a+1]=y,h[a+1]=v,l[a+2]=F,c[a+2]=d,h[a+2]=V,n[w]=a+2,n[w+1]=a+1,n[w+2]=a+0,i.set(o,1);let x=o*2;return o++,a+=3,x},m=[];if(t._aoSides.nx&&m.push(f(r.minX-.05,1e6,-1e6,r.minX-.05,1e6,1e6,r.minX-.05,-1e7,0)),t._aoSides.px&&m.push(f(r.maxX+.05,1e6,1e6,r.maxX+.05,1e6,-1e6,r.maxX+.05,-1e7,0)),t._aoSides.ny&&m.push(f(1e6,r.minY-.05,-1e6,-1e6,r.minY-.05,-1e6,0,r.minY-.05,1e7)),t._aoSides.py&&m.push(f(-1e6,r.maxY+.05,-1e6,1e6,r.maxY+.05,-1e6,0,r.maxY+.05,1e7)),t._aoSides.nz&&m.push(f(1e6,1e6,r.minZ-.05,-1e6,1e6,r.minZ-.05,0,-1e7,r.minZ-.05)),t._aoSides.pz&&m.push(f(-1e6,1e6,r.maxZ+.05,1e6,1e6,r.maxZ+.05,0,-1e7,r.maxZ+.05)),m.length>0){let u=this._trianglesToOctree(m,t,s),g=is();g.partitions=[g,u]}return e}static _hitsBox(t,s,e,r,a,o,n){let i=n.minx;if(t<i&&r<i)return!1;let l=n.maxx;if(t>l&&r>l)return!1;let c=n.miny;if(s<c&&a<c)return!1;let h=n.maxy;if(s>h&&a>h)return!1;let f=n.minz;if(e<f&&o<f)return!1;let m=n.maxz;if(e>m&&o>m)return!1;let u=t-(i+l)*.5,g=(l-i)*.5,p=(r-t)*.5,_=Math.abs(p);if(Math.abs(u)>g+_)return!1;let y=(h-c)*.5,v=(a-s)*.5,F=Math.abs(v),d=s-(c+h)*.5;if(Math.abs(d)>y+F)return!1;let V=(m-f)*.5,w=(o-e)*.5,x=Math.abs(w),M=e-(f+m)*.5;return!(Math.abs(M)>V+x||Math.abs(v*M-w*d)>y*x+V*F+Number.EPSILON||Math.abs(w*u-p*M)>V*_+g*x+Number.EPSILON||Math.abs(p*d-v*u)>g*F+y*_+Number.EPSILON)}static _distanceToModel(t,s,e,r,a,o,n,i,l,c){let h=null,{faceVertIndices:f}=s;for(let m=0;m<e.length;m++){let u=e[m],p=(u>>1)*4,_,y,v;(u&1)===0?(_=f[p+2],y=f[p+1],v=f[p+0]):(_=f[p+0],y=f[p+3],v=f[p+2]);let F=this._triangleDistance(t,s,_,y,v,r,a,o,n,i,l);F&&(h?h=Math.min(h,F):F<c&&(h=F))}return h}static _triangleDistance(t,s,e,r,a,o,n,i,l,c,h){let{vertX:f,vertY:m,vertZ:u}=s,g=f[e],p=m[e],_=u[e],y=f[r],v=m[r],F=u[r],d=f[a],V=m[a],w=u[a],x=y-g,M=v-p,z=F-_,C=d-g,A=V-p,X=w-_,T=c*X-h*A,Y=h*C-l*X,B=l*A-c*C,O=x*T+M*Y+z*B;if(O<Number.EPSILON)return null;let N=1/O,k=o-g,L=n-p,P=i-_,$=N*(k*T+L*Y+P*B);if($<0||$>1)return null;let E=L*z-P*M,U=P*x-k*z,b=k*M-L*x,q=N*(l*E+c*U+h*b);if(q<0||$+q>1)return null;let I=N*(C*E+A*U+X*b);return I<=Number.EPSILON?null:I}static _generateFibonacciSamples(t){let s=[],e=(Math.sqrt(5)+1)/2,r=(2-e)*(2*Math.PI);for(let a=1;a<=t;++a){let o=Math.asin(-1+2*a/(t+1)),n=r*a,i=Math.cos(n)*Math.cos(o),l=Math.sin(o),c=Math.sin(n)*Math.cos(o);s.push([i,l,c])}return s}static _generateOctahedronSamples(t){let s=[],e=Math.PI/2/t;for(let r=0;r<=t;r++){let a=r*e,o=Math.cos(a),n=Math.sin(a),i=Math.max(1,r*4),l=Math.PI*2/i;for(let c=0;c<i;c++){let h=c*l,f=n*Math.sin(h),m=n*Math.cos(h);s.push({x:f,y:o,z:m}),r<t&&s.push({x:f,y:-o,z:m})}i+=4}return s}};var ze=class{static assignUVs(t,s){let{faceMaterials:e,faceNameIndices:r,faceVertUs:a,faceVertVs:o}=s,n=[],i=[],l=[],c=t.materials.materials;for(let h=0;h<c.length;h++){let f=c[h],m=0,u=1,g=1;if(f.map||f.normalMap||f.roughnessMap||f.metalnessMap||f.emissiveMap){let p=t.voxChunk.size[0],_=t.voxChunk.size[1],y=t.voxChunk.size[2];f.mapTransform.uscale===-1&&(u=1/Math.max(p,_,y)),f.mapTransform.vscale===-1&&(g=1/Math.max(p,_,y)),(f.map&&f.map.cube||f.normalMap&&f.normalMap.cube||f.roughnessMap&&f.roughnessMap.cube||f.metalnessMap&&f.metalnessMap.cube||f.emissiveMap&&f.emissiveMap.cube)&&(m=1,u=u/4,g=g/2)}n.push(m),i.push(u),l.push(g)}for(let h=0,f=t.faceCount;h<f;h++){let m=e[h],u=n[m],g=i[m],p=l[m],_=Ms[r[h]],y=h*4,v=a[y+_.order[0]],F=o[y+_.order[0]],d=a[y+_.order[1]],V=o[y+_.order[1]],w=a[y+_.order[2]],x=o[y+_.order[2]],M=a[y+_.order[3]],z=o[y+_.order[3]],C=y+_.order[0],A=y+_.order[1],X=y+_.order[2],T=y+_.order[3],Y=u*_.uo,B=u*_.vo,O=_.ud*g,N=_.vd*p;a[C]=Y+(v+1e-4)*O,o[C]=B+(F+1e-4)*N,a[A]=Y+(d+1e-4)*O,o[A]=B+(V+.9999)*N,a[X]=Y+(w+.9999)*O,o[X]=B+(x+.9999)*N,a[T]=Y+(M+.9999)*O,o[T]=B+(z+1e-4)*N}}};var Ne=class{static combineColors(t,s){let{vertColorR:e,vertColorG:r,vertColorB:a,vertColorCount:o,faceVertColorR:n,faceVertColorG:i,faceVertColorB:l,faceVertLightR:c,faceVertLightG:h,faceVertLightB:f,faceVertIndices:m,faceMaterials:u,faceVertAO:g}=s,p=t.materials.materials,_=!!t.materials.find(d=>d.colors.length>1&&d.fade),y=Array(p.length).fill(!1);for(let d=0,V=p.length;d<V;d++)_&&p[d].colors.length>1&&p[d].fade&&(y[d]=!0);for(let d=0,V=t.faceCount;d<V;d++)if(y[u[d]])for(let x=0;x<4;x++){let M=0,z=0,C=0,A=0,X=d*4+x,T=m[X],Y=o[T];for(let O=0;O<Y;O++){let N=T*6+O;M+=e[N],z+=r[N],C+=a[N],A++}let B=1/A;n[X]=M*B,i[X]=z*B,l[X]=C*B}let v=t.ao||t.materials.find(function(d){return d.ao}),F=t.lights.length>0;if(v&&F)for(let d=0,V=t.faceCount;d<V;d++){let x=p[u[d]].ao||t.ao,M=x?x.color:null;for(let z=0;z<4;z++){let C=d*4+z,A=n[C],X=i[C],T=l[C],Y=M?M.r:A,B=M?M.g:X,O=M?M.b:T,N=1-g[C];n[C]=A*c[C]*N+Y*(1-N),i[C]=X*h[C]*N+B*(1-N),l[C]=T*f[C]*N+O*(1-N)}}else if(F&&!v)for(let d=0,V=t.faceCount;d<V;d++)for(let w=0;w<4;w++){let x=d*4+w;n[x]=n[x]*c[x],i[x]=i[x]*h[x],l[x]=l[x]*f[x]}else if(!F&&v)for(let d=0,V=t.faceCount;d<V;d++){let x=p[u[d]].ao||t.ao;if(!x)continue;let M=x.color;for(let z=0;z<4;z++){let C=d*4+z,A=n[C],X=i[C],T=l[C],Y=M?M.r:A,B=M?M.g:X,O=M?M.b:T,N=1-g[C];n[C]=N*A+Y*(1-N),i[C]=N*X+B*(1-N),l[C]=N*T+O*(1-N)}}}};var Pe={filled:!1,lastVoxelAxis1:0,lastVoxelAxis2:0,maxVoxelAxis3:0,lastFaceIndex:0},Le={filled:!1,lastVoxelAxis1:0,lastVoxelAxis2:0,maxVoxelAxis3:0,lastFaceIndex:0},$e={filled:!1,lastVoxelAxis1:0,lastVoxelAxis2:0,maxVoxelAxis3:0,lastFaceIndex:0},Ue={filled:!1,lastVoxelAxis1:0,lastVoxelAxis2:0,maxVoxelAxis3:0,lastFaceIndex:0},Ee=class{static simplify(t,s){if(!t.simplify)return;let e=function(){Pe.filled=!1,Le.filled=!1,$e.filled=!1,Ue.filled=!1},r=t.materials.materials,{faceCulled:a,faceNameIndices:o,vertX:n,vertY:i,vertZ:l,voxelXZYFaceIndices:c,voxelXYZFaceIndices:h,voxelYZXFaceIndices:f}=s;for(let m=c.length-t.faceCount,u=c.length;m<u;m++){let g=c[m],p=g&(1<<28)-1;if(a.get(p))continue;let _=g/(1<<28),y=_>>16&255,v=_>>8&255,F=_&255;switch(o[p]){case 0:this._mergeFaces(r,t,s,Pe,p,y,v,F,n,l,i,0,1,2,3);break;case 1:this._mergeFaces(r,t,s,Le,p,y,v,F,n,l,i,0,1,2,3);break;case 4:this._mergeFaces(r,t,s,$e,p,y,v,F,n,l,i,0,1,2,3);break;case 5:this._mergeFaces(r,t,s,Ue,p,y,v,F,n,l,i,0,1,2,3);break}}e();for(let m=h.length-t.faceCount,u=h.length;m<u;m++){let g=h[m],p=g&(1<<28)-1;if(a.get(p))continue;let _=g/(1<<28),y=_>>16&255,v=_>>8&255,F=_&255;switch(o[p]){case 0:this._mergeFaces(r,t,s,Pe,p,y,v,F,n,i,l,1,2,3,0);break;case 1:this._mergeFaces(r,t,s,Le,p,y,v,F,n,i,l,3,0,1,2);break;case 2:this._mergeFaces(r,t,s,$e,p,y,v,F,n,i,l,0,1,2,3);break;case 3:this._mergeFaces(r,t,s,Ue,p,y,v,F,n,i,l,2,3,0,1);break}}e();for(let m=f.length-t.faceCount,u=f.length;m<u;m++){let g=f[m],p=g&(1<<28)-1;if(a.get(p))continue;let _=g/(1<<28),y=_>>16&255,v=_>>8&255,F=_&255;switch(o[p]){case 2:this._mergeFaces(r,t,s,Pe,p,y,v,F,i,l,n,1,2,3,0);break;case 3:this._mergeFaces(r,t,s,Le,p,y,v,F,i,l,n,1,2,3,0);break;case 4:this._mergeFaces(r,t,s,$e,p,y,v,F,i,l,n,3,0,1,2);break;case 5:this._mergeFaces(r,t,s,Ue,p,y,v,F,i,l,n,1,2,3,0);break}}e()}static _mergeFaces(t,s,e,r,a,o,n,i,l,c,h,f,m,u,g){let{faceCulled:p,faceMaterials:_,vertX:y,vertY:v,vertZ:F,faceVertIndices:d,faceVertNormalX:V,faceVertNormalY:w,faceVertNormalZ:x,faceVertColorR:M,faceVertColorG:z,faceVertColorB:C,faceVertUs:A,faceVertVs:X,faceVertFlatNormalX:T,faceVertFlatNormalY:Y,faceVertFlatNormalZ:B,faceVertSmoothNormalX:O,faceVertSmoothNormalY:N,faceVertSmoothNormalZ:k,faceVertBothNormalX:L,faceVertBothNormalY:P,faceVertBothNormalZ:$}=e,E=_[a],U=t[E];if(r.filled&&r.lastVoxelAxis1===o&&r.lastVoxelAxis2===n&&(U.simplify===!0||U.simplify===null&&s.simplify===!0)&&p.get(a)===0){if(r.maxVoxelAxis3!==i-1){r.filled=!0,r.lastVoxelAxis1=o,r.lastVoxelAxis2=n,r.maxVoxelAxis3=i,r.lastFaceIndex=a;return}let b=a*4,q=r.lastFaceIndex,I=q*4;if(_[q]!==E)return;let R=V[b],G=w[b],H=x[b],K=V[b+1],tt=w[b+1],Z=x[b+1],ct=V[b+2],ht=w[b+2],Vt=x[b+2],xt=V[b+3],D=w[b+3],Ft=x[b+3],yt=V[I],Xt=w[I],Ct=x[I],Tt=V[I+1],Yt=w[I+1],Wt=x[I+1],Pt=V[I+2],ce=w[I+2],he=x[I+2],Lt=V[I+3],$t=w[I+3],fe=x[I+3];if(!(this._normalEquals(R,G,H,yt,Xt,Ct)&&this._normalEquals(K,tt,Z,Tt,Yt,Wt)&&this._normalEquals(ct,ht,Vt,Pt,ce,he)&&this._normalEquals(xt,D,Ft,Lt,$t,fe)))return;let gt=M[b],_t=z[b],nt=C[b],lt=M[b+1],At=z[b+1],Q=C[b+1],J=M[b+2],jt=z[b+2],dt=C[b+2],at=M[b+3],mt=z[b+3],ut=C[b+3],et=M[I],st=z[I],ot=C[I],bt=M[I+1],zt=z[I+1],Nt=C[I+1],Ut=M[I+2],Kt=z[I+2],Qt=C[I+2],Et=M[I+3],qe=z[I+3],ge=C[I+3];if(!(gt===et&&_t===st&&nt===ot&&lt===bt&&At===zt&&Q===Nt&&J===Ut&&jt===Kt&&dt===Qt&&at===Et&&mt===qe&&ut===ge))return;let He=d[b+f],Jt=d[b+m],Te=d[b+u],Bs=d[b+g],hs=y[He],fs=v[He],ms=F[He],Oe=y[Jt],Ye=v[Jt],Ze=F[Jt],me=d[I+f],Ge=d[I+m],We=d[I+u],je=d[I+g],us=y[me],ps=v[me],ds=F[me],Ss=Math.sqrt((Oe-hs)*(Oe-hs)+(Ye-fs)*(Ye-fs)+(Ze-ms)*(Ze-ms)),Xs=Math.sqrt((Oe-us)*(Oe-us)+(Ye-ps)*(Ye-ps)+(Ze-ds)*(Ze-ds)),St=Ss/Xs;return Math.abs(l[Ge]-(1-St)*l[Jt]-St*l[me])<=1e-4&&Math.abs(c[Ge]-(1-St)*c[Jt]-St*c[me])<=1e-4&&Math.abs(h[Ge]-(1-St)*h[Jt]-St*h[me])<=1e-4&&Math.abs(l[We]-(1-St)*l[Te]-St*l[je])<=1e-4&&Math.abs(c[We]-(1-St)*c[Te]-St*c[je])<=1e-4&&Math.abs(h[We]-(1-St)*h[Te]-St*h[je])<=1e-4?(d[I+m]=Jt,d[I+u]=Te,A[I+m]=A[b+m],X[I+m]=X[b+m],A[I+u]=A[b+u],X[I+u]=X[b+u],T[I+m]=T[b+m],Y[I+m]=Y[b+m],B[I+m]=B[b+m],T[I+u]=T[b+u],Y[I+u]=Y[b+u],B[I+u]=B[b+u],O[I+m]=O[b+m],N[I+m]=N[b+m],k[I+m]=k[b+m],O[I+u]=O[b+u],N[I+u]=N[b+u],k[I+u]=k[b+u],L[I+m]=L[b+m],P[I+m]=P[b+m],$[I+m]=$[b+m],L[I+u]=L[b+u],P[I+u]=P[b+u],$[I+u]=$[b+u],r.maxVoxelAxis3=i,p.set(a,1),s.nonCulledFaceCount--,!0):void 0}return r.filled=!0,r.lastVoxelAxis1=o,r.lastVoxelAxis2=n,r.maxVoxelAxis3=i,r.lastFaceIndex=a,!1}static _normalEquals(t,s,e,r,a,o){return Math.abs(t-r)<.01&&Math.abs(s-a)<.01&&Math.abs(e-o)<.01}};var Se=class{static alignFaceDiagonals(t,s){let e=.1*Math.min(t.scale.x,t.scale.y,t.scale.z);e*=e;let{faceCulled:r,faceVertIndices:a,vertX:o,vertY:n,vertZ:i,faceVertFlatNormalX:l,faceVertFlatNormalY:c,faceVertFlatNormalZ:h,faceVertSmoothNormalX:f,faceVertSmoothNormalY:m,faceVertSmoothNormalZ:u,faceVertBothNormalX:g,faceVertBothNormalY:p,faceVertBothNormalZ:_,faceVertUs:y,faceVertVs:v,faceVertColorR:F,faceVertColorG:d,faceVertColorB:V,faceVertNormalX:w,faceVertNormalY:x,faceVertNormalZ:M}=s;for(let z=0,C=t.faceCount;z<C;z++){if(r.get(z)===1)continue;let A=z*4,X=a[A],T=a[A+1],Y=a[A+2],B=a[A+3],O=o[X],N=n[X],k=i[X],L=o[T],P=n[T],$=i[T],E=o[Y],U=n[Y],b=i[Y],q=o[B],I=n[B],R=i[B],G=(O+E)/2,H=(N+U)/2,K=(k+b)/2,tt=(L-G)*(L-G)+(P-H)*(P-H)+($-K)*($-K),Z=(q-G)*(q-G)+(I-H)*(I-H)+(R-K)*(R-K),ct=(L+q)/2,ht=(P+I)/2,Vt=($+R)/2,xt=(O-ct)*(O-ct)+(N-ht)*(N-ht)+(k-Vt)*(k-Vt),D=(E-ct)*(E-ct)+(U-ht)*(U-ht)+(b-Vt)*(b-Vt);if(tt<e||Z<e)this._shiftFaceVertsAtOffset(A,a),this._shiftFaceVertsAtOffset(A,w),this._shiftFaceVertsAtOffset(A,x),this._shiftFaceVertsAtOffset(A,M),this._shiftFaceVertsAtOffset(A,l),this._shiftFaceVertsAtOffset(A,c),this._shiftFaceVertsAtOffset(A,h),this._shiftFaceVertsAtOffset(A,f),this._shiftFaceVertsAtOffset(A,m),this._shiftFaceVertsAtOffset(A,u),this._shiftFaceVertsAtOffset(A,g),this._shiftFaceVertsAtOffset(A,p),this._shiftFaceVertsAtOffset(A,_),this._shiftFaceVertsAtOffset(A,y),this._shiftFaceVertsAtOffset(A,v),this._shiftFaceVertsAtOffset(A,F),this._shiftFaceVertsAtOffset(A,d),this._shiftFaceVertsAtOffset(A,V);else if(!(xt<e||D<e)){let Ft=this._getVertexSumInline(O,N,k);for(;this._getVertexSumInline(L,P,$)<Ft||this._getVertexSumInline(E,U,b)<Ft||this._getVertexSumInline(q,I,R)<Ft;){this._shiftFaceVertsAtOffset(A,a),this._shiftFaceVertsAtOffset(A,w),this._shiftFaceVertsAtOffset(A,x),this._shiftFaceVertsAtOffset(A,M),this._shiftFaceVertsAtOffset(A,l),this._shiftFaceVertsAtOffset(A,c),this._shiftFaceVertsAtOffset(A,h),this._shiftFaceVertsAtOffset(A,f),this._shiftFaceVertsAtOffset(A,m),this._shiftFaceVertsAtOffset(A,u),this._shiftFaceVertsAtOffset(A,g),this._shiftFaceVertsAtOffset(A,p),this._shiftFaceVertsAtOffset(A,_),this._shiftFaceVertsAtOffset(A,y),this._shiftFaceVertsAtOffset(A,v),this._shiftFaceVertsAtOffset(A,F),this._shiftFaceVertsAtOffset(A,d),this._shiftFaceVertsAtOffset(A,V);let yt=O,Xt=N,Ct=k;O=L,N=P,k=$,L=E,P=U,$=b,E=q,U=I,b=R,q=yt,I=Xt,R=Ct,Ft=this._getVertexSumInline(O,N,k)}}}}static _getVertexSumInline(t,s,e){return Math.abs(t)+Math.abs(s)+Math.abs(e)}static _shiftFaceVertsAtOffset(t,s){let e=s[t];s[t]=s[t+1],s[t+1]=s[t+2],s[t+2]=s[t+3],s[t+3]=e}};var ns=(S,t)=>S-t,ie=class{set origin(t){this._origin=W.parse(t)}get origin(){return W.toString(this._origin)}set flatten(t){this._flatten=W.parse(t)}get flatten(){return W.toString(this._flatten)}set clamp(t){this._clamp=W.parse(t)}get clamp(){return W.toString(this._clamp)}set skip(t){this._skip=W.parse(t)}get skip(){return W.toString(this._skip)}set tile(t){this._tile=W.parse(t||" "),this._tile.x&&(this._tile=W.combine(this._tile,{nx:!0,px:!0})),this._tile.y&&(this._tile=W.combine(this._tile,{ny:!0,py:!0})),this._tile.z&&(this._tile=W.combine(this._tile,{nz:!0,pz:!0})),this._tile.x=!1,this._tile.y=!1,this._tile.z=!1}get tile(){return W.toString(this._tile)}set shape(t){if(this._shape=(t||"box").trim(),!["box","sphere","cylinder-x","cylinder-y","cylinder-z"].includes(this._shape))throw new Error(`SyntaxError Unrecognized shape ${this._shape}. Allowed are box, sphere, cylinder-x, cylinder-y and cylinder-z`)}get shape(){return this._shape}setAo(t){this._ao=t}get ao(){return this._ao}set aoSides(t){this._aoSides=W.parse(t)}get aoSides(){return W.toString(this._aoSides)}set aoSamples(t){this._aoSamples=Math.round(t)}get aoSamples(){return this._aoSamples}constructor(){this.name="main",this.lights=[],this.textures={},this.materials=new ae,this.voxChunk=null,this.scale={x:1,y:1,z:1},this.rotation={x:0,y:0,z:0},this.position={x:0,y:0,z:0},this.resize=!1,this._origin=W.parse("x y z"),this._flatten=W.parse(""),this._clamp=W.parse(""),this._skip=W.parse(""),this._tile=W.parse(""),this._ao=void 0,this._aoSamples=50,this._aoSides=W.parse(""),this.shape="box",this.wireframe=!1,this.simplify=!0,this.triCount=0,this.octCount=0,this.octMissCount=0,this.faceCount=0,this.vertCount=0,this.nonCulledFaceCount=0}prepareForWrite(){this.lights.some(t=>t.size)&&(this.materials.materials[0].colors[0].count=1)}prepareForRender(t){let{tmpVertIndexLookup:s,tmpVoxelXZYFaceIndices:e,tmpVoxelXYZFaceIndices:r,tmpVoxelYZXFaceIndices:a}=t,{voxChunk:o}=this;this.prepareForWrite();let n=Ht.maximumDeformCount(this);this.faceCount=0,this.vertCount=0;let i=n>0,[l,c,h,f,m,u]=ft(o.size),g=this.materials.materials,p=pt(o.size[0]),_=pt(o.size[1]),y=pt(o.size[2]);for(let v=l;v<=c;v++)for(let F=h;F<=f;F++)for(let d=m;d<=u;d++){let V=o.getPaletteIndexAt(v,F,d);if(V===0)continue;let w=v+p,x=F+_,M=d+y,z=w<<16,C=M<<8,A=(z|C|x)*(1<<28),X=(z|x<<8|M)*(1<<28),T=(x<<16|C|w)*(1<<28);for(let Y=0,B=Fs.length;Y<B;Y++){let O=As[Y],N,k=v+O[0],L=F+O[1],P=d+O[2];if(k<l||k>c||L<h||L>f||P<m||P>u?N=0:N=o.getPaletteIndexAt(k,L,P),this._createFace(o,t,g,v,F,d,p,_,y,V,N,Y,i,s)){let E=this.faceCount-1;e[E]=A+E,r[E]=X+E,a[E]=T+E}}}this.nonCulledFaceCount=this.faceCount,s.clear(),t.voxelXZYFaceIndices=e.slice(0,this.faceCount),t.voxelXYZFaceIndices=r.slice(0,this.faceCount),t.voxelYZXFaceIndices=a.slice(0,this.faceCount),t.voxelXZYFaceIndices.sort(ns),t.voxelXYZFaceIndices.sort(ns),t.voxelYZXFaceIndices.sort(ns),de.fixClampedLinks(this,t),Ht.changeShape(this,t,this._shape),Ht.deform(this,t,n),Ht.warpAndScatter(this,t),Me.calculateNormals(this,t),Ie.transformVertices(this,t),we.calculateLights(this,t),be.calculateAmbientOcclusion(this,t),Ne.combineColors(this,t),ze.assignUVs(this,t),Ee.simplify(this,t),Se.alignFaceDiagonals(this,t)}determineBoundsOffsetAndRescale(t,s){let e={bounds:null,offset:null,rescale:1},r,a,o,n,i,l,{vertX:c,vertY:h,vertZ:f}=s;if(t===ve||t===Bt){r=Number.POSITIVE_INFINITY,a=Number.POSITIVE_INFINITY,o=Number.POSITIVE_INFINITY,n=Number.NEGATIVE_INFINITY,i=Number.NEGATIVE_INFINITY,l=Number.NEGATIVE_INFINITY;for(let p=0,_=this.vertCount;p<_;p++){let y=c[p],v=h[p],F=f[p];y<r&&(r=y),v<a&&(a=v),F<o&&(o=F),y>n&&(n=y),v>i&&(i=v),F>l&&(l=F)}if(t===Bt){let[p,_,y,v,F,d]=ft(this.voxChunk.size),V=(_-p+1)/(_-p),w=(v-y+1)/(v-y),x=(d-F+1)/(d-F);e.rescale=Math.min(V,w,x)}}t||(r=this.bounds.minX,n=this.bounds.maxX+1,a=this.bounds.minY,i=this.bounds.maxY+1,o=this.bounds.minZ,l=this.bounds.maxZ+1);let m=-(r+n)/2,u=-(a+i)/2,g=-(o+l)/2;return this._origin.nx&&(m=-r),this._origin.px&&(m=-n),this._origin.ny&&(u=-a),this._origin.py&&(u=-i),this._origin.nz&&(g=-o),this._origin.pz&&(g=-l),e.bounds={minX:r,minY:a,minZ:o,maxX:n,maxY:i,maxZ:l},e.offset={x:m,y:u,z:g},e}_createFace(t,s,e,r,a,o,n,i,l,c,h,f,m,u){let g=t.colorForPaletteIndex(c),p=(g&4278190080)>>24,_=e[p];if(_.opacity===0)return!1;if(h!==0){let H=(t.colorForPaletteIndex(h)&4278190080)>>24;if(!e[H].isTransparent&&!_.wireframe)return!1;if(!(!_.isTransparent&&!_.wireframe)){if(!(_.isTransparent&&!_.wireframe&&h!==0&&e[(t.colorForPaletteIndex(h)&4278190080)>>24].wireframe))return!1}}let y=this._isFacePlanar(_,r,a,o,f,_._flatten,this._flatten),v=this._isFacePlanar(_,r,a,o,f,_._clamp,this._clamp);if(this._isFacePlanar(_,r,a,o,f,_._skip,this._skip))return!1;let{faceVertIndices:d,faceVertColorR:V,faceVertColorG:w,faceVertColorB:x,faceFlattened:M,faceClamped:z,faceSmooth:C,faceCulled:A,faceMaterials:X,faceNameIndices:T,faceVertUs:Y,faceVertVs:B}=s,{faceCount:O}=this,N=O*4,k=(g&255)/255,L=((g&65280)>>8)/255,P=((g&16711680)>>16)/255;d[N]=this._createVertex(s,_,r,a,o,k,L,P,n,i,l,f,0,y,v,u),d[N+1]=this._createVertex(s,_,r,a,o,k,L,P,n,i,l,f,1,y,v,u),d[N+2]=this._createVertex(s,_,r,a,o,k,L,P,n,i,l,f,2,y,v,u),d[N+3]=this._createVertex(s,_,r,a,o,k,L,P,n,i,l,f,3,y,v,u);for(let H=0;H<4;H++)V[N+H]=k,w[N+H]=L,x[N+H]=P;M.set(O,y?1:0),z.set(O,v?1:0),C.set(O,0),A.set(O,0),X[O]=p,T[O]=f;let $=Vs[f],E=$[0],U=$[1],b=r+n,q=a+i,I=o+l,R=b*E[0]+q*E[1]+I*E[2],G=b*U[0]+q*U[1]+I*U[2];for(let H=0;H<4;H++)Y[N+H]=R,B[N+H]=G;return m&&de.linkVertices(this,s,O),this.faceCount++,!0}_createVertex(t,s,e,r,a,o,n,i,l,c,h,f,m,u,g,p){let _=_s[f][m],y=e+_[0],v=r+_[1],F=a+_[2],d=y+l<<20|v+c<<10|F+h,{_clamp:V,_flatten:w}=this,{vertDeformCount:x,vertDeformDamping:M,vertDeformStrength:z,vertWarpAmplitude:C,vertWarpFrequency:A,vertScatter:X,vertX:T,vertY:Y,vertZ:B,vertLinkCounts:O,vertFullyClamped:N,vertRing:k,vertClampedX:L,vertClampedY:P,vertClampedZ:$,vertColorR:E,vertColorG:U,vertColorB:b,vertColorCount:q,vertFlattenedX:I,vertFlattenedY:R,vertFlattenedZ:G}=t,{deform:H,warp:K,scatter:tt}=s,Z;if(p.has(d)?(Z=p.get(d),H?x[Z]!==0&&this._getDeformIntegral(s.deform)<this._getDeformIntegralAtVertex(t,Z)&&(z[Z]=H.strength,M[Z]=H.damping,x[Z]=H.count):(x[Z]=0,M[Z]=0,z[Z]=0),K?C[Z]!==0&&(K.amplitude<C[Z]||K.amplitude===C[Z]&&K.frequency>A[Z])&&(C[Z]=K.amplitude,A[Z]=K.frequency):(C[Z]=0,A[Z]=0),tt?X[Z]!==0&&Math.abs(tt)<Math.abs(X[Z])&&(X[Z]=tt):X[Z]=0):(Z=this.vertCount,p.set(d,Z),T[Z]=y,Y[Z]=v,B[Z]=F,H?(M[Z]=H.damping,x[Z]=H.count,z[Z]=H.strength,O[Z]=0,N.set(Z,0)):x[Z]=0,K?(C[Z]=K.amplitude,A[Z]=K.frequency):C[Z]=0,tt?X[Z]=tt:X[Z]=0,q[Z]=0,k[Z]=0,L.set(Z,0),P.set(Z,0),$.set(Z,0),I.set(Z,0),R.set(Z,0),G.set(Z,0)),this._setIsVertexPlanar(s,y,v,F,s._flatten,w,I,R,G,Z),this._setIsVertexPlanar(s,y,v,F,s._clamp,V,L,P,$,Z),s.fade){let ct=q[Z],ht=Z*6;E[ht+ct]=o,U[ht+ct]=n,b[ht+ct]=i,q[Z]++}return this.vertCount++,Z}_getDeformIntegral(t){return t.damping===1?t.strength*(t.count+1):t.strength*(1-Math.pow(t.damping,t.count+1))/(1-t.damping)}_getDeformIntegralAtVertex(t,s){let{vertDeformDamping:e,vertDeformStrength:r,vertDeformCount:a}=t,o=e[s],n=a[s],i=r[s];return o===1?i*(n+1):i*(1-Math.pow(o,n+1))/(1-o)}_isFacePlanar(t,s,e,r,a,o,n){let i=o,l=t.bounds;if(i||(i=n,l=this.bounds),!i)return!1;switch(a){case 0:return i.x||i.nx&&s===l.minX;case 1:return i.x||i.px&&s===l.maxX;case 2:return i.y||i.ny&&e===l.minY;case 3:return i.y||i.py&&e===l.maxY;case 4:return i.z||i.nz&&r===l.minZ;case 5:return i.z||i.pz&&r===l.maxZ;default:return!1}}_setIsVertexPlanar(t,s,e,r,a,o,n,i,l,c){let h=a,f=t.bounds;h||(h=o,f=this.bounds),h?(n.set(c,h.x||h.nx&&s<f.minX+.5||h.px&&s>f.maxX+.5?1:n.get(c)|0),i.set(c,h.y||h.ny&&e<f.minY+.5||h.py&&e>f.maxY+.5?1:i.get(c)|0),l.set(c,h.z||h.nz&&r<f.minZ+.5||h.pz&&r>f.maxZ+.5?1:l.get(c)|0)):(n.set(c,n.get(c)|0),i.set(c,i.get(c)|0),l.set(c,l.get(c)|0))}};var Gt=class{static readFromString(t){let s=this._parse(t);return this._validateModel(s),this._createModel(s)}static _parse(t){let s={linecontinuation:/_\s*[\r\n]/gm,modelparts:new RegExp(/\s*(\/\/(.*?)\r?\n)/.source+"|"+/\s*(texture|light|model|material|voxels)\s+/.source+"|"+/\s*([^=,\r\n]+=\s*data:image.*?base64,.*$)\s*/.source+"|"+/\s*([^=,\r\n]+=[^\r\n=;,/]+)\s*/.source+"|"+/\s*([A-Za-z ()\d -]+)\s*/.source,"gm")},e={lights:[],textures:[],materials:[]},r=e,a=null;return Array.from(t.replaceAll(s.linecontinuation," ").matchAll(s.modelparts),n=>n[0].trim()).filter(n=>n).forEach(function(n){if(!n.startsWith("//"))if(n==="texture")r={id:"<no-name>",cube:!1},e.textures.push(r);else if(n==="light")r={color:"#FFF"},e.lights.push(r);else if(n==="model")r=e;else if(n==="material")r={},e.materials.push(r);else if(n==="voxels")r=e,a="";else if(a!==null)a+=n.replace(/\s/g,"");else{let i=n.indexOf("=");if(i===-1)throw new Error(`SyntaxError: Invalid definition '${n}'.`);let l=n.substring(0,i).trim().toLowerCase(),c=n.substring(i+1).trim();r[l]=c}},this),e.voxels=a,e}static _createModel(t){let s=new ie;return s.size=this._parseXYZInt("size",t.size,null,!0),s.scale=this._parseXYZFloat("scale",t.scale,"1",!0),s.rotation=this._parseXYZFloat("rotation",t.rotation,"0 0 0",!1),s.position=this._parseXYZFloat("position",t.position,"0 0 0",!1),s.simplify=t.simplify!=="false",t.resize===ve?s.resize=ve:t.resize===Bt?s.resize=Bt:t.resize?s.resize=null:t.autoresize==="true"&&(s.resize=Bt),s.shape=t.shape,s.wireframe=t.wireframe==="true"||!1,s.origin=t.origin||"x y z",s.flatten=t.flatten,s.clamp=t.clamp,s.skip=t.skip,s.tile=t.tile,s.setAo(this._parseAo(t.ao)),s.aoSides=t.aosides,s.aoSamples=parseInt(t.aosamples||50,10),s.data=this._parseVertexData(t.data,"model"),s.shell=this._parseShell(t.shell),t.lights.some(e=>e.size)&&s.materials.createMaterial(Be,ue,1,0,!1,!1,1,0,!1,1,!1,Mt,"#FFF",0,!1,null,null,null,null,null,null,null,null,-1,-1,0,0,0).addColorHEX("#FFFFFF"),t.lights.forEach(function(e){this._createLight(s,e)},this),t.textures.forEach(function(e){this._createTexture(s,e)},this),t.materials.forEach(function(e){this._createMaterial(s,e)},this),s.colors={},s.materials.forEach(function(e){e.colors.forEach(function(r){s.colors[r.id]=r})}),this._resolveShellColors(s.shell,s),s.materials.forEach(function(e){this._resolveShellColors(e.shell,s)},this),this._createVoxels(s,t.voxels),s}static _createLight(t,s){s.color||(s.color="#FFF 1"),s.color.startsWith("#")||(s.color="#FFF "+s.color),s.strength=parseFloat(s.color.split(" ")[1]||1),s.color=rt.fromHex(s.color.split(" ")[0]),s.direction=this._parseXYZFloat("direction",s.direction,null,!1),s.position=this._parseXYZFloat("position",s.position,null,!1),s.distance=parseFloat(s.distance||0),s.size=Math.max(0,parseFloat(s.size||0)),s.detail=Math.min(3,Math.max(0,parseInt(s.detail||1,10)));let e=new se(s.color,s.strength,s.direction,s.position,s.distance,s.size,s.detail);t.lights.push(e)}static _createTexture(t,s){s.cube=s.cube==="true"||!1,t.textures[s.id]=s}static _createMaterial(t,s){let e=ue;s.lighting===ye&&(e=ye),s.lighting===Dt&&(e=Dt),s.lighting===te&&(e=te),s.emissive||(s.emissivemap?s.emissive="#FFF 1":s.emissive="#000 0"),s.emissive.startsWith("#")||(s.emissive="#FFF "+s.emissive),s.emissiveColor=s.emissive.split(" ")[0],s.emissiveIntensity=s.emissive.split(" ")[1]||1,s.ao&&!s.ao.startsWith("#")&&(s.ao="#000 "+s.ao),s.maptransform=s.maptransform||"";let r=null;t.simplify&&s.simplify==="false"&&(r=!1),!t.simplify&&s.simplify==="true"&&(r=!0);let a=t.materials.createMaterial(s.type||qt,e,parseFloat(s.roughness||(s.roughnessmap,1)),parseFloat(s.metalness||(s.metalnessmap?1:0)),s.fade==="true"||!1,r,parseFloat(s.opacity||1),parseFloat(s.alphatest||0),s.transparent==="true"||!1,parseFloat(s.refractionratio||.9),s.wireframe==="true"||!1,s.side,s.emissiveColor,s.emissiveIntensity,s.fog!=="false",s.map?t.textures[s.map]:null,s.normalmap?t.textures[s.normalmap]:null,s.roughnessmap?t.textures[s.roughnessmap]:null,s.metalnessmap?t.textures[s.metalnessmap]:null,s.emissivemap?t.textures[s.emissivemap]:null,s.matcap?t.textures[s.matcap]:null,s.reflectionmap?t.textures[s.reflectionmap]:null,s.refractionmap?t.textures[s.refractionmap]:null,parseFloat(s.maptransform.split(" ")[0]||-1),parseFloat(s.maptransform.split(" ")[1]||-1),parseFloat(s.maptransform.split(" ")[2]||0),parseFloat(s.maptransform.split(" ")[3]||0),parseFloat(s.maptransform.split(" ")[4]||0));s.deform&&a.setDeform(parseFloat(s.deform.split(" ")[0]),parseFloat(s.deform.split(" ")[1]||1),parseFloat(s.deform.split(" ")[2]||1)),s.warp&&a.setWarp(parseFloat(s.warp.split(" ")[0]),parseFloat(s.warp.split(" ")[1]||1)),s.scatter&&(a.scatter=parseFloat(s.scatter)),a.flatten=s.flatten,a.clamp=s.clamp,a.skip=s.skip,a.setAo(this._parseAo(s.ao)),a.shell=this._parseShell(s.shell),a.lights=s.lights!=="false",a.data=this._parseVertexData(s.data,"material"),this._compareVertexData(t.data,a.data);let o=/\s*\(\s*(\d+)\s*\)\s*/g,n=/([A-Z][a-z]*)\s*(\(\d+\))?[:]\s*(#[a-fA-F0-9]*)\s*/g;s.colors=s.colors.replace(o,"($1)"),s.colors=s.colors.replace(n,"$1$2:$3 "),s.colors.split(" ").filter(l=>l).forEach(function(l){let c=l.split(":")[0],h=null;c.includes("(")&&(h=Number(c.split("(")[1].replace(")","")),c=c.split("(")[0]);let f=l.split(":")[1];if(!a.colors[c]){if(f=a.addColor(rt.fromHex(f)),!/^[A-Z][a-z]*$/.test(c))throw new Error(`SyntaxError: Invalid color ID '${c}'`);f.id=c,f.exId=h}},this)}static _createVoxels(t,s){let e=t.colors,r=null,a=[];if(s.matchAll)a=s.matchAll(/[0-9]+|[A-Z][a-z]*|-+|[()]/g);else{let f=/[0-9]+|[A-Z][a-z]*|-+|[()]/g,m;for(;(m=f.exec(s))!==null;)a.push(m);a=a[Symbol.iterator]()}let o=this._unpackRle(a),n=t.size.x*t.size.y*t.size.z,i=0,l=t.voxChunk=new vt([t.size.x,t.size.y,t.size.z]);for(let f=0;f<o.length;f++)i+=o[f][1];if(i!==n)throw new Error(`SyntaxError: The specified size is ${t.size.x} x ${t.size.y} x ${t.size.z} (= ${n} voxels) but the voxel matrix contains ${i} voxels.`);let c={minx:0,miny:0,minz:0,maxx:t.size.x-1,maxy:t.size.y-1,maxz:t.size.z-1,x:0,y:0,z:0};t.bounds=new kt;let h=0;for(let f=0;f<o.length;f++){let m=null;o[f][0]!=="-"&&(m=e[o[f][0]],h=t.materials.materials.findIndex(u=>u.colors.includes(m)),m||(r===null&&(r=t.materials.createMaterial(qt,ue,.5,0,!1,1,!1)),m=rt.fromHex("#FF00FF"),m.id=o[f][0],r.addColor(m),e[o[f][0]]=m)),this._setVoxels(t,m,o[f][1],c,l,h)}}static _parseAo(t){let s;if(t){t.startsWith("#")||(t="#000 "+t);let e=rt.fromHex(t.split(" ")[0]),r=Math.abs(parseFloat(t.split(" ")[1]||1)),a=parseFloat(t.split(" ")[2]||1),o=parseFloat(t.split(" ")[3]||70);o=Math.max(0,Math.min(90,Math.round(o))),s={color:e,maxDistance:r,strength:a,angle:o}}return s}static _parseShell(t){let s,e=!1;if(t&&(s=[],t!=="none")){let r=t.split(/\s+/);if(r.length<2||r.length%2!==0)e=!0;else for(let a=0;a<r.length/2;a++){let o=r[a*2+0],n=r[a*2+1];if(!/^[A-Z][a-z]*$/.test(o)||!/^([-+]?[0-9]*\.?[0-9]+)*$/.test(n)){e=!0;break}else s.push({colorId:r[a*2],distance:r[a*2+1]})}}if(e)throw new Error(`SyntaxError: shell '${t}' must be 'none' or one or more color ID's and distances, e.g. P 0.2 Q 0.4`);return s&&(s=s.sort(function(r,a){return r.distance-a.distance})),s}static _resolveShellColors(t,s){!t||t.length===0||t.forEach(function(e){if(e.color=s.colors[e.colorId],!e.color)throw new Error(`SyntaxError: shell color ID '${e.colorId}' is not a known color`)},this)}static _parseVertexData(t,s){if(t){let e=[],r=t.split(/\s+/),a=null;for(let n=0;n<r.length;n++){let i=r[n];if(isNaN(i))a={name:i,values:[]},e.push(a);else if(a)a.values.push(parseFloat(i));else break}let o=e.length===0;for(let n=0;n<e.length;n++)o=o||e[n].values.length===0||e[n].values.length>=4;if(o)throw new Error(`SyntaxError: The data property '${e.data}' of the ${s} should consist of one or more names, each followed by 1 to 4 float (default) values.`);return e}}static _compareVertexData(t,s){let e=!1;try{if((t||s)&&s){e=s&&!t,e=e||t.length!==s.length;for(let r=0;r<t.length;r++)e=e||t[r].name!==s[r].name,e=e||t[r].values.length!==s[r].values.length}}catch{e=!0}if(e)throw new Error("SyntaxError: The data property of the material should consist of identical names and number of values as the model data property.")}static _parseXYZInt(t,s,e,r){let a=this._parseXYZFloat(t,s,e,r);return{x:Math.trunc(a.x),y:Math.trunc(a.y),z:Math.trunc(a.z)}}static _parseXYZFloat(t,s,e,r){if(!s&&e&&(s=e),!s)return null;let a=s.split(/[\s/]+/);if(a.length===1&&r&&(a.push(a[0]),a.push(a[0])),a.length!==3)throw new Error(`SyntaxError: '${t}' must have three values.`);if(a={x:parseFloat(a[0]),y:parseFloat(a[1]),z:parseFloat(a[2])},Number.isNaN(a.x)||Number.isNaN(a.y)||Number.isNaN(a.z))throw new Error(`SyntaxError: Invalid value '${s}' for ${t}'.`);return a}static _unpackRle(t){let s=[],e=1,r=t.next();for(;!r.done;){let a=r.value[0];if(a[0]>="0"&&a[0]<="9")e=parseInt(a,10);else if(a==="("){let o=this._unpackRle(t);for(let n=0;n<e;n++)Array.prototype.push.apply(s,o);e=1}else{if(a===")")return s;a.length>1&&a[0]>="A"&&a[0]<="Z"&&a[1]===a[0]?(e>1?(s.push([a[0],e]),s.push([a[0],a.length-1])):s.push([a[0],a.length]),e=1):a.length>1&&a[0]==="-"&&a[1]==="-"?(e>1?(s.push(["-",e]),s.push(["-",a.length-1])):s.push(["-",a.length]),e=1):(s.push([a,e]),e=1)}r=t.next()}return s}static _setVoxels(t,s,e,r,a,o){let n=t.materials.materials[o];for(;e-- >0;){if(s){let i=Math.floor(s.r*255),l=Math.floor(s.g*255),c=Math.floor(s.b*255),f=ke(i,l,c,o),m=r.x-pt(t.size.x),u=r.y-pt(t.size.y),g=r.z-pt(t.size.z);t.bounds.set(m,u,g),n.bounds.set(m,u,g),a.setColorAt(m,u,g,f)}r.x++,r.x>r.maxx&&(r.x=r.minx,r.y++),r.y>r.maxy&&(r.y=r.miny,r.z++)}}static _validateModel(t){let s=["size","materials","textures","lights","voxels"],e=["name","shape","scale","rotation","position","simplify","origin","autoresize","resize","flatten","clamp","skip","tile","ao","aosides","aosamples","shell","wireframe","data"];this._validateProperties(t,s,e,"model"),t.lights.forEach(function(r){this._validateLight(r)},this),t.textures.forEach(function(r){this._validateTexture(r)},this),t.materials.forEach(function(r){this._validateMaterial(r)},this)}static _validateLight(t){let s=["color"],e=["direction","position","distance","size","detail"];if(this._validateProperties(t,s,e,"light"),t.direction&&t.position)throw new Error("SyntaxError: Light cannot have both a direction and a position.");if(t.direction&&t.distance)throw new Error("SyntaxError: Light cannot have both a direction and a distance.");if(!t.position&&(t.size||t.detail))throw new Error("SyntaxError: Light with no position cannot have size or detail.")}static _validateTexture(t){let s=["id","image"],e=["cube"];this._validateProperties(t,s,e,"texture")}static _validateMaterial(t){let s=["colors"],e=["type","lighting","fade","simplify","roughness","metalness","emissive","fog","opacity","alphatest","transparent","refractionratio","deform","warp","scatter","flatten","clamp","skip","ao","lights","wireframe","side","shell","map","normalmap","roughnessmap","metalnessmap","emissivemap","matcap","reflectionmap","refractionmap","maptransform","data"];this._validateProperties(t,s,e,"material")}static _validateProperties(t,s,e,r){for(let a of s)if(!t[a])throw new Error("SyntaxError: "+r+' is missing mandatory property "'+a+'".');for(let a in t)if(!s.includes(a)&&!e.includes(a))throw new Error("SyntaxError: "+r+' has unrecognized property "'+a+'".')}};var Xe=class{static writeToString(t,s,e){e=Math.round(e||1),t.prepareForWrite();let r=[],a={};t.materials.forEach(function(h){h.colors.forEach(function(f){r.push(f),a[f.id]=f.id})}),r.sort(function(h,f){return f.count-h.count});let o=0,n=0;for(let h=0;h<r.length;h++){if(!r[h].id){let f;do f=this._colorIdForIndex(n++);while(a[f]);a[f]=f,r[h].id=f}o=Math.max(r[h].id.length,o)}let i=s||o===1||o>3?1:o,l=this._serializeTextures(t);l+=this._serializeLights(t),l+=`model\r
-`;let c=t.voxels.bounds.size;return c.y===c.x&&c.z===c.x?l+=`size = ${c.x*e}\r
-`:l+=`size = ${c.x*e} ${c.y*e} ${c.z*e}\r
-`,t.shape!=="box"&&(l+=`shape = ${t.shape}\r
-`),(t.scale.x!==1||t.scale.y!==1||t.scale.z!==1||e!==1)&&(t.scale.y===t.scale.x&&t.scale.z===t.scale.x?l+=`scale = ${t.scale.x/e}\r
-`:l+=`scale = ${t.scale.x/e} ${t.scale.y/e} ${t.scale.z/e}\r
-`),t.resize&&(l+=`resize = ${t.resize}\r
-`),(t.rotation.x!==0||t.rotation.y!==0||t.rotation.z!==0)&&(l+=`rotation = ${t.rotation.x} ${t.rotation.y} ${t.rotation.z}\r
-`),(t.position.x!==0||t.position.y!==0||t.position.z!==0)&&(l+=`position = ${t.position.x} ${t.position.y} ${t.position.z}\r
-`),t.origin&&(l+=`origin = ${t.origin}\r
-`),t.flatten&&(l+=`flatten = ${t.flatten}\r
-`),t.clamp&&(l+=`clamp = ${t.clamp}\r
-`),t.skip&&(l+=`skip = ${t.skip}\r
-`),t.tile&&(l+=`tile = ${t.tile}\r
-`),t.ao&&(l+=`ao =${t.ao.color.toString()!=="#000"?" "+t.ao.color:""} ${t.ao.maxDistance} ${t.ao.strength}${t.ao.angle!==70?" "+t.ao.angle:""}\r
-`),t.asSides&&(l+=`aosides = ${t.aoSides}\r
-`),t.asSamples&&(l+=`aosamples = ${t.aoSamples}\r
-`),t.wireframe&&(l+=`wireframe = true\r
-`),t.simplify||(l+=`simplify = false\r
-`),t.data&&(l+=`data = ${this._serializeVertexData(t.data)}\r
-`),t.shell&&(l+=`shell = ${this._getShell(t.shell)}\r
-`),l+=this._serializeMaterials(t),!s||e!==1?l+=this._serializeVoxels(t,e,i):l+=this._serializeVoxelsRLE(t,100),l}static _serializeVertexData(t){let s=null;if(t&&t.length>0){s="";for(let e=0;e<t.length;e++){s+=t[e].name+" ";for(let r=0;r<t[e].values.length;r++)s+=t[e].values[r]+" "}}return s}static _serializeTextures(t){let s="",e="";return Object.getOwnPropertyNames(t.textures).forEach(function(r){let a=t.textures[r],o=[];o.push(`id = ${a.id}`),a.cube&&o.push("cube = true"),o.push(`image = ${a.image}`),s+=`texture ${o.join(", ")}\r
-`,e=`\r
-`}),s+=e,s}static _serializeLights(t){let s="",e="";return t.lights.forEach(function(r){let a=[],o=`${r.color}`;r.strength!==1&&(o+=` ${r.strength}`),a.push(`color = ${o}`),r.direction&&a.push(`direction = ${r.direction.x} ${r.direction.y} ${r.direction.z}`),r.position&&a.push(`position = ${r.position.x} ${r.position.y} ${r.position.z}`),r.distance&&a.push(`distance = ${r.distance}`),r.size&&(a.push(`size = ${r.size}`),r.detail!==1&&a.push(`detail = ${r.detail}`)),s+=`light ${a.join(", ")}\r
-`,e=`\r
-`}),s+=e,s}static _serializeMaterials(t){let s="";return t.materials.forEach(function(e){if(e.colors.length===0)return;let r=[];if(e.type!==qt&&r.push(`type = ${e.type}`),e.lighting!==ue&&r.push(`lighting = ${e.lighting}`),e.wireframe&&r.push("wireframe = true"),e.roughness!==1&&r.push(`roughness = ${e.roughness}`),e.metalness!==0&&r.push(`metalness = ${e.metalness}`),e.fade&&r.push("fade = true"),e.simplify!==null&&e.simplify!==t.simplify&&r.push(`simplify = ${e.simplify}`),e.opacity!==1&&r.push(`opacity = ${e.opacity}`),e.transparent&&r.push("transparent = true"),e.refractionRatio!==.9&&r.push(`refractionRatio = ${e.refractionRatio}`),e.emissive&&r.push(`emissive = ${e.emissive.color} ${e.emissive.intensity}`),e.fog||r.push("fog = false"),e.side!==Mt&&r.push(`side = ${e.side}`),e.deform&&r.push(`deform = ${e.deform.count} ${e.deform.strength}${e.deform.damping!==1?" "+e.deform.damping:""}`),e.warp&&r.push(`warp = ${e.warp.amplitude} ${e.warp.frequency}`),e.scatter&&r.push(`scatter = ${e.scatter}`),e.ao&&r.push(`ao =${e.ao.color!=="#000"?" "+e.ao.color:""} ${e.ao.maxDistance} ${e.ao.strength}${e.ao.angle!==70?" "+e.ao.angle:""}`),t.lights.length>0&&!e.lights&&r.push("lights = false"),e.flatten&&r.push(`flatten = ${e.flatten}`),e.clamp&&r.push(`clamp = ${e.clamp}`),e.skip&&r.push(`skip = ${e.skip}`),e.map&&r.push(`map = ${e.map.id}`),e.normalMap&&r.push(`normalmap = ${e.normalMap.id}`),e.roughnessMap&&r.push(`roughnessmap = ${e.roughnessMap.id}`),e.metalnessMap&&r.push(`metalnessmap = ${e.metalnessMap.id}`),e.emissiveMap&&r.push(`emissivemap = ${e.emissiveMap.id}`),e.matcap&&r.push(`matcap = ${e.matcap.id}`),e.reflectionMap&&r.push(`reflectionmap = ${e.reflectionMap.id}`),e.refractionMap&&r.push(`refractionmap = ${e.refractionMap.id}`),e.mapTransform.uscale!==-1||e.mapTransform.vscale!==-1){let a="maptransform =";a+=` ${e.mapTransform.uscale} ${e.mapTransform.vscale}`,(e.mapTransform.uoffset!==0||e.mapTransform.voffset!==0||e.mapTransform.rotation!==0)&&(a+=` ${e.mapTransform.uoffset} ${e.mapTransform.voffset}`,e.mapTransform.rotation!==0&&(a+=` ${e.mapTransform.rotation}`)),r.push(a)}e.data&&r.push(`data = ${this._serializeVertexData(e.data)}`),e.shell&&r.push(`shell = ${this._getShell(e.shell)}`),s+="material "+r.join(", ")+`\r
-`,s+="  colors =",e.colors.forEach(function(a){s+=` ${a.id}${a.exId==null?"":"("+a.exId+")"}:${a}`}),s+=`\r
-`},this),s}static _colorIdForIndex(t){let s="ABCDEFGHIJKLMNOPQRSTUVWXYZ",e="";do{let r=t%26;e=s[r]+e.toLowerCase(),t=(t-r)/26,t<26&&(s="#ABCDEFGHIJKLMNOPQRSTUVWXYZ")}while(t>0);return e}static _getShell(t){if(t.length===0)return"none";let s="";for(let e=0;e<t.length;e++)s+=`${t[e].colorId} ${t[e].distance} `;return s.trim()}static _serializeVoxels(t,s,e){let r="-"+" ".repeat(Math.max(e-1)),a=" ".repeat(e),o=`voxels\r
-`,n=t.voxels;for(let i=n.minZ;i<=n.maxZ;i++)for(let l=0;l<s;l++){for(let c=n.minY;c<=n.maxY;c++)for(let h=0;h<s;h++){for(let f=n.minX;f<=n.maxX;f++){let m=n.getVoxel(f,c,i);for(let u=0;u<s;u++)if(m){o+=m.color.id;let g=m.color.id.length;for(;g++<e;)o+=" "}else o+=r}o+=a}o+=`\r
-`}return o}static _serializeVoxelsRLE(t,s){let e=[],r=0,a;t.voxels.forEachInBoundary(function(n){let i=n?n.color:null;i===a?r++:(this._addRleChunk(e,a,r,s),a=i,r=1)},this),this._addRleChunk(e,a,r,s);let o="";for(let n of e)o+=this._rleToString(n);return`voxels\r
-`+o+`\r
-`}static _addRleChunk(t,s,e,r){if(e===0)return;let a=e>1?e.toString():"";a+=s?s.id:"-",t.push([a,1,a]);for(let o=Math.max(0,t.length-r*2);o<=t.length-2;o++){let n=t[o][0];for(let i=1;i<r&&!(o+2*i>t.length);i++){let l=!0;for(let c=0;c<=i-1&&(l=t[o+c][2]===t[o+c+i][2],!!l);c++);if(l){let c=t.splice(o,i);t.splice(o,i-1),t[o]=[c,2,null],t[o][2]=JSON.stringify(t[o]),o=t.length;break}}if(Array.isArray(n)&&t.length>o+n.length){let i=n,l=!0;for(let c=0;c<i.length&&(l=i[c][2]===t[o+1+c][2],!!l);c++);l&&(t.splice(o+1,i.length),t[o][1]++,t[o][2]=null,t[o][2]=JSON.stringify(t[o]),o=t.length)}}}static _rleToString(t){let s=t[1]===1?"":t[1].toString(),e=t[0];if(Array.isArray(e)){s+="(";for(let r of e)s+=this._rleToString(r);s+=")"}else s+=e;return s}};var ne=class{constructor(t){let s=Math.floor(t/8),e=t/4,r=Math.floor(e/8),a=e*4;this.tmpVertIndexLookup=new Map,this.vertX=new Float32Array(t),this.vertY=new Float32Array(t),this.vertZ=new Float32Array(t),this.vertTmpX=new Float32Array(t),this.vertTmpY=new Float32Array(t),this.vertTmpZ=new Float32Array(t),this.vertHasTmp=it.create(new Uint8Array(s).buffer,1,0),this.vertColorR=new Float32Array(t*6),this.vertColorG=new Float32Array(t*6),this.vertColorB=new Float32Array(t*6),this.vertColorCount=new Uint8Array(t),this.vertSmoothNormalX=new Float32Array(t),this.vertSmoothNormalY=new Float32Array(t),this.vertSmoothNormalZ=new Float32Array(t),this.vertBothNormalX=new Float32Array(t),this.vertBothNormalY=new Float32Array(t),this.vertBothNormalZ=new Float32Array(t),this.vertFlattenedX=it.create(new Uint8Array(s).buffer,1,0),this.vertFlattenedY=it.create(new Uint8Array(s).buffer,1,0),this.vertFlattenedZ=it.create(new Uint8Array(s).buffer,1,0),this.vertClampedX=it.create(new Uint8Array(s).buffer,1,0),this.vertClampedY=it.create(new Uint8Array(s).buffer,1,0),this.vertClampedZ=it.create(new Uint8Array(s).buffer,1,0),this.vertFullyClamped=it.create(new Uint8Array(s).buffer,1,0),this.vertDeformCount=new Uint8Array(t),this.vertDeformDamping=new Float32Array(t),this.vertDeformStrength=new Float32Array(t),this.vertWarpAmplitude=new Float32Array(t),this.vertWarpFrequency=new Float32Array(t),this.vertScatter=new Float32Array(t),this.vertRing=new Float32Array(t),this.vertNrOfClampedLinks=new Uint8Array(t),this.vertLinkCounts=new Uint8Array(t),this.vertLinkIndices=new Uint32Array(t*6),this.faceFlattened=it.create(new Uint8Array(r).buffer,1,0),this.faceClamped=it.create(new Uint8Array(r).buffer,1,0),this.faceSmooth=it.create(new Uint8Array(r).buffer,1,0),this.faceEquidistant=it.create(new Uint8Array(r).buffer,1,0),this.faceCulled=it.create(new Uint8Array(r).buffer,1,0),this.faceNameIndices=new Uint8Array(e),this.faceMaterials=new Uint8Array(e),this.faceVertIndices=new Uint32Array(a),this.faceVertNormalX=new Float32Array(a),this.faceVertNormalY=new Float32Array(a),this.faceVertNormalZ=new Float32Array(a),this.faceVertFlatNormalX=new Float32Array(a),this.faceVertFlatNormalY=new Float32Array(a),this.faceVertFlatNormalZ=new Float32Array(a),this.faceVertSmoothNormalX=new Float32Array(a),this.faceVertSmoothNormalY=new Float32Array(a),this.faceVertSmoothNormalZ=new Float32Array(a),this.faceVertBothNormalX=new Float32Array(a),this.faceVertBothNormalY=new Float32Array(a),this.faceVertBothNormalZ=new Float32Array(a),this.faceVertColorR=new Float32Array(a),this.faceVertColorG=new Float32Array(a),this.faceVertColorB=new Float32Array(a),this.faceVertLightR=new Float32Array(a),this.faceVertLightG=new Float32Array(a),this.faceVertLightB=new Float32Array(a),this.faceVertAO=new Float32Array(a),this.faceVertUs=new Float32Array(a),this.faceVertVs=new Float32Array(a),this.tmpVoxelXZYFaceIndices=Array(e).fill(0),this.tmpVoxelXYZFaceIndices=Array(e).fill(0),this.tmpVoxelYZXFaceIndices=Array(e).fill(0),this.voxelXZYFaceIndices=null,this.voxelXYZFaceIndices=null,this.voxelYZXFaceIndices=null}clear(){this.tmpVertIndexLookup.clear(),this.vertX.fill(0),this.vertY.fill(0),this.vertZ.fill(0),this.vertTmpX.fill(0),this.vertTmpY.fill(0),this.vertTmpZ.fill(0),this.vertHasTmp.clear(),this.vertColorR.fill(0),this.vertColorG.fill(0),this.vertColorB.fill(0),this.vertColorCount.fill(0),this.vertSmoothNormalX.fill(0),this.vertSmoothNormalY.fill(0),this.vertSmoothNormalZ.fill(0),this.vertBothNormalX.fill(0),this.vertBothNormalY.fill(0),this.vertBothNormalZ.fill(0),this.vertFlattenedX.clear(),this.vertFlattenedY.clear(),this.vertFlattenedZ.clear(),this.vertClampedX.clear(),this.vertClampedY.clear(),this.vertClampedZ.clear(),this.vertFullyClamped.clear(),this.vertDeformCount.fill(0),this.vertDeformDamping.fill(0),this.vertDeformStrength.fill(0),this.vertWarpAmplitude.fill(0),this.vertWarpFrequency.fill(0),this.vertScatter.fill(0),this.vertRing.fill(0),this.vertNrOfClampedLinks.fill(0),this.vertLinkCounts.fill(0),this.vertLinkIndices.fill(0),this.faceFlattened.clear(),this.faceClamped.clear(),this.faceSmooth.clear(),this.faceEquidistant.clear(),this.faceCulled.clear(),this.faceNameIndices.fill(0),this.faceMaterials.fill(0),this.faceVertIndices.fill(0),this.faceVertNormalX.fill(0),this.faceVertNormalY.fill(0),this.faceVertNormalZ.fill(0),this.faceVertFlatNormalX.fill(0),this.faceVertFlatNormalY.fill(0),this.faceVertFlatNormalZ.fill(0),this.faceVertSmoothNormalX.fill(0),this.faceVertSmoothNormalY.fill(0),this.faceVertSmoothNormalZ.fill(0),this.faceVertBothNormalX.fill(0),this.faceVertBothNormalY.fill(0),this.faceVertBothNormalZ.fill(0),this.faceVertColorR.fill(0),this.faceVertColorG.fill(0),this.faceVertColorB.fill(0),this.faceVertLightR.fill(0),this.faceVertLightG.fill(0),this.faceVertLightB.fill(0),this.faceVertAO.fill(0),this.faceVertUs.fill(0),this.faceVertVs.fill(0),this.tmpVoxelXZYFaceIndices.length=0,this.tmpVoxelXYZFaceIndices.length=0,this.tmpVoxelYZXFaceIndices.length=0,this.voxelXZYFaceIndices=null,this.voxelXYZFaceIndices=null,this.voxelYZXFaceIndices=null}};function ls(S){let t=new Blob([S],{type:"text/javascript"}),s=URL.createObjectURL(t),e=new Worker(s);return URL.revokeObjectURL(s),e}function cs(){return ls('var ws=Object.defineProperty;var Xs=(S,t,s)=>t in S?ws(S,t,{enumerable:!0,configurable:!0,writable:!0,value:s}):S[t]=s;var fs=(S,t,s)=>(Xs(S,typeof t!="symbol"?t+"":t,s),s);var W=class{static parse(t){if(!t)return;if(t=" "+(t||"").toLowerCase(),t!==" "&&!/^(?!$)(\\s+(?:none|-x|x|\\+x|-y|y|\\+y|-z|z|\\+z|\\s))+\\s*$/.test(t))throw new Error(`SyntaxError: Planar expression \'${t}\' is only allowed to be \'none\' or contain -x x +x -y y +y -z z +z.`);let s=t.includes("none");return{nx:!s&&t.includes("-x"),x:!s&&t.includes(" x"),px:!s&&t.includes("+x"),ny:!s&&t.includes("-y"),y:!s&&t.includes(" y"),py:!s&&t.includes("+y"),nz:!s&&t.includes("-z"),z:!s&&t.includes(" z"),pz:!s&&t.includes("+z")}}static toString(t){return t?((t.nx?" -x":"")+(t.x?" x":"")+(t.px?" +x":"")+(t.ny?" -y":"")+(t.y?" y":"")+(t.py?" +y":"")+(t.nz?" -z":"")+(t.z?" z":"")+(t.pz?" +z":"")).trim():void 0}static combine(t,s,e){return!t&&!s?e:t?!s||t===s?t:{nx:t.nx||s.nx,x:t.x||s.x,px:t.px||s.px,ny:t.ny||s.ny,y:t.y||s.y,py:t.py||s.py,nz:t.nz||s.nz,z:t.z||s.z,pz:t.pz||s.pz}:s}};var re="standard",Ee="basic",hs="lambert",ms="phong",us="matcap",ps="toon",Ye="normal",le="bounds",Zt="model",Ze="flat",fe="quad",Kt="smooth",Qt="both",wt="front",oe="back",Tt="double",xs=["nx","px","ny","py","nz","pz"],ds=[[[0,0,0],[0,1,0],[0,1,1],[0,0,1]],[[1,0,1],[1,1,1],[1,1,0],[1,0,0]],[[0,0,0],[0,0,1],[1,0,1],[1,0,0]],[[0,1,1],[0,1,0],[1,1,0],[1,1,1]],[[1,0,0],[1,1,0],[0,1,0],[0,0,0]],[[0,0,1],[0,1,1],[1,1,1],[1,0,1]]],gs=[[-1,0,0],[1,0,0],[0,-1,0],[0,1,0],[0,0,-1],[0,0,1]],vs=[{u:"z",v:"y",order:[0,1,2,3],ud:1,vd:1,uo:0,vo:0},{u:"z",v:"y",order:[3,2,1,0],ud:-1,vd:1,uo:.75,vo:0},{u:"x",v:"z",order:[0,1,2,3],ud:1,vd:1,uo:.75,vo:.5},{u:"x",v:"z",order:[1,0,3,2],ud:1,vd:-1,uo:.25,vo:1},{u:"x",v:"y",order:[3,2,1,0],ud:-1,vd:1,uo:1,vo:0},{u:"x",v:"y",order:[0,1,2,3],ud:1,vd:1,uo:.25,vo:0}],Fs=[[[0,0,1],[0,1,0]],[[0,0,1],[0,1,0]],[[1,0,0],[0,0,1]],[[1,0,0],[0,0,1]],[[1,0,0],[0,1,0]],[[1,0,0],[0,1,0]]];var Ge=(S,t,s)=>Math.min(Math.max(S,t),s),nt=class{static fromHex(t){let s=new nt;return s._set(t),s.id="",s.exId=null,s.count=0,s}static fromRgb(t,s,e){t=Math.round(Ge(t,0,1)*255),s=Math.round(Ge(s,0,1)*255),e=Math.round(Ge(e,0,1)*255);let r="#"+(t<16?"0":"")+t.toString(16)+(s<16?"0":"")+s.toString(16)+(e<16?"0":"")+e.toString(16);return nt.fromHex(r)}clone(){let t=new nt;return t._color=this._color,t.r=this.r,t.g=this.g,t.b=this.b,t._material=this._material,t}multiply(t){return t instanceof nt?nt.fromRgb(this.r*t.r,this.g*t.g,this.b*t.b):nt.fromRgb(this.r*t,this.g*t,this.b*t)}normalize(){let t=Math.sqrt(this.r*this.r+this.g*this.g+this.b*this.b);return this.multiply(1/t)}add(...t){let s=this.r+t.reduce((o,n)=>o+n.r,0),e=this.g+t.reduce((o,n)=>o+n.g,0),r=this.b+t.reduce((o,n)=>o+n.b,0);return nt.fromRgb(s,e,r)}_setMaterial(t){if(this._material!==void 0)throw new Error("A Color can only be added once.");this._material=t,this.count=0}get material(){return this._material}_set(t){let s=t;if((typeof s=="string"||s instanceof String)&&(s=s.trim().toUpperCase(),s.match(/^#([0-9a-fA-F]{3}|#?[0-9a-fA-F]{6})$/))){s=s.replace("#",""),this._color="#"+s,s.length===3&&(s=s[0]+s[0]+s[1]+s[1]+s[2]+s[2]);let e=parseInt(s,16);this.r=(e>>16&255)/255,this.g=(e>>8&255)/255,this.b=(e&255)/255;return}throw new Error(`SyntaxError: Color ${t} is not a hexadecimal color of the form #000 or #000000.`)}toString(){return this._color}};var he=class{constructor(t,s,e,r,o,n,i,a,c,f,l,h,m,u,v,p,A,F,g,V,x,M,N,d,_){switch(t=t||re,t){case re:case Ee:case hs:case ms:case ps:case us:case Ye:break;default:throw new Error("SyntaxError: Unknown material type: "+t)}if(this.type=t,(m&&m.cube||u&&u.cube||v&&v.cube||p&&p.cube||A&&A.cube)&&!(x===-1&&M===-1))throw new Error("SyntaxError: Cube textures can not be combined with maptransform");if(g&&V)throw new Error("SyntaxError: One material can have a reflectionmap or a refractionmap, but not both");this.index=0,this.roughness=typeof s=="number"?s:1,this.metalness=typeof e=="number"?e:0,this.opacity=typeof r=="number"?r:1,this.alphaTest=typeof o=="number"?o:0,this.transparent=!!n,this.refractionRatio=typeof i=="number"?i:.9,this.wireframe=!!a,this.side=c||wt,[wt,oe,Tt].includes(this.side)||(this.side=wt),this.setEmissive(f,l),this.fog=typeof h=="boolean"?h:!0,this.map=m,this.normalMap=u,this.roughnessMap=v,this.metalnessMap=p,this.emissiveMap=A,this.matcap=F,this.reflectionMap=g,this.refractionMap=V,this.mapTransform={uscale:x||-1,vscale:M||-1,uoffset:N||0,voffset:d||0,rotation:_||0},this.aoActive=!1,this._colors=[]}get baseId(){return this._baseId===void 0&&(this._baseId=`${this.type}|${this.roughness}|${this.metalness}|${this.opacity}|${this.alphaTest}|${this.transparent?1:0}|${this.refractionRatio}|${this.wireframe?1:0}|${this.side}|`+(this.emissive?`${this.emissive.color}|${this.emissive.intensity}|`:"||")+`${this.fog?1:0}|`+(this.map?`${this.map.id}|`:"|")+(this.normalMap?`${this.normalMap.id}|`:"|")+(this.roughnessMap?`${this.roughnessMap.id}|`:"|")+(this.metalnessMap?`${this.metalnessMap.id}|`:"|")+(this.emissiveMap?`${this.emissiveMap.id}|`:"|")+(this.matcap?`${this.matcap.id}|`:"|")+(this.reflectionMap?`${this.reflectionMap.id}|`:"|")+(this.refractionMap?`${this.refractionMap.id}|`:"|")+`${this.mapTransform.uscale}|${this.mapTransform.vscale}|${this.mapTransform.uoffset}|${this.mapTransform.voffset}|${this.mapTransform.rotation}`),this._baseId}get isTransparent(){return this.transparent||this.opacity<1}setEmissive(t,s){t===void 0||t==="#000"||t==="#000000"||!s?this._emissive=void 0:this._emissive={color:nt.fromHex(t),intensity:s}}get emissive(){return this._emissive}get colors(){return this._colors}get colorCount(){return this._colors.length}get colorUsageCount(){return this._colors.reduce((t,s)=>t+s.count,0)}};var Jt=class{get size(){return this.minX>this.maxX?{x:0,y:0,z:0}:{x:this.maxX-this.minX+1,y:this.maxY-this.minY+1,z:this.maxZ-this.minZ+1}}constructor(){this.reset()}reset(){this.minX=Number.POSITIVE_INFINITY,this.minY=Number.POSITIVE_INFINITY,this.minZ=Number.POSITIVE_INFINITY,this.maxX=Number.NEGATIVE_INFINITY,this.maxY=Number.NEGATIVE_INFINITY,this.maxZ=Number.NEGATIVE_INFINITY}set(t,s,e){this.minX=Math.min(this.minX,t),this.minY=Math.min(this.minY,s),this.minZ=Math.min(this.minZ,e),this.maxX=Math.max(this.maxX,t),this.maxY=Math.max(this.maxY,s),this.maxZ=Math.max(this.maxZ,e)}};var me=class{constructor(t,s,e,r,o){this._baseMaterial=t,this.lighting=s,this.fade=!!e,this.simplify=r!==!1,this._deform=void 0,this._warp=void 0,this._scatter=void 0,this._flatten=W.parse(""),this._clamp=W.parse(""),this._skip=W.parse(""),this._ao=void 0,this.lights=!0,this._side=o,this._colors=[],this.bounds=new Jt}get baseId(){return this._baseMaterial.baseId}get index(){return this._baseMaterial.index}get colors(){return this._colors}get colorCount(){return this._baseMaterial.colorCount}get type(){return this._baseMaterial.type}get roughness(){return this._baseMaterial.roughness}get metalness(){return this._baseMaterial.metalness}get opacity(){return this._baseMaterial.opacity}get alphaTest(){return this._baseMaterial.alphaTest}get transparent(){return this._baseMaterial.transparent}get isTransparent(){return this._baseMaterial.isTransparent}get refractionRatio(){return this._baseMaterial.refractionRatio}get emissive(){return this._baseMaterial.emissive}get side(){return this._side}get fog(){return this._baseMaterial.fog}get map(){return this._baseMaterial.map}get normalMap(){return this._baseMaterial.normalMap}get roughnessMap(){return this._baseMaterial.roughnessMap}get metalnessMap(){return this._baseMaterial.metalnessMap}get emissiveMap(){return this._baseMaterial.emissiveMap}get matcap(){return this._baseMaterial.matcap}get reflectionMap(){return this._baseMaterial.reflectionMap}get refractionMap(){return this._baseMaterial.refractionMap}get mapTransform(){return this._baseMaterial.mapTransform}setDeform(t,s,e){t=Math.max(t==null?1:t,0),s=s==null?1:s,e=e==null?1:e,t>0&&s!==0?this._deform={count:t,strength:s,damping:e}:this._deform={count:0,strength:0,damping:0}}get deform(){return this._deform}setWarp(t,s){t=t===void 0?1:Math.abs(t),s=s===void 0?1:Math.abs(s),t>.001&&s>.001?this._warp={amplitude:t,frequency:s}:this._warp=void 0}get warp(){return this._warp}set scatter(t){t===0&&(t=void 0),this._scatter=Math.abs(t)}get scatter(){return this._scatter}set flatten(t){this._flatten=W.parse(t)}get flatten(){return W.toString(this._flatten)}set clamp(t){this._clamp=W.parse(t)}get clamp(){return W.toString(this._clamp)}set skip(t){this._skip=W.parse(t)}get skip(){return W.toString(this._skip)}setAo(t){this._ao=t}get ao(){return this._ao}set aoSides(t){this._aoSides=W.parse(t)}get aoSides(){return W.toString(this._aoSides)}addColorHEX(t){return this.addColor(nt.fromHex(t))}addColorRGB(t,s,e){return this.addColor(nt.fromRgb(t,s,e))}addColor(t){if(!(t instanceof nt))throw new Error("addColor requires a Color object, e.g. material.addColor(Color.fromHex(\'#FFFFFF\'))");return t._setMaterial(this),this._colors.push(t),this._baseMaterial._colors.push(t),t}};var ue=class{constructor(){this.baseMaterials=[],this.materials=[]}createMaterial(t,s,e,r,o,n,i,a,c,f,l,h,m,u,v,p,A,F,g,V,x,M,N,d,_,w,C,y){h=h||wt,[wt,oe,Tt].includes(h)||(h=wt);let O=h===Tt?Tt:wt,E=new he(t,e,r,i,a,c,f,l,O,m,u,v,p,A,F,g,V,x,M,N,d,_,w,C,y),Z=E.baseId,B=this.baseMaterials.find(X=>X.baseId===Z);B?E=B:this.baseMaterials.push(E);let Y=new me(E,s,o,n,h);return this.materials.push(Y),Y}clearMaterials(){this.materials.length=0}forEach(t,s,e){e?this.baseMaterials.foreach(t,s):this.materials.forEach(t,s)}find(t){return this.materials.find(t)}findColorByExId(t){let s=null;return this.forEach(function(e){s||(s=e.colors.find(r=>r.exId===t))},this),s}getMaterialListIndex(t){return this.materials.indexOf(t)}};function pe(S,t,s,e){let r=s*S;for(let o=0;o<s;){let n=r&7,i=r>>3,a=s-o,c=8-n,f=a<c?a:c,l=~(255<<f),h=t&l;t>>=f;let m=~(l<<n);e[i]=e[i]&m|h<<n,r+=f,o+=f}}var He=class{constructor(t){this.view=t}get(t){return this.view[t>>3]>>(t&7)&1}set(t,s){return pe(t,s,1,this.view)}clear(){this.view.fill(0)}},We=class{constructor(t){this.view=t}get(t){return this.view[t>>2]>>((t&3)<<1)&3}set(t,s){return pe(t,s,2,this.view)}clear(){this.view.fill(0)}},Ke=class{constructor(t){this.view=t}get(t){return this.view[t>>1]>>((t&1)<<2)&15}set(t,s){return pe(t,s,4,this.view)}clear(){this.view.fill(0)}},Qe=class{constructor(t){this.view=t}get(t){return this.view[t]>>>0}set(t,s){return pe(t,s,8,this.view)}clear(){this.view.fill(0)}},Je=class{constructor(t,s){this.view=t,this.bits=s}get(t){let{view:s,bits:e}=this,r=t*e,o=0;for(let n=0;n<e;){let i=r&7,a=r>>3,c=e-n,f=8-i,l=c<f?c:f,h=s[a],m=~(255<<l);o|=(h>>i&m)<<n,r+=l,n+=l}return o>>>0}set(t,s){pe(t,s,this.bits,this.view)}clear(){this.view.fill(0)}},ft=class{static create(t,s,e,r=null){let o=r?new Uint8Array(t,e,r):new Uint8Array(t,e);switch(s){case 1:return new He(o);case 2:return new We(o);case 4:return new Ke(o);case 8:return new Qe(o);default:return new Je(o)}}};var bs=0,Vs=0,je=128,xe=8,Ss=0,Os=255,As=Os<<24>>>0,De={NONE:0,PAINT:1,KEEP:2},Ct=1,jt=new Map,gt=S=>Math.floor(S%2===0?S/2-1:S/2),pt=S=>{let[t,s,e]=S,r=gt(t),o=gt(s),n=gt(e),i=t-r-1,a=s-o-1,c=e-n-1,f=-r,l=-o,h=-n;return[f,i,l,a,h,c]},de=1,ys=de*4;function ts(S,t,s=null){let e=2**t-Ct,r=ys*e,o=S[0]*S[1]*S[2]*t,n=Math.floor(o/8)+1,i=xe+r+n;s==null&&(typeof Buffer!="undefined"?s=Buffer.alloc(i).buffer:s=new ArrayBuffer(i));let a=new Uint8Array(s,0,xe),c=r/ys,f=new Uint32Array(s,xe,c),l=ft.create(s,t,xe+r);return a[0]=bs,[a[1],a[2],a[3]]=S,a[4]=t,[s,f,l]}var yt=class{constructor(t=null,s=null,e=null,r=8,o=0,n=null,i=0,a=null){fs(this,"createInverse",(t,s)=>{jt.clear();let e=t.size,[r,o,n,i,a,c]=pt(e),{size:f}=this,l=new yt(f),[h,m,u,v,p,A]=pt(f);for(let F=h;F<=m;F+=1)for(let g=u;g<=v;g+=1)for(let V=p;V<=A;V+=1){if(this.getPaletteIndexAt(F,g,V)===0)continue;let M=F+s[0],N=g+s[1],d=V+s[2];if(M>o||M<r||N>i||N<n||d>c||d<a||!t.hasVoxelAt(M,N,d))l.setColorAt(F,g,V,As);else{let _=t.getColorAt(M,N,d);l.setColorAt(F,g,V,_)}}return l});if(s&&e)this.size=[t[0],t[1],t[2]],this.bitsPerIndex=r,n=n||s.length,a=a||e.length,this.palette=new Uint32Array(s,o||0,n/4),this.indices=ft.create(e,r,i,a),this.xShift=gt(t[0]),this.yShift=gt(t[1]),this.zShift=gt(t[2]),this._rebuildRefCounts();else if(t){let[c,f,l]=ts(t,1);this.palette=f,this.indices=l,this._refCounts=new Array(this.palette.length).fill(0),this._recomputeSizeFieldsForBuffer(c)}}_recomputeSizeFieldsForBuffer(t){let s=new Uint8Array(t,0,xe);this.size=[0,0,0],[,this.size[0],this.size[1],this.size[2],this.bitsPerIndex]=s,this.xShift=gt(this.size[0]),this.yShift=gt(this.size[1]),this.zShift=gt(this.size[2])}getPaletteIndexAt(t,s,e){let{indices:r}=this,o=this._getOffset(t,s,e);return r.get(o)}getPaletteIndexAtOffset(t){let{indices:s}=this;return s.get(t)}getColorAt(t,s,e){let r=this.getPaletteIndexAt(t,s,e);return this.colorForPaletteIndex(r)}hasVoxelAt(t,s,e){return this.getPaletteIndexAt(t,s,e)!==Vs}removeVoxelAt(t,s,e){return this.setPaletteIndexAt(t,s,e,Vs)}getTotalNonEmptyVoxels(){let t=0;for(let s=0;s<this._refCounts.length;s+=1)t+=this._refCounts[s];return t}getPaletteColor(t){return this.palette[(t-Ct)*de]}setPaletteColor(t,s){this.palette[(t-Ct)*de]=s}paletteHasReferences(t){return this._refCounts[t-Ct]!==0}resetPaletteRefcountToOne(t){this._refCounts[t-Ct]=1}incrementPaletteRefcount(t){this._refCounts[t-Ct]+=1}decrementPaletteRefcount(t){this._refCounts[t-Ct]-=1}static isNonEmptyPaletteIndex(t){return t!==0}setPaletteIndexAt(t,s,e,r){let o=this._getOffset(t,s,e);this.setPaletteIndexAtOffset(o,r)}setPaletteIndexAtOffset(t,s){let{indices:e}=this,r=this.getPaletteIndexAtOffset(t);yt.isNonEmptyPaletteIndex(r)&&this.decrementPaletteRefcount(r),yt.isNonEmptyPaletteIndex(s)&&this.incrementPaletteRefcount(s),e.set(t,s)}setEmptyAt(t,s,e){this.setPaletteIndexAt(t,s,e,0)}clear(){this.indices.clear(),this._refCounts.fill(0)}setColorAt(t,s,e,r){let o=this._getOffset(t,s,e);return this.setColorAtOffset(o,r)}setColorAtOffset(t,s){let{palette:e,indices:r}=this,o=this.getPaletteIndexAtOffset(t),n=yt.isNonEmptyPaletteIndex(o);n&&this.decrementPaletteRefcount(o);for(let a=0;a<e.length;a+=1){let c=a+Ct;if(this.getPaletteColor(c)===s)return this.incrementPaletteRefcount(c),r.set(t,c),c}if(n&&!this.paletteHasReferences(o))return this.setPaletteColor(o,s),this.resetPaletteRefcountToOne(o),o;let i=this._getFreePaletteIndex();return this.setPaletteColor(i,s),this.resetPaletteRefcountToOne(i),this.indices.set(t,i),i}colorForPaletteIndex(t){return this.palette[(t-Ct)*de]}filterByChunk(t,s,e,r,o){if(o===De.NONE)return;let n=t.size,[i,a,c,f,l,h]=pt(n),{size:m}=this,[u,v,p,A,F,g]=pt(m);for(let V=u;V<=v;V+=1)for(let x=p;x<=A;x+=1)for(let M=F;M<=g;M+=1){if(this.getPaletteIndexAt(V,x,M)===0)continue;let d=V+s,_=x+e,w=M+r,y=!(d>a||d<i||_>f||_<c||w>h||w<l)&&t.hasVoxelAt(d,_,w);(o===De.PAINT&&!y||o===De.KEEP&&y)&&this.setEmptyAt(V,x,M)}}_getFreePaletteIndex(){let{palette:t,size:s,indices:e,bitsPerIndex:r}=this;for(let c=0;c<t.length;c+=1){let f=c+Ct;if(!this.paletteHasReferences(f))return f}let o=r*2,[n,i,a]=ts(s,o);for(let c=0;c<t.length*de;c+=1)i[c]=t[c];for(;this._refCounts.length<i.length;)this._refCounts.push(0);for(let c=0,f=s[0]*s[1]*s[2];c<f;c+=1){let l=e.get(c);a.set(c,l)}return this.palette=i,this.indices=a,this._recomputeSizeFieldsForBuffer(n),this._getFreePaletteIndex()}resizeToFit(t,s,e){let{size:r}=this,o=Math.max(1,r[0],Math.abs(t)*2+1),n=Math.max(1,r[1],Math.abs(s)*2+1),i=Math.max(1,r[2],Math.abs(e)*2+1);this.resizeTo([o,n,i])}resizeTo(t){if(this.size[0]>=t[0]&&this.size[1]>=t[1]&&this.size[2]>=t[2])return;let s=new yt(t),[e,r,o,n,i,a]=pt(this.size);for(let m=e;m<=r;m+=1)for(let u=o;u<=n;u+=1)for(let v=i;v<=a;v+=1)this.getPaletteIndexAt(m,u,v)!==0&&s.setColorAt(m,u,v,this.getColorAt(m,u,v));let{buffer:c}=s.palette;[this.size[0],this.size[1],this.size[2]]=t;let{bitsPerIndex:f}=s;this.bitsPerIndex=f;let[,l,h]=ts(t,f,c);this.palette=l,this.indices=h,this._refCounts=s._refCounts,this._recomputeSizeFieldsForBuffer(c)}static fromJSON(t){if(typeof t=="string")return yt.deserialize(t);let{size:s,palette:e,indices:r}=t,o=new yt(s);for(let n=0;n<e.length+Ct;n+=1)for(let i=0;i<r.length;i+=1){let a=r[i];if(a===n)if(a>=Ct){let c=e[a-Ct];o.setColorAtOffset(i,c)}else a===n&&o.setPaletteIndexAtOffset(i,a)}return o}toJSON(t,s){if(!s)return this.serialize();let e=[],r=[];for(let o=0;o<this.palette.length;o+=1){let n=o+Ct,i=this.getPaletteColor(n);i>0&&e.push(i)}for(let o=0,n=this.size[0]*this.size[1]*this.size[2];o<n;o+=1)r.push(this.indices.get(o));return{size:[...this.size],palette:e,indices:r}}clone(){return new yt(this.size,this.palette.buffer.slice(0),this.indices.view.buffer.slice(0),this.bitsPerIndex,this.palette.byteOffset,this.palette.byteLength,this.indices.view.byteOffset,this.indices.view.byteLength)}_getOffset(t,s,e){let{size:r,xShift:o,yShift:n,zShift:i}=this;return(t+o)*r[1]*r[2]+(s+n)*r[2]+(e+i)}_rebuildRefCounts(){this._refCounts=new Array(this.palette.length).fill(0);for(let t=0,s=this.size[0]*this.size[1]*this.size[2];t<s;t+=1){let e=this.getPaletteIndexAtOffset(t);yt.isNonEmptyPaletteIndex(e)&&this.incrementPaletteRefcount(e)}}applyToChunk(t,s=0,e=0,r=0){jt.clear();let o=t.size,[n,i,a,c,f,l]=pt(o),{size:h}=this,[m,u,v,p,A,F]=pt(h);for(let g=m;g<=u;g+=1)for(let V=v;V<=p;V+=1)for(let x=A;x<=F;x+=1){let M=this.getPaletteIndexAt(g,V,x);if(M!==0){let N=g+s,d=V+e,_=x+r,w=o[0],C=o[1],y=o[2];if(N>i&&(w=N*2),N<n&&(w=Math.max(w,-N*2+1)),d>c&&(C=d*2),d<a&&(C=Math.max(C,-d*2+1)),_>l&&(y=_*2),_<f&&(y=Math.max(y,-_*2+1)),w>je||C>je||y>je)continue;(o[0]<w||o[1]<C||o[2]<y)&&(t.resizeTo([w,C,y]),o=t.size,[n,i,a,c,f,l]=pt(o),jt.clear());let O=jt.get(M);if(O===void 0){let E=this.getColorAt(g,V,x);if(E===As)t.setEmptyAt(N,d,_);else{let Z=t.setColorAt(N,d,_,E);jt.set(M,Z)}}else t.getPaletteIndexAt(N,d,_)!==O&&t.setPaletteIndexAt(N,d,_,O)}}}mergeWith(t,s,e,r=!1){jt.clear();let o=jt,n=e[0]-s[0],i=e[1]-s[1],a=e[2]-s[2],c=t.size,[f,l,h,m,u,v]=pt(c),{size:p}=this,[A,F,g,V,x,M]=pt(p);for(let N=A;N<=F;N+=1)for(let d=g;d<=V;d+=1)for(let _=x;_<=M;_+=1){let w=this.getPaletteIndexAt(N,d,_);if(w===0)continue;let C=N+n,y=d+i,O=_+a;if(!!(!(C>l||C<f||y>m||y<h||O>v||O<u)&&t.hasVoxelAt(C,y,O)))if(o.has(w))this.setPaletteIndexAt(N,d,_,o.get(w));else{(r||t.getColorAt(C,y,O)>this.getColorAt(N,d,_))&&this.removeVoxelAt(N,d,_);let B=this.getPaletteIndexAt(N,d,_);o.set(w,B)}}}};function _s(S,t,s,e=Ss){return(S|t<<8|s<<16|e<<24)>>>0}function Ms(){let S=[];for(let r=0;r<256;r++)S[r]=Math.floor(Math.random()*256),S[r+256]=S[r];function t(r){return r*r*r*(r*(r*6-15)+10)}function s(r,o,n){return o+r*(n-o)}function e(r,o,n,i){let a=r&15,c=a<8?o:n,f=a<4?n:a===12||a===14?o:i;return((a&1)===0?c:-c)+((a&2)===0?f:-f)}return{noise:function(r,o,n){let i=Math.floor(r),a=Math.floor(o),c=Math.floor(n),f=i&255,l=a&255,h=c&255;r-=i,o-=a,n-=c;let m=r-1,u=o-1,v=n-1,p=t(r),A=t(o),F=t(n),g=S[f]+l,V=S[g]+h,x=S[g+1]+h,M=S[f+1]+l,N=S[M]+h,d=S[M+1]+h;return s(F,s(A,s(p,e(S[V],r,o,n),e(S[N],m,o,n)),s(p,e(S[x],r,u,n),e(S[d],m,u,n))),s(A,s(p,e(S[V+1],r,o,v),e(S[N+1],m,o,n-1)),s(p,e(S[x+1],r,u,v),e(S[d+1],m,u,v))))}}}var Ut=class{static changeShape(t,s,e){let{faceEquidistant:r}=s;switch(e){case"sphere":this._circularDeform(t,s,1,1,1);break;case"cylinder-x":this._circularDeform(t,s,0,1,1);break;case"cylinder-y":this._circularDeform(t,s,1,0,1);break;case"cylinder-z":this._circularDeform(t,s,1,1,0);break;default:for(let o=0,n=t.faceCount;o<n;o++)r.set(o,0);break}}static _circularDeform(t,s,e,r,o){let[n,i,a,c,f,l]=pt(t.voxChunk.size),h=(n+i)/2+.5,m=(a+c)/2+.5,u=(f+l)/2+.5,{vertX:v,vertY:p,vertZ:A,vertRing:F}=s;for(let g=0,V=t.vertCount;g<V;g++){let x=v[g],M=p[g],N=A[g],d=x-h,_=M-m,w=N-u,C=Math.max(Math.abs(d*e),Math.abs(_*r),Math.abs(w*o)),y=Math.sqrt(d*d*e+_*_*r+w*w*o);if(y===0)continue;let O=C/y;v[g]=d*(1-e+e*O)+h,p[g]=_*(1-r+r*O)+m,A[g]=w*(1-o+o*O)+u,F[g]=C}this._markEquidistantFaces(t,s)}static _markEquidistantFaces(t,s){let{faceVertIndices:e,vertRing:r,faceEquidistant:o}=s;for(let n=0,i=t.faceCount;n<i;n++){let a=n*4,c=a+1,f=a+2,l=a+3;o.set(n,r[e[a]]===r[e[c]]&&r[e[a]]===r[e[f]]&&r[e[a]]===r[e[l]]?1:0)}}static maximumDeformCount(t){let s=0;return t.materials.forEach(function(e){e.deform&&(s=Math.max(s,e.deform.count))}),s}static deform(t,s,e){let{vertLinkIndices:r,vertLinkCounts:o,vertDeformCount:n,vertDeformDamping:i,vertDeformStrength:a,vertFlattenedX:c,vertFlattenedY:f,vertFlattenedZ:l,vertClampedX:h,vertClampedY:m,vertClampedZ:u,vertX:v,vertY:p,vertZ:A,vertTmpX:F,vertTmpY:g,vertTmpZ:V,vertHasTmp:x}=s;for(let M=0;M<e;M++){let N=!1;for(let d=0,_=t.vertCount;d<_;d++){if(n[d]<=M)continue;let C=o[d];if(C===0)continue;N=!0;let y=v[d],O=p[d],E=A[d],Z=i[d],B=a[d],Y=1-(h.get(d)|c.get(d)),X=1-(m.get(d)|f.get(d)),R=1-(u.get(d)|l.get(d)),k=0,L=0,U=0;for(let I=0;I<C;I++){let P=r[d*6+I];k+=v[P],L+=p[P],U+=A[P]}let b=Math.pow(Z,M)*B,q=k/C-y,z=L/C-O,$=U/C-E;F[d]=y+Y*q*b,g[d]=O+X*z*b,V[d]=E+R*$*b,x.set(d,Y|X|R)}if(N){for(let d=0,_=t.vertCount;d<_;d++)x.get(d)!==0&&(v[d]=F[d],p[d]=g[d],A[d]=V[d]);x.clear()}}}static warpAndScatter(t,s){let e=Ms().noise,{nx:r,px:o,ny:n,py:i,nz:a,pz:c}=t._tile,[f,l,h,m,u,v]=pt(t.voxChunk.size),{vertX:p,vertY:A,vertZ:F,vertWarpAmplitude:g,vertWarpFrequency:V,vertScatter:x,vertFlattenedX:M,vertFlattenedY:N,vertFlattenedZ:d,vertClampedX:_,vertClampedY:w,vertClampedZ:C}=s;f+=.1,h+=.1,u+=.1,l+=.9,m+=.9,v+=.9;for(let y=0,O=t.vertCount;y<O;y++){let E=p[y],Z=A[y],B=F[y];if(r&&E<f||o&&E>l||n&&Z<h||i&&Z>m||a&&B<u||c&&B>v)continue;let Y=g[y],X=V[y],R=x[y],k=Y>0,L=R>0;if(k||L){let U=0,b=0,q=0;k&&(U=e((E+.19)*X,Z*X,B*X)*Y,b=e((Z+.17)*X,B*X,E*X)*Y,q=e((B+.13)*X,E*X,Z*X)*Y),L&&(U+=(Math.random()*2-1)*R,b+=(Math.random()*2-1)*R,q+=(Math.random()*2-1)*R);let z=1-(_.get(y)|M.get(y)),$=1-(w.get(y)|N.get(y)),I=1-(C.get(y)|d.get(y));p[y]=E+z*U,A[y]=Z+$*b,F[y]=B+I*q}}}};var ne=class{static linkVertices(t,s,e){let{faceClamped:r,vertNrOfClampedLinks:o,faceVertIndices:n,vertLinkIndices:i,vertLinkCounts:a}=s;if(r.get(e)===1)for(let f=0;f<4;f++){let l=n[e*4+f],h=!1;for(let m=0,u=a[l];m<u;m++)if(i[l*6+m]===l){h=!0;break}h||(i[l*6+a[l]]=l,a[l]++,o[l]++)}else for(let f=0;f<4;f++){let l=n[e*4+f],h=n[e*4+(f+1)%4],m=!1;for(let v=0,p=a[l];v<p;v++)if(i[l*6+v]===h){m=!0;break}m||(i[l*6+a[l]]=h,a[l]++);let u=!1;for(let v=0,p=a[h];v<p;v++)if(i[h*6+v]===l){u=!0;break}u||(i[h*6+a[h]]=l,a[h]++)}}static fixClampedLinks(t,s){let{faceVertIndices:e,vertNrOfClampedLinks:r,vertFullyClamped:o,vertLinkCounts:n,vertLinkIndices:i}=s;for(let a=0,c=t.vertCount;a<c;a++){let f=r[a],l=n[a];f===l&&(o.set(a,1),n[a]=0)}for(let a=0,c=t.faceCount;a<c;a++)for(let f=0;f<4;f++){let l=e[a*4+f],h=e[a*4+(f+1)%4];if(o.get(l)===1){let m=!1;for(let u=0,v=n[l];u<v;u++)if(i[l*6+u]===h){m=!0;break}m||(i[l*6+n[l]]=h,n[l]++)}if(o.get(h)===1){let m=!1;for(let u=0,v=n[h];u<v;u++)if(i[h*6+u]===l){m=!0;break}m||(i[h*6+n[h]]=l,n[h]++)}}}};var ge=class{static calculateNormals(t,s){let e=t.tile,{faceNameIndices:r,faceEquidistant:o,faceSmooth:n,faceFlattened:i,faceClamped:a,vertX:c,vertY:f,vertZ:l,faceVertFlatNormalX:h,faceVertFlatNormalY:m,faceVertFlatNormalZ:u,faceVertSmoothNormalX:v,faceVertSmoothNormalY:p,faceVertSmoothNormalZ:A,faceVertBothNormalX:F,faceVertBothNormalY:g,faceVertBothNormalZ:V,faceVertNormalX:x,faceVertNormalY:M,faceVertNormalZ:N,faceMaterials:d,faceVertIndices:_,vertSmoothNormalX:w,vertSmoothNormalY:C,vertSmoothNormalZ:y,vertBothNormalX:O,vertBothNormalY:E,vertBothNormalZ:Z}=s,[B,Y,X,R,k,L]=pt(t.voxChunk.size);for(let b=0,q=t.faceCount;b<q;b++){let z=b*4;for(let $=0;$<4;$++){let I=_[z+$];w[I]=0,C[I]=0,y[I]=0,O[I]=0,E[I]=0,Z[I]=0}}for(let b=0,q=t.faceCount;b<q;b++){let z=r[b],$=o.get(b),I=i.get(b),P=a.get(b),H=$|1-(I|P);n.set(b,H);let G=_[b*4],Q=_[b*4+1],tt=_[b*4+2],T=_[b*4+3],ct=(c[G]+c[Q]+c[tt]+c[T])/4,lt=(f[G]+f[Q]+f[tt]+f[T])/4,_t=(l[G]+l[Q]+l[tt]+l[T])/4;for(let xt=0;xt<4;xt++){let D=_[b*4+xt],Ft=_[b*4+(xt+3)%4],vt=c[D],St=c[Ft],Mt=f[D],Ot=f[Ft],Et=l[D],qt=l[Ft],Pt=w[D],Dt=C[D],te=y[D],Rt=O[D],Lt=E[D],ee=Z[D],Yt=St-vt,dt=Ot-Mt,Vt=qt-Et,at=ct-vt,it=lt-Mt,At=_t-Et,J=Math.sqrt(Yt*Yt+dt*dt+Vt*Vt),j=Math.sqrt(at*at+it*it+At*At);J=J===0?1:J,j=j===0?1:j;let $t=1/J;Yt*=$t,dt*=$t,Vt*=$t;let ut=1/j;at*=ut,it*=ut,At*=ut;let rt=dt*At-Vt*it,ht=Vt*at-Yt*At,mt=Yt*it-dt*at,et=B+.1,st=Y+.9,ot=X+.1,It=R+.9,Nt=k+.1,zt=L+.9;e&&((e.nx&&z===0||e.px&&z===1)&&(Mt<ot||Mt>It||Et<Nt||Et>zt)&&(ht=0,mt=0),(e.ny&&z===2||e.py&&z===3)&&(vt<et||vt>st||Et<Nt||Et>zt)&&(rt=0,mt=0),(e.nz&&z===4||e.pz&&z===5)&&(vt<et||vt>st||Mt<ot||Mt>It)&&(rt=0,ht=0));let kt=Math.sqrt(rt*rt+ht*ht+mt*mt);kt=kt===0?1:kt;let Gt=1/kt;rt*=Gt,ht*=Gt,mt*=Gt,h[b*4+xt]=rt,m[b*4+xt]=ht,u[b*4+xt]=mt;let Ht=Yt*at+dt*it+Vt*At,Xt=Math.acos(Ht);Pt+=rt*Xt,Dt+=ht*Xt,te+=mt*Xt,Rt+=H*(rt*Xt),Lt+=H*(ht*Xt),ee+=H*(mt*Xt),w[D]=Pt,C[D]=Dt,y[D]=te,O[D]=Rt,E[D]=Lt,Z[D]=ee}}for(let b=0,q=t.vertCount;b<q;b++){let z=w[b],$=C[b],I=y[b],P=O[b],H=E[b],G=Z[b],Q=Math.sqrt(z*z+$*$+I*I),tt=Math.sqrt(P*P+H*H+G*G);Q!==0&&(w[b]=z/Q,C[b]=$/Q,y[b]=I/Q),tt!==0&&(O[b]=P/tt,E[b]=H/tt,Z[b]=G/tt)}let U=t.materials.materials;for(let b=0,q=t.faceCount;b<q;b++){let z=n.get(b)===1,$=U[d[b]];for(let I=0;I<4;I++){let P=b*4+I,H=_[b*4+I];switch(v[P]=w[H],p[P]=C[H],A[P]=y[H],F[P]=!z||O[H]===0?h[P]:O[H],g[P]=!z||E[H]===0?m[P]:E[H],V[P]=!z||Z[H]===0?u[P]:Z[H],$.lighting){case Kt:x[P]=v[P],M[P]=p[P],N[P]=A[P];break;case Qt:x[P]=F[P],M[P]=g[P],N[P]=V[P];break;default:x[P]=h[P],M[P]=m[P],N[P]=u[P];break}}}}};var K=class{constructor(){let t=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];this.m=new Float32Array(t)}transformPoint(t){let s=this.m,e=s[12]*t.x+s[13]*t.y+s[14]*t.z+s[15],r=(s[0]*t.x+s[1]*t.y+s[2]*t.z+s[3])/e,o=(s[4]*t.x+s[5]*t.y+s[6]*t.z+s[7])/e,n=(s[8]*t.x+s[9]*t.y+s[10]*t.z+s[11])/e;t.x=r,t.y=o,t.z=n}transformPointInline(t,s,e,r){let o=t[r],n=s[r],i=e[r],a=this.m,c=a[12]*o+a[13]*n+a[14]*i+a[15],f=(a[0]*o+a[1]*n+a[2]*i+a[3])/c,l=(a[4]*o+a[5]*n+a[6]*i+a[7])/c,h=(a[8]*o+a[9]*n+a[10]*i+a[11])/c;t[r]=f,s[r]=l,e[r]=h}transformVector(t){let s=this.m,e=s[0]*t.x+s[1]*t.y+s[2]*t.z,r=s[4]*t.x+s[5]*t.y+s[6]*t.z,o=s[8]*t.x+s[9]*t.y+s[10]*t.z;t.x=e,t.y=r,t.z=o}transformVectorInline(t,s,e,r){let o=t[r],n=s[r],i=e[r],a=this.m,c=a[0]*o+a[1]*n+a[2]*i,f=a[4]*o+a[5]*n+a[6]*i,l=a[8]*o+a[9]*n+a[10]*i;t[r]=c,s[r]=f,e[r]=l}static identity(t){t=t||new K;let s=t.m;return s[0]=s[5]=s[10]=s[15]=1,s[1]=s[2]=s[3]=s[4]=s[6]=s[7]=s[8]=s[9]=s[11]=s[12]=s[13]=s[14]=0,t}static multiply(t,s,e){e=e||new K;let r=t.m,o=s.m,n=e.m;return n[0]=r[0]*o[0]+r[1]*o[4]+r[2]*o[8]+r[3]*o[12],n[1]=r[0]*o[1]+r[1]*o[5]+r[2]*o[9]+r[3]*o[13],n[2]=r[0]*o[2]+r[1]*o[6]+r[2]*o[10]+r[3]*o[14],n[3]=r[0]*o[3]+r[1]*o[7]+r[2]*o[11]+r[3]*o[15],n[4]=r[4]*o[0]+r[5]*o[4]+r[6]*o[8]+r[7]*o[12],n[5]=r[4]*o[1]+r[5]*o[5]+r[6]*o[9]+r[7]*o[13],n[6]=r[4]*o[2]+r[5]*o[6]+r[6]*o[10]+r[7]*o[14],n[7]=r[4]*o[3]+r[5]*o[7]+r[6]*o[11]+r[7]*o[15],n[8]=r[8]*o[0]+r[9]*o[4]+r[10]*o[8]+r[11]*o[12],n[9]=r[8]*o[1]+r[9]*o[5]+r[10]*o[9]+r[11]*o[13],n[10]=r[8]*o[2]+r[9]*o[6]+r[10]*o[10]+r[11]*o[14],n[11]=r[8]*o[3]+r[9]*o[7]+r[10]*o[11]+r[11]*o[15],n[12]=r[12]*o[0]+r[13]*o[4]+r[14]*o[8]+r[15]*o[12],n[13]=r[12]*o[1]+r[13]*o[5]+r[14]*o[9]+r[15]*o[13],n[14]=r[12]*o[2]+r[13]*o[6]+r[14]*o[10]+r[15]*o[14],n[15]=r[12]*o[3]+r[13]*o[7]+r[14]*o[11]+r[15]*o[15],e}static transpose(t,s){s=s||new K;let e=t.m,r=s.m;return r[0]=e[0],r[1]=e[4],r[2]=e[8],r[3]=e[12],r[4]=e[1],r[5]=e[5],r[6]=e[9],r[7]=e[13],r[8]=e[2],r[9]=e[6],r[10]=e[10],r[11]=e[14],r[12]=e[3],r[13]=e[7],r[14]=e[11],r[15]=e[15],s}static inverse(t,s){s=s||new K;let e=t.m,r=s.m;r[0]=e[5]*e[10]*e[15]-e[5]*e[14]*e[11]-e[6]*e[9]*e[15]+e[6]*e[13]*e[11]+e[7]*e[9]*e[14]-e[7]*e[13]*e[10],r[1]=-e[1]*e[10]*e[15]+e[1]*e[14]*e[11]+e[2]*e[9]*e[15]-e[2]*e[13]*e[11]-e[3]*e[9]*e[14]+e[3]*e[13]*e[10],r[2]=e[1]*e[6]*e[15]-e[1]*e[14]*e[7]-e[2]*e[5]*e[15]+e[2]*e[13]*e[7]+e[3]*e[5]*e[14]-e[3]*e[13]*e[6],r[3]=-e[1]*e[6]*e[11]+e[1]*e[10]*e[7]+e[2]*e[5]*e[11]-e[2]*e[9]*e[7]-e[3]*e[5]*e[10]+e[3]*e[9]*e[6],r[4]=-e[4]*e[10]*e[15]+e[4]*e[14]*e[11]+e[6]*e[8]*e[15]-e[6]*e[12]*e[11]-e[7]*e[8]*e[14]+e[7]*e[12]*e[10],r[5]=e[0]*e[10]*e[15]-e[0]*e[14]*e[11]-e[2]*e[8]*e[15]+e[2]*e[12]*e[11]+e[3]*e[8]*e[14]-e[3]*e[12]*e[10],r[6]=-e[0]*e[6]*e[15]+e[0]*e[14]*e[7]+e[2]*e[4]*e[15]-e[2]*e[12]*e[7]-e[3]*e[4]*e[14]+e[3]*e[12]*e[6],r[7]=e[0]*e[6]*e[11]-e[0]*e[10]*e[7]-e[2]*e[4]*e[11]+e[2]*e[8]*e[7]+e[3]*e[4]*e[10]-e[3]*e[8]*e[6],r[8]=e[4]*e[9]*e[15]-e[4]*e[13]*e[11]-e[5]*e[8]*e[15]+e[5]*e[12]*e[11]+e[7]*e[8]*e[13]-e[7]*e[12]*e[9],r[9]=-e[0]*e[9]*e[15]+e[0]*e[13]*e[11]+e[1]*e[8]*e[15]-e[1]*e[12]*e[11]-e[3]*e[8]*e[13]+e[3]*e[12]*e[9],r[10]=e[0]*e[5]*e[15]-e[0]*e[13]*e[7]-e[1]*e[4]*e[15]+e[1]*e[12]*e[7]+e[3]*e[4]*e[13]-e[3]*e[12]*e[5],r[11]=-e[0]*e[5]*e[11]+e[0]*e[9]*e[7]+e[1]*e[4]*e[11]-e[1]*e[8]*e[7]-e[3]*e[4]*e[9]+e[3]*e[8]*e[5],r[12]=-e[4]*e[9]*e[14]+e[4]*e[13]*e[10]+e[5]*e[8]*e[14]-e[5]*e[12]*e[10]-e[6]*e[8]*e[13]+e[6]*e[12]*e[9],r[13]=e[0]*e[9]*e[14]-e[0]*e[13]*e[10]-e[1]*e[8]*e[14]+e[1]*e[12]*e[10]+e[2]*e[8]*e[13]-e[2]*e[12]*e[9],r[14]=-e[0]*e[5]*e[14]+e[0]*e[13]*e[6]+e[1]*e[4]*e[14]-e[1]*e[12]*e[6]-e[2]*e[4]*e[13]+e[2]*e[12]*e[5],r[15]=e[0]*e[5]*e[10]-e[0]*e[9]*e[6]-e[1]*e[4]*e[10]+e[1]*e[8]*e[6]+e[2]*e[4]*e[9]-e[2]*e[8]*e[5];let o=e[0]*r[0]+e[1]*r[4]+e[2]*r[8]+e[3]*r[12];for(let n=0;n<16;n++)r[n]/=o;return s}static scale(t,s,e,r){r=r||new K;let o=r.m;return o[0]=t,o[1]=0,o[2]=0,o[3]=0,o[4]=0,o[5]=s,o[6]=0,o[7]=0,o[8]=0,o[9]=0,o[10]=e,o[11]=0,o[12]=0,o[13]=0,o[14]=0,o[15]=1,r}static translate(t,s,e,r){r=r||new K;let o=r.m;return o[0]=1,o[1]=0,o[2]=0,o[3]=t,o[4]=0,o[5]=1,o[6]=0,o[7]=s,o[8]=0,o[9]=0,o[10]=1,o[11]=e,o[12]=0,o[13]=0,o[14]=0,o[15]=1,r}static rotate(t,s,e,r,o){if(!t||!s&&!e&&!r)return K.identity(o);o=o||new K;let n=o.m,i=Math.sqrt(s*s+e*e+r*r);t*=Math.PI/180,s/=i,e/=i,r/=i;let a=Math.cos(t),c=Math.sin(t),f=1-a;return n[0]=s*s*f+a,n[1]=s*e*f-r*c,n[2]=s*r*f+e*c,n[3]=0,n[4]=e*s*f+r*c,n[5]=e*e*f+a,n[6]=e*r*f-s*c,n[7]=0,n[8]=r*s*f-e*c,n[9]=r*e*f+s*c,n[10]=r*r*f+a,n[11]=0,n[12]=0,n[13]=0,n[14]=0,n[15]=1,o}static lookAtORIGINAL(t,s,e,r,o,n,i,a,c,f){f=f||new K;let l=f.m,h=t-r,m=s-o,u=e-n,v=Math.sqrt(h*h+m*m+u*u);h/=v,m/=v,u/=v;let p=a*u-c*m,A=c*h-i*u,F=i*m-a*h;v=Math.sqrt(p*p+A*A+F*F),p/=v,A/=v,F/=v;let g=m*F-u*A,V=u*p-h*F,x=h*A-m*p;return v=Math.sqrt(g*g+V*V+x*x),g/=v,V/=v,x/=v,l[0]=p,l[1]=A,l[2]=F,l[3]=-(p*t+A*s+F*e),l[4]=g,l[5]=V,l[6]=x,l[7]=-(g*t+V*s+x*e),l[8]=h,l[9]=m,l[10]=u,l[11]=-(h*t+m*s+u*e),l[12]=0,l[13]=0,l[14]=0,l[15]=1,f}static lookAtTRYOUT(t,s,e,r){r=r||new K;let o=r.m,n=Math.sqrt(t*t+e*e);return o[0]=e/n,o[1]=0,o[2]=-t/n,o[3]=0,o[4]=t*s/n,o[5]=-n,o[6]=e*s/n,o[7]=0,o[8]=t,o[9]=s,o[10]=e,o[11]=0,o[12]=0,o[13]=0,o[14]=0,o[15]=1,r}static lookAt(t,s,e,r){r=r||new K;let o=r.m,n=Math.sqrt(t*t+e*e),i=n?t/n:1,a=n?e/n:0;return o[0]=t,o[1]=-a,o[2]=-e*i,o[3]=0,o[4]=s,o[5]=0,o[6]=n,o[7]=0,o[8]=e,o[9]=i,o[10]=-e*a,o[11]=0,o[12]=0,o[13]=0,o[14]=0,o[15]=1,r}};var ae=[null,null,null,null],ve=[null,null,null,null],Fe=[null,null,null,null],Ve=class{static transformVertices(t,s){let{vertX:e,vertY:r,vertZ:o,faceVertNormalX:n,faceVertFlatNormalX:i,faceVertNormalY:a,faceVertFlatNormalY:c,faceVertNormalZ:f,faceVertFlatNormalZ:l,faceVertSmoothNormalX:h,faceVertSmoothNormalY:m,faceVertSmoothNormalZ:u,faceVertBothNormalX:v,faceVertBothNormalY:p,faceVertBothNormalZ:A}=s,F=t.determineBoundsOffsetAndRescale(t.resize,s),g=new K;g=K.multiply(g,K.translate(t.position.x,t.position.y,t.position.z)),g=K.multiply(g,K.rotate(t.rotation.z,0,0,1)),g=K.multiply(g,K.rotate(t.rotation.y,0,1,0)),g=K.multiply(g,K.rotate(t.rotation.x,1,0,0)),g=K.multiply(g,K.scale(t.scale.x,t.scale.y,t.scale.z)),g=K.multiply(g,K.scale(F.rescale,F.rescale,F.rescale)),g=K.multiply(g,K.translate(F.offset.x,F.offset.y,F.offset.z));let V=K.inverse(g);V=K.transpose(V);for(let x=0,M=t.vertCount;x<M;x++)g.transformPointInline(e,r,o,x);ae[0]=n,ve[0]=a,Fe[0]=f,ae[1]=i,ve[1]=c,Fe[1]=l,ae[2]=h,ve[2]=m,Fe[2]=u,ae[3]=v,ve[3]=p,Fe[3]=A;for(let x=0,M=t.faceCount;x<M;x++){let N=x*4;for(let d=0;d<4;d++)for(let _=0,w=ae.length;_<w;_++){let C=ae[_],y=ve[_],O=Fe[_],E=N+d;V.transformVectorInline(C,y,O,E);let Z=C[E],B=y[E],Y=O[E],X=Math.sqrt(Z*Z+B*B+Y*Y);if(X>0){let R=1/X;C[E]=Z*R,y[E]=B*R,O[E]=Y*R}}}}};var Ae=class{static calculateLights(t,s){let e=t.lights;if(e.length===0)return;for(let p of e)if(p.direction&&!p.normalizedDirection){let A=Math.sqrt(p.direction.x*p.direction.x+p.direction.y*p.direction.y+p.direction.z*p.direction.z);if(p.normalizedDirection={x:p.direction.x,y:p.direction.y,z:p.direction.z},A>0){let F=1/A;p.normalizedDirection.x*=F}}let r=t.materials.materials,{faceMaterials:o,faceVertNormalX:n,faceVertNormalY:i,faceVertNormalZ:a,faceVertIndices:c,vertX:f,vertY:l,vertZ:h,faceVertLightR:m,faceVertLightG:u,faceVertLightB:v}=s;for(let p=0,A=t.faceCount;p<A;p++){let F=r[o[p]],g=p*4;if(F.lights)for(let V=0;V<4;V++){let x=g+V,M=c[x],N=f[M],d=l[M],_=h[M],w=n[x],C=i[x],y=a[x];m[x]=0,u[x]=0,v[x]=0;for(let O of e){let{color:E,strength:Z,distance:B,normalizedDirection:Y,position:X}=O,R=Z,k=0;if(X){let L=X.x-N,U=X.y-d,b=X.z-_;k=Math.sqrt(L*L+U*U+b*b);let q=1/k;R=Z*Math.max(w*L*q+C*U*q+y*b*q,0)}else Y&&(R=Z*Math.max(w*Y.x+C*Y.y+y*Y.z,0));X&&B&&(R=R*(1-Math.min(k/B,1))),m[x]+=E.r*R,u[x]+=E.g*R,v[x]+=E.b*R}}else for(let V=0;V<4;V++){let x=g+V;m[x]=1,u[x]=1,v[x]=1}}}};var Cs=[],es=new Map,ss=()=>Cs.pop()||{minx:Number.MAX_VALUE,miny:Number.MAX_VALUE,minz:Number.MAX_VALUE,maxx:-Number.MAX_VALUE,maxy:-Number.MAX_VALUE,maxz:-Number.MAX_VALUE,partitions:Array(8).fill(null),triangles:[]},Is=S=>{for(let t of S.partitions)t&&Is(t);S.minx=Number.MAX_VALUE,S.miny=Number.MAX_VALUE,S.minz=Number.MAX_VALUE,S.maxx=-Number.MAX_VALUE,S.maxy=-Number.MAX_VALUE,S.maxz=-Number.MAX_VALUE,S.partitions.fill(null),S.triangles.length=0,Cs.push(S)},ye=class{static calculateAmbientOcclusion(t,s){if(!(t.ao||t.materials.find(function(M){return M.ao})))return;let{faceMaterials:r,faceVertIndices:o,faceVertAO:n,vertX:i,vertY:a,vertZ:c,faceVertNormalX:f,faceVertNormalY:l,faceVertNormalZ:h}=s,{faceCount:m}=t,u=t.materials.materials,v=this._getAllFaceTriangles(t,s),p=this._trianglesToOctree(v,t,s);t._aoSides&&(p=this._aoSidesToOctree(t,s,p));let A=t.aoSamples,F=this._generateFibonacciSamples(A);es.clear();let g=t.scale.x,V=t.scale.y,x=t.scale.z;for(let M=0;M<m;M++){let N=u[r[M]],d=N.ao||t.ao,_=M*4;if(n[_]=0,n[_+1]=0,n[_+2]=0,n[_+3]=0,!d||d.maxDistance===0||d.strength===0||d.angle<1||N.opacity===0)continue;let w=d.maxDistance*Math.max(g,V,x),C=d.strength,y=Math.cos(d.angle/180*Math.PI);for(let O=0;O<4;O++){let E=_+O,Z=o[E],B=i[Z],Y=a[Z],X=c[Z],R=f[E],k=l[E],L=h[E],U=B*16384+Y*128+X,b=R*1e7+k*1e5+L*1e3,q=U*1e9+b,z=es.get(q);if(z!==void 0){n[E]=z;continue}let $=o[_+(O+2)%4],I=i[$],P=a[$],H=c[$],G=B*.99999+I*1e-5+R*1e-5,Q=Y*.99999+P*1e-5+k*1e-5,tt=X*.99999+H*1e-5+L*1e-5,T=0,ct=0;for(let[_t,xt,D]of F){if(_t*R+xt*k+D*L<=y)continue;let vt=G+_t*w,St=Q+xt*w,Mt=tt+D*w,Ot=this._distanceToOctree(t,s,p,G,Q,tt,_t,xt,D,w,vt,St,Mt);Ot?Ot=Ot/w:Ot=1,T+=Ot,ct++}let lt=0;ct!==0&&(T=Math.max(Math.min(T/ct,1),0),lt=1-Math.pow(T,C)),n[E]=lt,es.set(q,lt)}}Is(p)}static _getAllFaceTriangles(t,s){let{faceMaterials:e}=s,{faceCount:r}=t,o=[],n=t.materials.materials;for(let i=0;i<r;i++){if(n[e[i]].opacity<.75)continue;let c=i*2;o.push(c),o.push(c+1)}return o}static _trianglesToOctree(t,s,e){let{faceVertIndices:r,vertX:o,vertY:n,vertZ:i}=e,a=t.length;if(a<=32){let c=ss();c.triangles=t;for(let f=0;f<a;f++){let l=t[f],m=(l>>1)*4,u,v,p;(l&1)===0?(u=r[m+2],v=r[m+1],p=r[m+0]):(u=r[m+0],v=r[m+3],p=r[m+2]);let A=o[u],F=n[u],g=i[u],V=o[v],x=n[v],M=i[v],N=o[p],d=n[p],_=i[p];c.minx=Math.min(c.minx,A,V,N),c.miny=Math.min(c.miny,F,x,d),c.minz=Math.min(c.minz,g,M,_),c.maxx=Math.max(c.maxx,A,V,N),c.maxy=Math.max(c.maxy,F,x,d),c.maxz=Math.max(c.maxz,g,M,_)}return c}else{let c=0,f=0,l=0;for(let v=0;v<a;v++){let p=t[v],F=(p>>1)*4,g,V,x;(p&1)===0?(g=r[F+2],V=r[F+1],x=r[F+0]):(g=r[F+0],V=r[F+3],x=r[F+2]);let M=o[g],N=n[g],d=i[g],_=o[V],w=n[V],C=i[V],y=o[x],O=n[x],E=i[x];c+=M+_+y,f+=N+w+O,l+=d+C+E}let h=1/a;c*=h,f*=h,l*=h;let m=Array(8).fill(null);for(let v=0;v<a;v++){let p=t[v],F=(p>>1)*4,g,V,x;(p&1)===0?(g=r[F+2],V=r[F+1],x=r[F+0]):(g=r[F+0],V=r[F+3],x=r[F+2]);let M=o[g],N=n[g],d=i[g],_=o[V],w=n[V],C=i[V],y=o[x],O=n[x],E=i[x],Z=M+_+y<c?0:1,B=N+w+O<f?0:1,Y=d+C+E<l?0:1,X=Z+B*2+Y*4;m[X]===null?m[X]=[p]:m[X].push(p)}let u=ss();for(let v=0;v<8;v++){if(m[v]===null)continue;let p=this._trianglesToOctree(m[v],s,e);u.partitions[v]=p,u.minx=Math.min(u.minx,p.minx),u.miny=Math.min(u.miny,p.miny),u.minz=Math.min(u.minz,p.minz),u.maxx=Math.max(u.maxx,p.maxx),u.maxy=Math.max(u.maxy,p.maxy),u.maxz=Math.max(u.maxz,p.maxz)}return u}}static _distanceToOctree(t,s,e,r,o,n,i,a,c,f,l,h,m){if(this._hitsBox(r,o,n,l,h,m,e)===!1)return null;if(e.triangles.length>0)return this._distanceToModel(t,s,e.triangles,r,o,n,i,a,c,f);let u=f,v=e.partitions;for(let p=0;p<8;p++){let A=v[p];if(A===null)continue;let F=this._distanceToOctree(t,s,A,r,o,n,i,a,c,f,l,h,m);F&&(u=Math.min(u,F))}return u}static _aoSidesToOctree(t,s,e){let r=t.determineBoundsOffsetAndRescale(Zt,s).bounds,{vertCount:o,faceCount:n}=t,{faceVertIndices:i,faceCulled:a,vertX:c,vertY:f,vertZ:l}=s,h=(u,v,p,A,F,g,V,x,M)=>{let N=n*4;c[o]=u,f[o]=v,l[o]=p,c[o+1]=A,f[o+1]=F,l[o+1]=g,c[o+2]=V,f[o+2]=x,l[o+2]=M,i[N]=o+2,i[N+1]=o+1,i[N+2]=o+0,a.set(n,1);let d=n*2;return n++,o+=3,d},m=[];if(t._aoSides.nx&&m.push(h(r.minX-.05,1e6,-1e6,r.minX-.05,1e6,1e6,r.minX-.05,-1e7,0)),t._aoSides.px&&m.push(h(r.maxX+.05,1e6,1e6,r.maxX+.05,1e6,-1e6,r.maxX+.05,-1e7,0)),t._aoSides.ny&&m.push(h(1e6,r.minY-.05,-1e6,-1e6,r.minY-.05,-1e6,0,r.minY-.05,1e7)),t._aoSides.py&&m.push(h(-1e6,r.maxY+.05,-1e6,1e6,r.maxY+.05,-1e6,0,r.maxY+.05,1e7)),t._aoSides.nz&&m.push(h(1e6,1e6,r.minZ-.05,-1e6,1e6,r.minZ-.05,0,-1e7,r.minZ-.05)),t._aoSides.pz&&m.push(h(-1e6,1e6,r.maxZ+.05,1e6,1e6,r.maxZ+.05,0,-1e7,r.maxZ+.05)),m.length>0){let u=this._trianglesToOctree(m,t,s),v=ss();v.partitions=[v,u]}return e}static _hitsBox(t,s,e,r,o,n,i){let a=i.minx;if(t<a&&r<a)return!1;let c=i.maxx;if(t>c&&r>c)return!1;let f=i.miny;if(s<f&&o<f)return!1;let l=i.maxy;if(s>l&&o>l)return!1;let h=i.minz;if(e<h&&n<h)return!1;let m=i.maxz;if(e>m&&n>m)return!1;let u=t-(a+c)*.5,v=(c-a)*.5,p=(r-t)*.5,A=Math.abs(p);if(Math.abs(u)>v+A)return!1;let F=(l-f)*.5,g=(o-s)*.5,V=Math.abs(g),x=s-(f+l)*.5;if(Math.abs(x)>F+V)return!1;let M=(m-h)*.5,N=(n-e)*.5,d=Math.abs(N),_=e-(h+m)*.5;return!(Math.abs(_)>M+d||Math.abs(g*_-N*x)>F*d+M*V+Number.EPSILON||Math.abs(N*u-p*_)>M*A+v*d+Number.EPSILON||Math.abs(p*x-g*u)>v*V+F*A+Number.EPSILON)}static _distanceToModel(t,s,e,r,o,n,i,a,c,f){let l=null,{faceVertIndices:h}=s;for(let m=0;m<e.length;m++){let u=e[m],p=(u>>1)*4,A,F,g;(u&1)===0?(A=h[p+2],F=h[p+1],g=h[p+0]):(A=h[p+0],F=h[p+3],g=h[p+2]);let V=this._triangleDistance(t,s,A,F,g,r,o,n,i,a,c);V&&(l?l=Math.min(l,V):V<f&&(l=V))}return l}static _triangleDistance(t,s,e,r,o,n,i,a,c,f,l){let{vertX:h,vertY:m,vertZ:u}=s,v=h[e],p=m[e],A=u[e],F=h[r],g=m[r],V=u[r],x=h[o],M=m[o],N=u[o],d=F-v,_=g-p,w=V-A,C=x-v,y=M-p,O=N-A,E=f*O-l*y,Z=l*C-c*O,B=c*y-f*C,Y=d*E+_*Z+w*B;if(Y<Number.EPSILON)return null;let X=1/Y,R=n-v,k=i-p,L=a-A,U=X*(R*E+k*Z+L*B);if(U<0||U>1)return null;let b=k*w-L*_,q=L*d-R*w,z=R*_-k*d,$=X*(c*b+f*q+l*z);if($<0||U+$>1)return null;let I=X*(C*b+y*q+O*z);return I<=Number.EPSILON?null:I}static _generateFibonacciSamples(t){let s=[],e=(Math.sqrt(5)+1)/2,r=(2-e)*(2*Math.PI);for(let o=1;o<=t;++o){let n=Math.asin(-1+2*o/(t+1)),i=r*o,a=Math.cos(i)*Math.cos(n),c=Math.sin(n),f=Math.sin(i)*Math.cos(n);s.push([a,c,f])}return s}static _generateOctahedronSamples(t){let s=[],e=Math.PI/2/t;for(let r=0;r<=t;r++){let o=r*e,n=Math.cos(o),i=Math.sin(o),a=Math.max(1,r*4),c=Math.PI*2/a;for(let f=0;f<a;f++){let l=f*c,h=i*Math.sin(l),m=i*Math.cos(l);s.push({x:h,y:n,z:m}),r<t&&s.push({x:h,y:-n,z:m})}a+=4}return s}};var _e=class{static assignUVs(t,s){let{faceMaterials:e,faceNameIndices:r,faceVertUs:o,faceVertVs:n}=s,i=[],a=[],c=[],f=t.materials.materials;for(let l=0;l<f.length;l++){let h=f[l],m=0,u=1,v=1;if(h.map||h.normalMap||h.roughnessMap||h.metalnessMap||h.emissiveMap){let p=t.voxChunk.size[0],A=t.voxChunk.size[1],F=t.voxChunk.size[2];h.mapTransform.uscale===-1&&(u=1/Math.max(p,A,F)),h.mapTransform.vscale===-1&&(v=1/Math.max(p,A,F)),(h.map&&h.map.cube||h.normalMap&&h.normalMap.cube||h.roughnessMap&&h.roughnessMap.cube||h.metalnessMap&&h.metalnessMap.cube||h.emissiveMap&&h.emissiveMap.cube)&&(m=1,u=u/4,v=v/2)}i.push(m),a.push(u),c.push(v)}for(let l=0,h=t.faceCount;l<h;l++){let m=e[l],u=i[m],v=a[m],p=c[m],A=vs[r[l]],F=l*4,g=o[F+A.order[0]],V=n[F+A.order[0]],x=o[F+A.order[1]],M=n[F+A.order[1]],N=o[F+A.order[2]],d=n[F+A.order[2]],_=o[F+A.order[3]],w=n[F+A.order[3]],C=F+A.order[0],y=F+A.order[1],O=F+A.order[2],E=F+A.order[3],Z=u*A.uo,B=u*A.vo,Y=A.ud*v,X=A.vd*p;o[C]=Z+(g+1e-4)*Y,n[C]=B+(V+1e-4)*X,o[y]=Z+(x+1e-4)*Y,n[y]=B+(M+.9999)*X,o[O]=Z+(N+.9999)*Y,n[O]=B+(d+.9999)*X,o[E]=Z+(_+.9999)*Y,n[E]=B+(w+1e-4)*X}}};var Me=class{static combineColors(t,s){let{vertColorR:e,vertColorG:r,vertColorB:o,vertColorCount:n,faceVertColorR:i,faceVertColorG:a,faceVertColorB:c,faceVertLightR:f,faceVertLightG:l,faceVertLightB:h,faceVertIndices:m,faceMaterials:u,faceVertAO:v}=s,p=t.materials.materials,A=!!t.materials.find(x=>x.colors.length>1&&x.fade),F=Array(p.length).fill(!1);for(let x=0,M=p.length;x<M;x++)A&&p[x].colors.length>1&&p[x].fade&&(F[x]=!0);for(let x=0,M=t.faceCount;x<M;x++)if(F[u[x]])for(let d=0;d<4;d++){let _=0,w=0,C=0,y=0,O=x*4+d,E=m[O],Z=n[E];for(let Y=0;Y<Z;Y++){let X=E*6+Y;_+=e[X],w+=r[X],C+=o[X],y++}let B=1/y;i[O]=_*B,a[O]=w*B,c[O]=C*B}let g=t.ao||t.materials.find(function(x){return x.ao}),V=t.lights.length>0;if(g&&V)for(let x=0,M=t.faceCount;x<M;x++){let d=p[u[x]].ao||t.ao,_=d?d.color:null;for(let w=0;w<4;w++){let C=x*4+w,y=i[C],O=a[C],E=c[C],Z=_?_.r:y,B=_?_.g:O,Y=_?_.b:E,X=1-v[C];i[C]=y*f[C]*X+Z*(1-X),a[C]=O*l[C]*X+B*(1-X),c[C]=E*h[C]*X+Y*(1-X)}}else if(V&&!g)for(let x=0,M=t.faceCount;x<M;x++)for(let N=0;N<4;N++){let d=x*4+N;i[d]=i[d]*f[d],a[d]=a[d]*l[d],c[d]=c[d]*h[d]}else if(!V&&g)for(let x=0,M=t.faceCount;x<M;x++){let d=p[u[x]].ao||t.ao;if(!d)continue;let _=d.color;for(let w=0;w<4;w++){let C=x*4+w,y=i[C],O=a[C],E=c[C],Z=_?_.r:y,B=_?_.g:O,Y=_?_.b:E,X=1-v[C];i[C]=X*y+Z*(1-X),a[C]=X*O+B*(1-X),c[C]=X*E+Y*(1-X)}}}};var Te={filled:!1,lastVoxelAxis1:0,lastVoxelAxis2:0,maxVoxelAxis3:0,lastFaceIndex:0},Be={filled:!1,lastVoxelAxis1:0,lastVoxelAxis2:0,maxVoxelAxis3:0,lastFaceIndex:0},Pe={filled:!1,lastVoxelAxis1:0,lastVoxelAxis2:0,maxVoxelAxis3:0,lastFaceIndex:0},Re={filled:!1,lastVoxelAxis1:0,lastVoxelAxis2:0,maxVoxelAxis3:0,lastFaceIndex:0},Ce=class{static simplify(t,s){if(!t.simplify)return;let e=function(){Te.filled=!1,Be.filled=!1,Pe.filled=!1,Re.filled=!1},r=t.materials.materials,{faceCulled:o,faceNameIndices:n,vertX:i,vertY:a,vertZ:c,voxelXZYFaceIndices:f,voxelXYZFaceIndices:l,voxelYZXFaceIndices:h}=s;for(let m=f.length-t.faceCount,u=f.length;m<u;m++){let v=f[m],p=v&(1<<28)-1;if(o.get(p))continue;let A=v/(1<<28),F=A>>16&255,g=A>>8&255,V=A&255;switch(n[p]){case 0:this._mergeFaces(r,t,s,Te,p,F,g,V,i,c,a,0,1,2,3);break;case 1:this._mergeFaces(r,t,s,Be,p,F,g,V,i,c,a,0,1,2,3);break;case 4:this._mergeFaces(r,t,s,Pe,p,F,g,V,i,c,a,0,1,2,3);break;case 5:this._mergeFaces(r,t,s,Re,p,F,g,V,i,c,a,0,1,2,3);break}}e();for(let m=l.length-t.faceCount,u=l.length;m<u;m++){let v=l[m],p=v&(1<<28)-1;if(o.get(p))continue;let A=v/(1<<28),F=A>>16&255,g=A>>8&255,V=A&255;switch(n[p]){case 0:this._mergeFaces(r,t,s,Te,p,F,g,V,i,a,c,1,2,3,0);break;case 1:this._mergeFaces(r,t,s,Be,p,F,g,V,i,a,c,3,0,1,2);break;case 2:this._mergeFaces(r,t,s,Pe,p,F,g,V,i,a,c,0,1,2,3);break;case 3:this._mergeFaces(r,t,s,Re,p,F,g,V,i,a,c,2,3,0,1);break}}e();for(let m=h.length-t.faceCount,u=h.length;m<u;m++){let v=h[m],p=v&(1<<28)-1;if(o.get(p))continue;let A=v/(1<<28),F=A>>16&255,g=A>>8&255,V=A&255;switch(n[p]){case 2:this._mergeFaces(r,t,s,Te,p,F,g,V,a,c,i,1,2,3,0);break;case 3:this._mergeFaces(r,t,s,Be,p,F,g,V,a,c,i,1,2,3,0);break;case 4:this._mergeFaces(r,t,s,Pe,p,F,g,V,a,c,i,3,0,1,2);break;case 5:this._mergeFaces(r,t,s,Re,p,F,g,V,a,c,i,1,2,3,0);break}}e()}static _mergeFaces(t,s,e,r,o,n,i,a,c,f,l,h,m,u,v){let{faceCulled:p,faceMaterials:A,vertX:F,vertY:g,vertZ:V,faceVertIndices:x,faceVertNormalX:M,faceVertNormalY:N,faceVertNormalZ:d,faceVertColorR:_,faceVertColorG:w,faceVertColorB:C,faceVertUs:y,faceVertVs:O,faceVertFlatNormalX:E,faceVertFlatNormalY:Z,faceVertFlatNormalZ:B,faceVertSmoothNormalX:Y,faceVertSmoothNormalY:X,faceVertSmoothNormalZ:R,faceVertBothNormalX:k,faceVertBothNormalY:L,faceVertBothNormalZ:U}=e,b=A[o],q=t[b];if(r.filled&&r.lastVoxelAxis1===n&&r.lastVoxelAxis2===i&&(q.simplify===!0||q.simplify===null&&s.simplify===!0)&&p.get(o)===0){if(r.maxVoxelAxis3!==a-1){r.filled=!0,r.lastVoxelAxis1=n,r.lastVoxelAxis2=i,r.maxVoxelAxis3=a,r.lastFaceIndex=o;return}let z=o*4,$=r.lastFaceIndex,I=$*4;if(A[$]!==b)return;let P=M[z],H=N[z],G=d[z],Q=M[z+1],tt=N[z+1],T=d[z+1],ct=M[z+2],lt=N[z+2],_t=d[z+2],xt=M[z+3],D=N[z+3],Ft=d[z+3],vt=M[I],St=N[I],Mt=d[I],Ot=M[I+1],Et=N[I+1],qt=d[I+1],Pt=M[I+2],Dt=N[I+2],te=d[I+2],Rt=M[I+3],Lt=N[I+3],ee=d[I+3];if(!(this._normalEquals(P,H,G,vt,St,Mt)&&this._normalEquals(Q,tt,T,Ot,Et,qt)&&this._normalEquals(ct,lt,_t,Pt,Dt,te)&&this._normalEquals(xt,D,Ft,Rt,Lt,ee)))return;let dt=_[z],Vt=w[z],at=C[z],it=_[z+1],At=w[z+1],J=C[z+1],j=_[z+2],$t=w[z+2],ut=C[z+2],rt=_[z+3],ht=w[z+3],mt=C[z+3],et=_[I],st=w[I],ot=C[I],It=_[I+1],Nt=w[I+1],zt=C[I+1],kt=_[I+2],Gt=w[I+2],Ht=C[I+2],Xt=_[I+3],Le=w[I+3],ce=C[I+3];if(!(dt===et&&Vt===st&&at===ot&&it===It&&At===Nt&&J===zt&&j===kt&&$t===Gt&&ut===Ht&&rt===Xt&&ht===Le&&mt===ce))return;let ke=x[z+h],Wt=x[z+m],Xe=x[z+u],Ts=x[z+v],os=F[ke],ns=g[ke],as=V[ke],be=F[Wt],Se=g[Wt],Oe=V[Wt],se=x[I+h],Ue=x[I+m],qe=x[I+u],$e=x[I+v],is=F[se],cs=g[se],ls=V[se],Ns=Math.sqrt((be-os)*(be-os)+(Se-ns)*(Se-ns)+(Oe-as)*(Oe-as)),zs=Math.sqrt((be-is)*(be-is)+(Se-cs)*(Se-cs)+(Oe-ls)*(Oe-ls)),bt=Ns/zs;return Math.abs(c[Ue]-(1-bt)*c[Wt]-bt*c[se])<=1e-4&&Math.abs(f[Ue]-(1-bt)*f[Wt]-bt*f[se])<=1e-4&&Math.abs(l[Ue]-(1-bt)*l[Wt]-bt*l[se])<=1e-4&&Math.abs(c[qe]-(1-bt)*c[Xe]-bt*c[$e])<=1e-4&&Math.abs(f[qe]-(1-bt)*f[Xe]-bt*f[$e])<=1e-4&&Math.abs(l[qe]-(1-bt)*l[Xe]-bt*l[$e])<=1e-4?(x[I+m]=Wt,x[I+u]=Xe,y[I+m]=y[z+m],O[I+m]=O[z+m],y[I+u]=y[z+u],O[I+u]=O[z+u],E[I+m]=E[z+m],Z[I+m]=Z[z+m],B[I+m]=B[z+m],E[I+u]=E[z+u],Z[I+u]=Z[z+u],B[I+u]=B[z+u],Y[I+m]=Y[z+m],X[I+m]=X[z+m],R[I+m]=R[z+m],Y[I+u]=Y[z+u],X[I+u]=X[z+u],R[I+u]=R[z+u],k[I+m]=k[z+m],L[I+m]=L[z+m],U[I+m]=U[z+m],k[I+u]=k[z+u],L[I+u]=L[z+u],U[I+u]=U[z+u],r.maxVoxelAxis3=a,p.set(o,1),s.nonCulledFaceCount--,!0):void 0}return r.filled=!0,r.lastVoxelAxis1=n,r.lastVoxelAxis2=i,r.maxVoxelAxis3=a,r.lastFaceIndex=o,!1}static _normalEquals(t,s,e,r,o,n){return Math.abs(t-r)<.01&&Math.abs(s-o)<.01&&Math.abs(e-n)<.01}};var Ie=class{static alignFaceDiagonals(t,s){let e=.1*Math.min(t.scale.x,t.scale.y,t.scale.z);e*=e;let{faceCulled:r,faceVertIndices:o,vertX:n,vertY:i,vertZ:a,faceVertFlatNormalX:c,faceVertFlatNormalY:f,faceVertFlatNormalZ:l,faceVertSmoothNormalX:h,faceVertSmoothNormalY:m,faceVertSmoothNormalZ:u,faceVertBothNormalX:v,faceVertBothNormalY:p,faceVertBothNormalZ:A,faceVertUs:F,faceVertVs:g,faceVertColorR:V,faceVertColorG:x,faceVertColorB:M,faceVertNormalX:N,faceVertNormalY:d,faceVertNormalZ:_}=s;for(let w=0,C=t.faceCount;w<C;w++){if(r.get(w)===1)continue;let y=w*4,O=o[y],E=o[y+1],Z=o[y+2],B=o[y+3],Y=n[O],X=i[O],R=a[O],k=n[E],L=i[E],U=a[E],b=n[Z],q=i[Z],z=a[Z],$=n[B],I=i[B],P=a[B],H=(Y+b)/2,G=(X+q)/2,Q=(R+z)/2,tt=(k-H)*(k-H)+(L-G)*(L-G)+(U-Q)*(U-Q),T=($-H)*($-H)+(I-G)*(I-G)+(P-Q)*(P-Q),ct=(k+$)/2,lt=(L+I)/2,_t=(U+P)/2,xt=(Y-ct)*(Y-ct)+(X-lt)*(X-lt)+(R-_t)*(R-_t),D=(b-ct)*(b-ct)+(q-lt)*(q-lt)+(z-_t)*(z-_t);if(tt<e||T<e)this._shiftFaceVertsAtOffset(y,o),this._shiftFaceVertsAtOffset(y,N),this._shiftFaceVertsAtOffset(y,d),this._shiftFaceVertsAtOffset(y,_),this._shiftFaceVertsAtOffset(y,c),this._shiftFaceVertsAtOffset(y,f),this._shiftFaceVertsAtOffset(y,l),this._shiftFaceVertsAtOffset(y,h),this._shiftFaceVertsAtOffset(y,m),this._shiftFaceVertsAtOffset(y,u),this._shiftFaceVertsAtOffset(y,v),this._shiftFaceVertsAtOffset(y,p),this._shiftFaceVertsAtOffset(y,A),this._shiftFaceVertsAtOffset(y,F),this._shiftFaceVertsAtOffset(y,g),this._shiftFaceVertsAtOffset(y,V),this._shiftFaceVertsAtOffset(y,x),this._shiftFaceVertsAtOffset(y,M);else if(!(xt<e||D<e)){let Ft=this._getVertexSumInline(Y,X,R);for(;this._getVertexSumInline(k,L,U)<Ft||this._getVertexSumInline(b,q,z)<Ft||this._getVertexSumInline($,I,P)<Ft;){this._shiftFaceVertsAtOffset(y,o),this._shiftFaceVertsAtOffset(y,N),this._shiftFaceVertsAtOffset(y,d),this._shiftFaceVertsAtOffset(y,_),this._shiftFaceVertsAtOffset(y,c),this._shiftFaceVertsAtOffset(y,f),this._shiftFaceVertsAtOffset(y,l),this._shiftFaceVertsAtOffset(y,h),this._shiftFaceVertsAtOffset(y,m),this._shiftFaceVertsAtOffset(y,u),this._shiftFaceVertsAtOffset(y,v),this._shiftFaceVertsAtOffset(y,p),this._shiftFaceVertsAtOffset(y,A),this._shiftFaceVertsAtOffset(y,F),this._shiftFaceVertsAtOffset(y,g),this._shiftFaceVertsAtOffset(y,V),this._shiftFaceVertsAtOffset(y,x),this._shiftFaceVertsAtOffset(y,M);let vt=Y,St=X,Mt=R;Y=k,X=L,R=U,k=b,L=q,U=z,b=$,q=I,z=P,$=vt,I=St,P=Mt,Ft=this._getVertexSumInline(Y,X,R)}}}}static _getVertexSumInline(t,s,e){return Math.abs(t)+Math.abs(s)+Math.abs(e)}static _shiftFaceVertsAtOffset(t,s){let e=s[t];s[t]=s[t+1],s[t+1]=s[t+2],s[t+2]=s[t+3],s[t+3]=e}};var rs=(S,t)=>S-t,Ne=class{set origin(t){this._origin=W.parse(t)}get origin(){return W.toString(this._origin)}set flatten(t){this._flatten=W.parse(t)}get flatten(){return W.toString(this._flatten)}set clamp(t){this._clamp=W.parse(t)}get clamp(){return W.toString(this._clamp)}set skip(t){this._skip=W.parse(t)}get skip(){return W.toString(this._skip)}set tile(t){this._tile=W.parse(t||" "),this._tile.x&&(this._tile=W.combine(this._tile,{nx:!0,px:!0})),this._tile.y&&(this._tile=W.combine(this._tile,{ny:!0,py:!0})),this._tile.z&&(this._tile=W.combine(this._tile,{nz:!0,pz:!0})),this._tile.x=!1,this._tile.y=!1,this._tile.z=!1}get tile(){return W.toString(this._tile)}set shape(t){if(this._shape=(t||"box").trim(),!["box","sphere","cylinder-x","cylinder-y","cylinder-z"].includes(this._shape))throw new Error(`SyntaxError Unrecognized shape ${this._shape}. Allowed are box, sphere, cylinder-x, cylinder-y and cylinder-z`)}get shape(){return this._shape}setAo(t){this._ao=t}get ao(){return this._ao}set aoSides(t){this._aoSides=W.parse(t)}get aoSides(){return W.toString(this._aoSides)}set aoSamples(t){this._aoSamples=Math.round(t)}get aoSamples(){return this._aoSamples}constructor(){this.name="main",this.lights=[],this.textures={},this.materials=new ue,this.voxChunk=null,this.scale={x:1,y:1,z:1},this.rotation={x:0,y:0,z:0},this.position={x:0,y:0,z:0},this.resize=!1,this._origin=W.parse("x y z"),this._flatten=W.parse(""),this._clamp=W.parse(""),this._skip=W.parse(""),this._tile=W.parse(""),this._ao=void 0,this._aoSamples=50,this._aoSides=W.parse(""),this.shape="box",this.wireframe=!1,this.simplify=!0,this.triCount=0,this.octCount=0,this.octMissCount=0,this.faceCount=0,this.vertCount=0,this.nonCulledFaceCount=0}prepareForWrite(){this.lights.some(t=>t.size)&&(this.materials.materials[0].colors[0].count=1)}prepareForRender(t){let{tmpVertIndexLookup:s,tmpVoxelXZYFaceIndices:e,tmpVoxelXYZFaceIndices:r,tmpVoxelYZXFaceIndices:o}=t,{voxChunk:n}=this;this.prepareForWrite();let i=Ut.maximumDeformCount(this);this.faceCount=0,this.vertCount=0;let a=i>0,[c,f,l,h,m,u]=pt(n.size),v=this.materials.materials,p=gt(n.size[0]),A=gt(n.size[1]),F=gt(n.size[2]);for(let g=c;g<=f;g++)for(let V=l;V<=h;V++)for(let x=m;x<=u;x++){let M=n.getPaletteIndexAt(g,V,x);if(M===0)continue;let N=g+p,d=V+A,_=x+F,w=N<<16,C=_<<8,y=(w|C|d)*(1<<28),O=(w|d<<8|_)*(1<<28),E=(d<<16|C|N)*(1<<28);for(let Z=0,B=xs.length;Z<B;Z++){let Y=gs[Z],X,R=g+Y[0],k=V+Y[1],L=x+Y[2];if(R<c||R>f||k<l||k>h||L<m||L>u?X=0:X=n.getPaletteIndexAt(R,k,L),this._createFace(n,t,v,g,V,x,p,A,F,M,X,Z,a,s)){let b=this.faceCount-1;e[b]=y+b,r[b]=O+b,o[b]=E+b}}}this.nonCulledFaceCount=this.faceCount,s.clear(),t.voxelXZYFaceIndices=e.slice(0,this.faceCount),t.voxelXYZFaceIndices=r.slice(0,this.faceCount),t.voxelYZXFaceIndices=o.slice(0,this.faceCount),t.voxelXZYFaceIndices.sort(rs),t.voxelXYZFaceIndices.sort(rs),t.voxelYZXFaceIndices.sort(rs),ne.fixClampedLinks(this,t),Ut.changeShape(this,t,this._shape),Ut.deform(this,t,i),Ut.warpAndScatter(this,t),ge.calculateNormals(this,t),Ve.transformVertices(this,t),Ae.calculateLights(this,t),ye.calculateAmbientOcclusion(this,t),Me.combineColors(this,t),_e.assignUVs(this,t),Ce.simplify(this,t),Ie.alignFaceDiagonals(this,t)}determineBoundsOffsetAndRescale(t,s){let e={bounds:null,offset:null,rescale:1},r,o,n,i,a,c,{vertX:f,vertY:l,vertZ:h}=s;if(t===le||t===Zt){r=Number.POSITIVE_INFINITY,o=Number.POSITIVE_INFINITY,n=Number.POSITIVE_INFINITY,i=Number.NEGATIVE_INFINITY,a=Number.NEGATIVE_INFINITY,c=Number.NEGATIVE_INFINITY;for(let p=0,A=this.vertCount;p<A;p++){let F=f[p],g=l[p],V=h[p];F<r&&(r=F),g<o&&(o=g),V<n&&(n=V),F>i&&(i=F),g>a&&(a=g),V>c&&(c=V)}if(t===Zt){let[p,A,F,g,V,x]=pt(this.voxChunk.size),M=(A-p+1)/(A-p),N=(g-F+1)/(g-F),d=(x-V+1)/(x-V);e.rescale=Math.min(M,N,d)}}t||(r=this.bounds.minX,i=this.bounds.maxX+1,o=this.bounds.minY,a=this.bounds.maxY+1,n=this.bounds.minZ,c=this.bounds.maxZ+1);let m=-(r+i)/2,u=-(o+a)/2,v=-(n+c)/2;return this._origin.nx&&(m=-r),this._origin.px&&(m=-i),this._origin.ny&&(u=-o),this._origin.py&&(u=-a),this._origin.nz&&(v=-n),this._origin.pz&&(v=-c),e.bounds={minX:r,minY:o,minZ:n,maxX:i,maxY:a,maxZ:c},e.offset={x:m,y:u,z:v},e}_createFace(t,s,e,r,o,n,i,a,c,f,l,h,m,u){let v=t.colorForPaletteIndex(f),p=(v&4278190080)>>24,A=e[p];if(A.opacity===0)return!1;if(l!==0){let G=(t.colorForPaletteIndex(l)&4278190080)>>24;if(!e[G].isTransparent&&!A.wireframe)return!1;if(!(!A.isTransparent&&!A.wireframe)){if(!(A.isTransparent&&!A.wireframe&&l!==0&&e[(t.colorForPaletteIndex(l)&4278190080)>>24].wireframe))return!1}}let F=this._isFacePlanar(A,r,o,n,h,A._flatten,this._flatten),g=this._isFacePlanar(A,r,o,n,h,A._clamp,this._clamp);if(this._isFacePlanar(A,r,o,n,h,A._skip,this._skip))return!1;let{faceVertIndices:x,faceVertColorR:M,faceVertColorG:N,faceVertColorB:d,faceFlattened:_,faceClamped:w,faceSmooth:C,faceCulled:y,faceMaterials:O,faceNameIndices:E,faceVertUs:Z,faceVertVs:B}=s,{faceCount:Y}=this,X=Y*4,R=(v&255)/255,k=((v&65280)>>8)/255,L=((v&16711680)>>16)/255;x[X]=this._createVertex(s,A,r,o,n,R,k,L,i,a,c,h,0,F,g,u),x[X+1]=this._createVertex(s,A,r,o,n,R,k,L,i,a,c,h,1,F,g,u),x[X+2]=this._createVertex(s,A,r,o,n,R,k,L,i,a,c,h,2,F,g,u),x[X+3]=this._createVertex(s,A,r,o,n,R,k,L,i,a,c,h,3,F,g,u);for(let G=0;G<4;G++)M[X+G]=R,N[X+G]=k,d[X+G]=L;_.set(Y,F?1:0),w.set(Y,g?1:0),C.set(Y,0),y.set(Y,0),O[Y]=p,E[Y]=h;let U=Fs[h],b=U[0],q=U[1],z=r+i,$=o+a,I=n+c,P=z*b[0]+$*b[1]+I*b[2],H=z*q[0]+$*q[1]+I*q[2];for(let G=0;G<4;G++)Z[X+G]=P,B[X+G]=H;return m&&ne.linkVertices(this,s,Y),this.faceCount++,!0}_createVertex(t,s,e,r,o,n,i,a,c,f,l,h,m,u,v,p){let A=ds[h][m],F=e+A[0],g=r+A[1],V=o+A[2],x=F+c<<20|g+f<<10|V+l,{_clamp:M,_flatten:N}=this,{vertDeformCount:d,vertDeformDamping:_,vertDeformStrength:w,vertWarpAmplitude:C,vertWarpFrequency:y,vertScatter:O,vertX:E,vertY:Z,vertZ:B,vertLinkCounts:Y,vertFullyClamped:X,vertRing:R,vertClampedX:k,vertClampedY:L,vertClampedZ:U,vertColorR:b,vertColorG:q,vertColorB:z,vertColorCount:$,vertFlattenedX:I,vertFlattenedY:P,vertFlattenedZ:H}=t,{deform:G,warp:Q,scatter:tt}=s,T;if(p.has(x)?(T=p.get(x),G?d[T]!==0&&this._getDeformIntegral(s.deform)<this._getDeformIntegralAtVertex(t,T)&&(w[T]=G.strength,_[T]=G.damping,d[T]=G.count):(d[T]=0,_[T]=0,w[T]=0),Q?C[T]!==0&&(Q.amplitude<C[T]||Q.amplitude===C[T]&&Q.frequency>y[T])&&(C[T]=Q.amplitude,y[T]=Q.frequency):(C[T]=0,y[T]=0),tt?O[T]!==0&&Math.abs(tt)<Math.abs(O[T])&&(O[T]=tt):O[T]=0):(T=this.vertCount,p.set(x,T),E[T]=F,Z[T]=g,B[T]=V,G?(_[T]=G.damping,d[T]=G.count,w[T]=G.strength,Y[T]=0,X.set(T,0)):d[T]=0,Q?(C[T]=Q.amplitude,y[T]=Q.frequency):C[T]=0,tt?O[T]=tt:O[T]=0,$[T]=0,R[T]=0,k.set(T,0),L.set(T,0),U.set(T,0),I.set(T,0),P.set(T,0),H.set(T,0)),this._setIsVertexPlanar(s,F,g,V,s._flatten,N,I,P,H,T),this._setIsVertexPlanar(s,F,g,V,s._clamp,M,k,L,U,T),s.fade){let ct=$[T],lt=T*6;b[lt+ct]=n,q[lt+ct]=i,z[lt+ct]=a,$[T]++}return this.vertCount++,T}_getDeformIntegral(t){return t.damping===1?t.strength*(t.count+1):t.strength*(1-Math.pow(t.damping,t.count+1))/(1-t.damping)}_getDeformIntegralAtVertex(t,s){let{vertDeformDamping:e,vertDeformStrength:r,vertDeformCount:o}=t,n=e[s],i=o[s],a=r[s];return n===1?a*(i+1):a*(1-Math.pow(n,i+1))/(1-n)}_isFacePlanar(t,s,e,r,o,n,i){let a=n,c=t.bounds;if(a||(a=i,c=this.bounds),!a)return!1;switch(o){case 0:return a.x||a.nx&&s===c.minX;case 1:return a.x||a.px&&s===c.maxX;case 2:return a.y||a.ny&&e===c.minY;case 3:return a.y||a.py&&e===c.maxY;case 4:return a.z||a.nz&&r===c.minZ;case 5:return a.z||a.pz&&r===c.maxZ;default:return!1}}_setIsVertexPlanar(t,s,e,r,o,n,i,a,c,f){let l=o,h=t.bounds;l||(l=n,h=this.bounds),l?(i.set(f,l.x||l.nx&&s<h.minX+.5||l.px&&s>h.maxX+.5?1:i.get(f)|0),a.set(f,l.y||l.ny&&e<h.minY+.5||l.py&&e>h.maxY+.5?1:a.get(f)|0),c.set(f,l.z||l.nz&&r<h.minZ+.5||l.pz&&r>h.maxZ+.5?1:c.get(f)|0)):(i.set(f,i.get(f)|0),a.set(f,a.get(f)|0),c.set(f,c.get(f)|0))}};var ze=class{constructor(t,s,e,r,o,n,i){this.color=t,this.strength=s,this.direction=e,this.position=r,this.distance=o,this.size=n,this.detail=i}};var ie=class{static readFromString(t){let s=this._parse(t);return this._validateModel(s),this._createModel(s)}static _parse(t){let s={linecontinuation:/_\\s*[\\r\\n]/gm,modelparts:new RegExp(/\\s*(\\/\\/(.*?)\\r?\\n)/.source+"|"+/\\s*(texture|light|model|material|voxels)\\s+/.source+"|"+/\\s*([^=,\\r\\n]+=\\s*data:image.*?base64,.*$)\\s*/.source+"|"+/\\s*([^=,\\r\\n]+=[^\\r\\n=;,/]+)\\s*/.source+"|"+/\\s*([A-Za-z ()\\d -]+)\\s*/.source,"gm")},e={lights:[],textures:[],materials:[]},r=e,o=null;return Array.from(t.replaceAll(s.linecontinuation," ").matchAll(s.modelparts),i=>i[0].trim()).filter(i=>i).forEach(function(i){if(!i.startsWith("//"))if(i==="texture")r={id:"<no-name>",cube:!1},e.textures.push(r);else if(i==="light")r={color:"#FFF"},e.lights.push(r);else if(i==="model")r=e;else if(i==="material")r={},e.materials.push(r);else if(i==="voxels")r=e,o="";else if(o!==null)o+=i.replace(/\\s/g,"");else{let a=i.indexOf("=");if(a===-1)throw new Error(`SyntaxError: Invalid definition \'${i}\'.`);let c=i.substring(0,a).trim().toLowerCase(),f=i.substring(a+1).trim();r[c]=f}},this),e.voxels=o,e}static _createModel(t){let s=new Ne;return s.size=this._parseXYZInt("size",t.size,null,!0),s.scale=this._parseXYZFloat("scale",t.scale,"1",!0),s.rotation=this._parseXYZFloat("rotation",t.rotation,"0 0 0",!1),s.position=this._parseXYZFloat("position",t.position,"0 0 0",!1),s.simplify=t.simplify!=="false",t.resize===le?s.resize=le:t.resize===Zt?s.resize=Zt:t.resize?s.resize=null:t.autoresize==="true"&&(s.resize=Zt),s.shape=t.shape,s.wireframe=t.wireframe==="true"||!1,s.origin=t.origin||"x y z",s.flatten=t.flatten,s.clamp=t.clamp,s.skip=t.skip,s.tile=t.tile,s.setAo(this._parseAo(t.ao)),s.aoSides=t.aosides,s.aoSamples=parseInt(t.aosamples||50,10),s.data=this._parseVertexData(t.data,"model"),s.shell=this._parseShell(t.shell),t.lights.some(e=>e.size)&&s.materials.createMaterial(Ee,Ze,1,0,!1,!1,1,0,!1,1,!1,wt,"#FFF",0,!1,null,null,null,null,null,null,null,null,-1,-1,0,0,0).addColorHEX("#FFFFFF"),t.lights.forEach(function(e){this._createLight(s,e)},this),t.textures.forEach(function(e){this._createTexture(s,e)},this),t.materials.forEach(function(e){this._createMaterial(s,e)},this),s.colors={},s.materials.forEach(function(e){e.colors.forEach(function(r){s.colors[r.id]=r})}),this._resolveShellColors(s.shell,s),s.materials.forEach(function(e){this._resolveShellColors(e.shell,s)},this),this._createVoxels(s,t.voxels),s}static _createLight(t,s){s.color||(s.color="#FFF 1"),s.color.startsWith("#")||(s.color="#FFF "+s.color),s.strength=parseFloat(s.color.split(" ")[1]||1),s.color=nt.fromHex(s.color.split(" ")[0]),s.direction=this._parseXYZFloat("direction",s.direction,null,!1),s.position=this._parseXYZFloat("position",s.position,null,!1),s.distance=parseFloat(s.distance||0),s.size=Math.max(0,parseFloat(s.size||0)),s.detail=Math.min(3,Math.max(0,parseInt(s.detail||1,10)));let e=new ze(s.color,s.strength,s.direction,s.position,s.distance,s.size,s.detail);t.lights.push(e)}static _createTexture(t,s){s.cube=s.cube==="true"||!1,t.textures[s.id]=s}static _createMaterial(t,s){let e=Ze;s.lighting===fe&&(e=fe),s.lighting===Kt&&(e=Kt),s.lighting===Qt&&(e=Qt),s.emissive||(s.emissivemap?s.emissive="#FFF 1":s.emissive="#000 0"),s.emissive.startsWith("#")||(s.emissive="#FFF "+s.emissive),s.emissiveColor=s.emissive.split(" ")[0],s.emissiveIntensity=s.emissive.split(" ")[1]||1,s.ao&&!s.ao.startsWith("#")&&(s.ao="#000 "+s.ao),s.maptransform=s.maptransform||"";let r=null;t.simplify&&s.simplify==="false"&&(r=!1),!t.simplify&&s.simplify==="true"&&(r=!0);let o=t.materials.createMaterial(s.type||re,e,parseFloat(s.roughness||(s.roughnessmap,1)),parseFloat(s.metalness||(s.metalnessmap?1:0)),s.fade==="true"||!1,r,parseFloat(s.opacity||1),parseFloat(s.alphatest||0),s.transparent==="true"||!1,parseFloat(s.refractionratio||.9),s.wireframe==="true"||!1,s.side,s.emissiveColor,s.emissiveIntensity,s.fog!=="false",s.map?t.textures[s.map]:null,s.normalmap?t.textures[s.normalmap]:null,s.roughnessmap?t.textures[s.roughnessmap]:null,s.metalnessmap?t.textures[s.metalnessmap]:null,s.emissivemap?t.textures[s.emissivemap]:null,s.matcap?t.textures[s.matcap]:null,s.reflectionmap?t.textures[s.reflectionmap]:null,s.refractionmap?t.textures[s.refractionmap]:null,parseFloat(s.maptransform.split(" ")[0]||-1),parseFloat(s.maptransform.split(" ")[1]||-1),parseFloat(s.maptransform.split(" ")[2]||0),parseFloat(s.maptransform.split(" ")[3]||0),parseFloat(s.maptransform.split(" ")[4]||0));s.deform&&o.setDeform(parseFloat(s.deform.split(" ")[0]),parseFloat(s.deform.split(" ")[1]||1),parseFloat(s.deform.split(" ")[2]||1)),s.warp&&o.setWarp(parseFloat(s.warp.split(" ")[0]),parseFloat(s.warp.split(" ")[1]||1)),s.scatter&&(o.scatter=parseFloat(s.scatter)),o.flatten=s.flatten,o.clamp=s.clamp,o.skip=s.skip,o.setAo(this._parseAo(s.ao)),o.shell=this._parseShell(s.shell),o.lights=s.lights!=="false",o.data=this._parseVertexData(s.data,"material"),this._compareVertexData(t.data,o.data);let n=/\\s*\\(\\s*(\\d+)\\s*\\)\\s*/g,i=/([A-Z][a-z]*)\\s*(\\(\\d+\\))?[:]\\s*(#[a-fA-F0-9]*)\\s*/g;s.colors=s.colors.replace(n,"($1)"),s.colors=s.colors.replace(i,"$1$2:$3 "),s.colors.split(" ").filter(c=>c).forEach(function(c){let f=c.split(":")[0],l=null;f.includes("(")&&(l=Number(f.split("(")[1].replace(")","")),f=f.split("(")[0]);let h=c.split(":")[1];if(!o.colors[f]){if(h=o.addColor(nt.fromHex(h)),!/^[A-Z][a-z]*$/.test(f))throw new Error(`SyntaxError: Invalid color ID \'${f}\'`);h.id=f,h.exId=l}},this)}static _createVoxels(t,s){let e=t.colors,r=null,o=[];if(s.matchAll)o=s.matchAll(/[0-9]+|[A-Z][a-z]*|-+|[()]/g);else{let h=/[0-9]+|[A-Z][a-z]*|-+|[()]/g,m;for(;(m=h.exec(s))!==null;)o.push(m);o=o[Symbol.iterator]()}let n=this._unpackRle(o),i=t.size.x*t.size.y*t.size.z,a=0,c=t.voxChunk=new yt([t.size.x,t.size.y,t.size.z]);for(let h=0;h<n.length;h++)a+=n[h][1];if(a!==i)throw new Error(`SyntaxError: The specified size is ${t.size.x} x ${t.size.y} x ${t.size.z} (= ${i} voxels) but the voxel matrix contains ${a} voxels.`);let f={minx:0,miny:0,minz:0,maxx:t.size.x-1,maxy:t.size.y-1,maxz:t.size.z-1,x:0,y:0,z:0};t.bounds=new Jt;let l=0;for(let h=0;h<n.length;h++){let m=null;n[h][0]!=="-"&&(m=e[n[h][0]],l=t.materials.materials.findIndex(u=>u.colors.includes(m)),m||(r===null&&(r=t.materials.createMaterial(re,Ze,.5,0,!1,1,!1)),m=nt.fromHex("#FF00FF"),m.id=n[h][0],r.addColor(m),e[n[h][0]]=m)),this._setVoxels(t,m,n[h][1],f,c,l)}}static _parseAo(t){let s;if(t){t.startsWith("#")||(t="#000 "+t);let e=nt.fromHex(t.split(" ")[0]),r=Math.abs(parseFloat(t.split(" ")[1]||1)),o=parseFloat(t.split(" ")[2]||1),n=parseFloat(t.split(" ")[3]||70);n=Math.max(0,Math.min(90,Math.round(n))),s={color:e,maxDistance:r,strength:o,angle:n}}return s}static _parseShell(t){let s,e=!1;if(t&&(s=[],t!=="none")){let r=t.split(/\\s+/);if(r.length<2||r.length%2!==0)e=!0;else for(let o=0;o<r.length/2;o++){let n=r[o*2+0],i=r[o*2+1];if(!/^[A-Z][a-z]*$/.test(n)||!/^([-+]?[0-9]*\\.?[0-9]+)*$/.test(i)){e=!0;break}else s.push({colorId:r[o*2],distance:r[o*2+1]})}}if(e)throw new Error(`SyntaxError: shell \'${t}\' must be \'none\' or one or more color ID\'s and distances, e.g. P 0.2 Q 0.4`);return s&&(s=s.sort(function(r,o){return r.distance-o.distance})),s}static _resolveShellColors(t,s){!t||t.length===0||t.forEach(function(e){if(e.color=s.colors[e.colorId],!e.color)throw new Error(`SyntaxError: shell color ID \'${e.colorId}\' is not a known color`)},this)}static _parseVertexData(t,s){if(t){let e=[],r=t.split(/\\s+/),o=null;for(let i=0;i<r.length;i++){let a=r[i];if(isNaN(a))o={name:a,values:[]},e.push(o);else if(o)o.values.push(parseFloat(a));else break}let n=e.length===0;for(let i=0;i<e.length;i++)n=n||e[i].values.length===0||e[i].values.length>=4;if(n)throw new Error(`SyntaxError: The data property \'${e.data}\' of the ${s} should consist of one or more names, each followed by 1 to 4 float (default) values.`);return e}}static _compareVertexData(t,s){let e=!1;try{if((t||s)&&s){e=s&&!t,e=e||t.length!==s.length;for(let r=0;r<t.length;r++)e=e||t[r].name!==s[r].name,e=e||t[r].values.length!==s[r].values.length}}catch(r){e=!0}if(e)throw new Error("SyntaxError: The data property of the material should consist of identical names and number of values as the model data property.")}static _parseXYZInt(t,s,e,r){let o=this._parseXYZFloat(t,s,e,r);return{x:Math.trunc(o.x),y:Math.trunc(o.y),z:Math.trunc(o.z)}}static _parseXYZFloat(t,s,e,r){if(!s&&e&&(s=e),!s)return null;let o=s.split(/[\\s/]+/);if(o.length===1&&r&&(o.push(o[0]),o.push(o[0])),o.length!==3)throw new Error(`SyntaxError: \'${t}\' must have three values.`);if(o={x:parseFloat(o[0]),y:parseFloat(o[1]),z:parseFloat(o[2])},Number.isNaN(o.x)||Number.isNaN(o.y)||Number.isNaN(o.z))throw new Error(`SyntaxError: Invalid value \'${s}\' for ${t}\'.`);return o}static _unpackRle(t){let s=[],e=1,r=t.next();for(;!r.done;){let o=r.value[0];if(o[0]>="0"&&o[0]<="9")e=parseInt(o,10);else if(o==="("){let n=this._unpackRle(t);for(let i=0;i<e;i++)Array.prototype.push.apply(s,n);e=1}else{if(o===")")return s;o.length>1&&o[0]>="A"&&o[0]<="Z"&&o[1]===o[0]?(e>1?(s.push([o[0],e]),s.push([o[0],o.length-1])):s.push([o[0],o.length]),e=1):o.length>1&&o[0]==="-"&&o[1]==="-"?(e>1?(s.push(["-",e]),s.push(["-",o.length-1])):s.push(["-",o.length]),e=1):(s.push([o,e]),e=1)}r=t.next()}return s}static _setVoxels(t,s,e,r,o,n){let i=t.materials.materials[n];for(;e-- >0;){if(s){let a=Math.floor(s.r*255),c=Math.floor(s.g*255),f=Math.floor(s.b*255),h=_s(a,c,f,n),m=r.x-gt(t.size.x),u=r.y-gt(t.size.y),v=r.z-gt(t.size.z);t.bounds.set(m,u,v),i.bounds.set(m,u,v),o.setColorAt(m,u,v,h)}r.x++,r.x>r.maxx&&(r.x=r.minx,r.y++),r.y>r.maxy&&(r.y=r.miny,r.z++)}}static _validateModel(t){let s=["size","materials","textures","lights","voxels"],e=["name","shape","scale","rotation","position","simplify","origin","autoresize","resize","flatten","clamp","skip","tile","ao","aosides","aosamples","shell","wireframe","data"];this._validateProperties(t,s,e,"model"),t.lights.forEach(function(r){this._validateLight(r)},this),t.textures.forEach(function(r){this._validateTexture(r)},this),t.materials.forEach(function(r){this._validateMaterial(r)},this)}static _validateLight(t){let s=["color"],e=["direction","position","distance","size","detail"];if(this._validateProperties(t,s,e,"light"),t.direction&&t.position)throw new Error("SyntaxError: Light cannot have both a direction and a position.");if(t.direction&&t.distance)throw new Error("SyntaxError: Light cannot have both a direction and a distance.");if(!t.position&&(t.size||t.detail))throw new Error("SyntaxError: Light with no position cannot have size or detail.")}static _validateTexture(t){let s=["id","image"],e=["cube"];this._validateProperties(t,s,e,"texture")}static _validateMaterial(t){let s=["colors"],e=["type","lighting","fade","simplify","roughness","metalness","emissive","fog","opacity","alphatest","transparent","refractionratio","deform","warp","scatter","flatten","clamp","skip","ao","lights","wireframe","side","shell","map","normalmap","roughnessmap","metalnessmap","emissivemap","matcap","reflectionmap","refractionmap","maptransform","data"];this._validateProperties(t,s,e,"material")}static _validateProperties(t,s,e,r){for(let o of s)if(!t[o])throw new Error("SyntaxError: "+r+\' is missing mandatory property "\'+o+\'".\');for(let o in t)if(!s.includes(o)&&!e.includes(o))throw new Error("SyntaxError: "+r+\' has unrecognized property "\'+o+\'".\')}};var Bt=class{static generate(t,s){t.prepareForRender(s);let{nonCulledFaceCount:e}=t,r={materials:[],groups:[],indices:Array(e*6),indicesIndex:0,positions:new Float32Array(e*4*3),positionIndex:0,normals:new Float32Array(e*4*3),normalIndex:0,colors:new Float32Array(e*4*3),colorIndex:0,uvs:new Float32Array(e*4*2),uvIndex:0,data:null};return t.materials.baseMaterials.forEach(function(o){o.index=r.materials.length,r.materials.push(Bt._generateMaterial(o,t))},this),Bt._generateAll(t,r,s),r}static _generateMaterial(t,s){let e={type:t.type,roughness:t.roughness,metalness:t.metalness,opacity:t.opacity,alphaTest:t.alphaTest,transparent:t.isTransparent,refractionRatio:t.refractionRatio,wireframe:t.wireframe||s.wireframe,fog:t.fog,vertexColors:!0,side:t.side===Tt?Tt:wt};return t.type!==Ye&&(e.color="#FFF"),t.emissive&&(e.emissive=t.emissive.color.toString(),e.emissiveIntensity=t.emissive.intensity),t.map&&(e.map={image:t.map.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.normalMap&&(e.normalMap={image:t.normalMap.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.roughnessMap&&(e.roughnessMap={image:t.roughnessMap.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.metalnessMap&&(e.metalnessMap={image:t.metalnessMap.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.emissiveMap&&(e.emissiveMap={image:t.emissiveMap.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.matcap&&(e.matcap={image:t.matcap.image}),t.reflectionMap&&(e.reflectionMap={image:t.reflectionMap.image}),t.refractionMap&&(e.refractionMap={image:t.refractionMap.image}),e}static _generateAll(t,s,e){let r=t.materials.materials,{faceMaterials:o,faceCulled:n}=e;t.materials.baseMaterials.forEach(function(i){let a=s.indicesIndex;for(let f=0,l=t.faceCount;f<l;f++)r[o[f]]._baseMaterial===i&&n.get(f)===0&&Bt._generateFace(t,e,f,s);let c=s.indicesIndex;s.groups.push({start:a,count:c-a,materialIndex:i.index})},this)}static _generateFace(t,s,e,r){let{faceVertIndices:o,faceVertNormalX:n,faceVertNormalY:i,faceVertNormalZ:a,vertX:c,vertY:f,vertZ:l,faceVertColorR:h,faceVertColorG:m,faceVertColorB:u,faceVertUs:v,faceVertVs:p,faceMaterials:A,faceSmooth:F}=s,V=t.materials.materials[A[e]],x=o[e*4],M=o[e*4+1],N=o[e*4+2],d=o[e*4+3],_=c[x],w=f[x],C=l[x],y=c[M],O=f[M],E=l[M],Z=c[N],B=f[N],Y=l[N],X=c[d],R=f[d],k=l[d],L=n[e*4],U=i[e*4],b=a[e*4],q=n[e*4+1],z=i[e*4+1],$=a[e*4+1],I=n[e*4+2],P=i[e*4+2],H=a[e*4+2],G=n[e*4+3],Q=i[e*4+3],tt=a[e*4+3],T=h[e*4],ct=m[e*4],lt=u[e*4],_t=h[e*4+1],xt=m[e*4+1],D=u[e*4+1],Ft=h[e*4+2],vt=m[e*4+2],St=u[e*4+2],Mt=h[e*4+3],Ot=m[e*4+3],Et=u[e*4+3],qt=v[e*4],Pt=p[e*4],Dt=v[e*4+1],te=p[e*4+1],Rt=v[e*4+2],Lt=p[e*4+2],ee=v[e*4+3],Yt=p[e*4+3];if(V.side===oe){let et,st,ot;et=_,st=w,ot=C,_=Z,w=B,C=Y,Z=et,B=st,Y=ot,et=L,st=U,ot=b,L=I,U=P,b=H,I=et,P=st,H=ot,et=T,st=ct,ot=lt,T=Ft,ct=vt,lt=St,Ft=et,vt=st,St=ot,et=qt,st=Pt,qt=Rt,Pt=Lt,Rt=et,Lt=st}let dt=r.indicesIndex,Vt=r.indices,at=r.positionIndex,it=r.positions,At=dt===0?0:r.indices[dt-2]+1;Vt[dt]=At+2,Vt[dt+1]=At+1,Vt[dt+2]=At+0,Vt[dt+3]=At+0,Vt[dt+4]=At+3,Vt[dt+5]=At+2,r.indicesIndex+=6,it[at]=_,it[at+1]=w,it[at+2]=C,it[at+3]=y,it[at+4]=O,it[at+5]=E,it[at+6]=Z,it[at+7]=B,it[at+8]=Y,it[at+9]=X,it[at+10]=R,it[at+11]=k,r.positionIndex+=12;let J=r.normalIndex,j=r.normals,$t=F.get(e)===1;if(V.lighting===Kt||V.lighting===Qt&&$t)j[J]=L,j[J+1]=U,j[J+2]=b,j[J+3]=q,j[J+4]=z,j[J+5]=$,j[J+6]=I,j[J+7]=P,j[J+8]=H,j[J+9]=G,j[J+10]=Q,j[J+11]=tt;else{let et=I+q+L,st=P+z+U,ot=H+$+b,It=L+G+I,Nt=U+Q+P,zt=b+tt+H,kt=Math.sqrt(et*et+st*st+ot*ot),Gt=Math.sqrt(It*It+Nt*Nt+zt*zt),Ht=1/kt,Xt=1/Gt;if(et*=Ht,st*=Ht,ot*=Ht,It*=Xt,Nt*=Xt,zt*=Xt,V.lighting===fe){let Le=Math.sqrt(et*et+st*st+ot*ot)+Math.sqrt(It*It+Nt*Nt+zt*zt),ce=1/Le;et=It=(et+It)*ce,st=Nt=(st+Nt)*ce,ot=zt=(ot+zt)*ce}j[J]=et,j[J+1]=st,j[J+2]=ot,j[J+3]=et,j[J+4]=st,j[J+5]=ot,j[J+6]=et,j[J+7]=st,j[J+8]=ot,j[J+9]=It,j[J+10]=Nt,j[J+11]=zt}r.normalIndex+=12;let ut=r.colorIndex,rt=r.colors;rt[ut]=T,rt[ut+1]=ct,rt[ut+2]=lt,rt[ut+3]=_t,rt[ut+4]=xt,rt[ut+5]=D,rt[ut+6]=Ft,rt[ut+7]=vt,rt[ut+8]=St,rt[ut+9]=Mt,rt[ut+10]=Ot,rt[ut+11]=Et,r.colorIndex+=12;let ht=r.uvIndex,mt=r.uvs;mt[ht]=qt,mt[ht+1]=Pt,mt[ht+2]=Dt,mt[ht+3]=te,mt[ht+4]=Rt,mt[ht+5]=Lt,mt[ht+6]=ee,mt[ht+7]=Yt,r.uvIndex+=8}};var we=class{constructor(t){let s=Math.floor(t/8),e=t/4,r=Math.floor(e/8),o=e*4;this.tmpVertIndexLookup=new Map,this.vertX=new Float32Array(t),this.vertY=new Float32Array(t),this.vertZ=new Float32Array(t),this.vertTmpX=new Float32Array(t),this.vertTmpY=new Float32Array(t),this.vertTmpZ=new Float32Array(t),this.vertHasTmp=ft.create(new Uint8Array(s).buffer,1,0),this.vertColorR=new Float32Array(t*6),this.vertColorG=new Float32Array(t*6),this.vertColorB=new Float32Array(t*6),this.vertColorCount=new Uint8Array(t),this.vertSmoothNormalX=new Float32Array(t),this.vertSmoothNormalY=new Float32Array(t),this.vertSmoothNormalZ=new Float32Array(t),this.vertBothNormalX=new Float32Array(t),this.vertBothNormalY=new Float32Array(t),this.vertBothNormalZ=new Float32Array(t),this.vertFlattenedX=ft.create(new Uint8Array(s).buffer,1,0),this.vertFlattenedY=ft.create(new Uint8Array(s).buffer,1,0),this.vertFlattenedZ=ft.create(new Uint8Array(s).buffer,1,0),this.vertClampedX=ft.create(new Uint8Array(s).buffer,1,0),this.vertClampedY=ft.create(new Uint8Array(s).buffer,1,0),this.vertClampedZ=ft.create(new Uint8Array(s).buffer,1,0),this.vertFullyClamped=ft.create(new Uint8Array(s).buffer,1,0),this.vertDeformCount=new Uint8Array(t),this.vertDeformDamping=new Float32Array(t),this.vertDeformStrength=new Float32Array(t),this.vertWarpAmplitude=new Float32Array(t),this.vertWarpFrequency=new Float32Array(t),this.vertScatter=new Float32Array(t),this.vertRing=new Float32Array(t),this.vertNrOfClampedLinks=new Uint8Array(t),this.vertLinkCounts=new Uint8Array(t),this.vertLinkIndices=new Uint32Array(t*6),this.faceFlattened=ft.create(new Uint8Array(r).buffer,1,0),this.faceClamped=ft.create(new Uint8Array(r).buffer,1,0),this.faceSmooth=ft.create(new Uint8Array(r).buffer,1,0),this.faceEquidistant=ft.create(new Uint8Array(r).buffer,1,0),this.faceCulled=ft.create(new Uint8Array(r).buffer,1,0),this.faceNameIndices=new Uint8Array(e),this.faceMaterials=new Uint8Array(e),this.faceVertIndices=new Uint32Array(o),this.faceVertNormalX=new Float32Array(o),this.faceVertNormalY=new Float32Array(o),this.faceVertNormalZ=new Float32Array(o),this.faceVertFlatNormalX=new Float32Array(o),this.faceVertFlatNormalY=new Float32Array(o),this.faceVertFlatNormalZ=new Float32Array(o),this.faceVertSmoothNormalX=new Float32Array(o),this.faceVertSmoothNormalY=new Float32Array(o),this.faceVertSmoothNormalZ=new Float32Array(o),this.faceVertBothNormalX=new Float32Array(o),this.faceVertBothNormalY=new Float32Array(o),this.faceVertBothNormalZ=new Float32Array(o),this.faceVertColorR=new Float32Array(o),this.faceVertColorG=new Float32Array(o),this.faceVertColorB=new Float32Array(o),this.faceVertLightR=new Float32Array(o),this.faceVertLightG=new Float32Array(o),this.faceVertLightB=new Float32Array(o),this.faceVertAO=new Float32Array(o),this.faceVertUs=new Float32Array(o),this.faceVertVs=new Float32Array(o),this.tmpVoxelXZYFaceIndices=Array(e).fill(0),this.tmpVoxelXYZFaceIndices=Array(e).fill(0),this.tmpVoxelYZXFaceIndices=Array(e).fill(0),this.voxelXZYFaceIndices=null,this.voxelXYZFaceIndices=null,this.voxelYZXFaceIndices=null}clear(){this.tmpVertIndexLookup.clear(),this.vertX.fill(0),this.vertY.fill(0),this.vertZ.fill(0),this.vertTmpX.fill(0),this.vertTmpY.fill(0),this.vertTmpZ.fill(0),this.vertHasTmp.clear(),this.vertColorR.fill(0),this.vertColorG.fill(0),this.vertColorB.fill(0),this.vertColorCount.fill(0),this.vertSmoothNormalX.fill(0),this.vertSmoothNormalY.fill(0),this.vertSmoothNormalZ.fill(0),this.vertBothNormalX.fill(0),this.vertBothNormalY.fill(0),this.vertBothNormalZ.fill(0),this.vertFlattenedX.clear(),this.vertFlattenedY.clear(),this.vertFlattenedZ.clear(),this.vertClampedX.clear(),this.vertClampedY.clear(),this.vertClampedZ.clear(),this.vertFullyClamped.clear(),this.vertDeformCount.fill(0),this.vertDeformDamping.fill(0),this.vertDeformStrength.fill(0),this.vertWarpAmplitude.fill(0),this.vertWarpFrequency.fill(0),this.vertScatter.fill(0),this.vertRing.fill(0),this.vertNrOfClampedLinks.fill(0),this.vertLinkCounts.fill(0),this.vertLinkIndices.fill(0),this.faceFlattened.clear(),this.faceClamped.clear(),this.faceSmooth.clear(),this.faceEquidistant.clear(),this.faceCulled.clear(),this.faceNameIndices.fill(0),this.faceMaterials.fill(0),this.faceVertIndices.fill(0),this.faceVertNormalX.fill(0),this.faceVertNormalY.fill(0),this.faceVertNormalZ.fill(0),this.faceVertFlatNormalX.fill(0),this.faceVertFlatNormalY.fill(0),this.faceVertFlatNormalZ.fill(0),this.faceVertSmoothNormalX.fill(0),this.faceVertSmoothNormalY.fill(0),this.faceVertSmoothNormalZ.fill(0),this.faceVertBothNormalX.fill(0),this.faceVertBothNormalY.fill(0),this.faceVertBothNormalZ.fill(0),this.faceVertColorR.fill(0),this.faceVertColorG.fill(0),this.faceVertColorB.fill(0),this.faceVertLightR.fill(0),this.faceVertLightG.fill(0),this.faceVertLightB.fill(0),this.faceVertAO.fill(0),this.faceVertUs.fill(0),this.faceVertVs.fill(0),this.tmpVoxelXZYFaceIndices.length=0,this.tmpVoxelXYZFaceIndices.length=0,this.tmpVoxelYZXFaceIndices.length=0,this.voxelXZYFaceIndices=null,this.voxelXYZFaceIndices=null,this.voxelYZXFaceIndices=null}};var Es=new we(1024*1024);onmessage=function(S){let t=Ys(S.data.svoxmodel);postMessage({svoxmesh:t,elementId:S.data.elementId,worker:S.data.worker})};function Ys(S){let t="model size=9,scale=0.05,material lighting=flat,colors=B:#FF8800 C:#FF0000 A:#FFFFFF,voxels 10B7-2(2B2-3C2-2B4-C2-)2B2-3C2-2B7-11B7-B-6(7A2-)7A-B7-2B2-3C2-B-6(7A2-)7A-B2-3C2-2B2-C4-B-2(7A-C7A2C)7A-C7AC-7A-B2-C4-2B2-3C2-B3(-7A-C7AC)-7A-B2-3C2-2B2-C4-B-7A-C2(7AC-7A2C)7AC-7A-B2-C4-2B2-3C2-B-6(7A2-)7A-B2-3C2-2B7-B-6(7A2-)7A-B7-11B7-2(2B2-3C2-2B2-C4-)2B2-3C2-2B7-10B",s="model size=9,scale=0.05,material lighting=flat,colors=A:#FFFFFF B:#FF8800 C:#FF0000,voxels 10B7-2B-C3-C-2B2-C-C2-2B3-C3-2B2-C-C2-2B-C3-C-2B7-11B7-B-6(7A2-)7A-B7-2B-C3-C-B-7A-C7AC-2(7A2-)7A-C7AC-7A-B-C3-C-2B2-C-C2-B-7A2-2(7A-C7AC-)7A2-7A-B2-C-C2-2B3-C3-B-2(7A2-)7A-C7AC-2(7A2-)7A-B3-C3-2B2-C-C2-B-7A2-2(7A-C7AC-)7A2-7A-B2-C-C2-2B-C3-C-B-7A-C7AC-2(7A2-)7A-C7AC-7A-B-C3-C-2B7-B-6(7A2-)7A-B7-11B7-2B-C3-C-2B2-C-C2-2B3-C3-2B2-C-C2-2B-C3-C-2B7-10B",e;(!S||S.trim()==="")&&(e={name:"ConfigError",message:"Model not found"},S=t);let r=null;try{r=ie.readFromString(S)}catch(n){e=n,r=ie.readFromString(s)}let o=Bt.generate(r,Es);return o.error=e,o}\n')}var le=class{constructor(t,s){this._resultHandler=t,this._resultCallback=s,this._nrOfWorkers=window.navigator.hardwareConcurrency,this._workers=[],this._free=[],this._tasks=[]}executeTask(t){if(this._workers.length<this._nrOfWorkers){let s=new cs,e=this;s.onmessage=function(r){e._free.push(event.data.worker),e._processNextTask(),e._resultCallback.apply(e._resultHandler,[event.data])},this._free.push(this._workers.length),this._workers.push(s)}this._tasks.push(t),this._processNextTask()}_processNextTask(){if(this._tasks.length>0&&this._free.length>0){let t=this._tasks.shift();t.worker=this._free.shift(),this._workers[t.worker].postMessage(t)}}};var wt=class{static generate(t){let s=[];t.materials.forEach(function(a){s.push(wt._generateMaterial(a))},this);let e=new THREE.BufferGeometry;if(e.setAttribute("position",new THREE.Float32BufferAttribute(t.positions,3)),e.setAttribute("normal",new THREE.Float32BufferAttribute(t.normals,3)),e.setAttribute("color",new THREE.Float32BufferAttribute(t.colors,3)),t.uvs&&e.setAttribute("uv",new THREE.Float32BufferAttribute(t.uvs,2)),t.data)for(let a=0;a<t.data.length;a++)e.setAttribute(t.data[a].name,new THREE.Float32BufferAttribute(t.data[a].values,t.data[a].width));return e.setIndex(t.indices),t.groups.forEach(function(a){e.addGroup(a.start,a.count,a.materialIndex)},this),e.computeBoundingBox(),e.uvsNeedUpdate=!0,new THREE.Mesh(e,s)}static _generateMaterial(t){switch(t.reflectivity=(1-t.roughness)*(t.metalness*.95+.05),t.shininess=Math.pow(10,5*Math.pow(1-t.roughness,1.1))*.1,t.side){case"back":t.side=THREE.BackSide;break;case"double":t.side=THREE.DoubleSide;break;default:t.side=THREE.FrontSide;break}t.map&&(t.map=wt._generateTexture(t.map.image,THREE.sRGBEncoding,t.map.uscale,t.map.vscale,t.map.uoffset,t.map.voffset,t.map.rotation)),t.normalMap&&(t.normalMap=wt._generateTexture(t.normalMap.image,THREE.LinearEncoding,t.normalMap.uscale,t.normalMap.vscale,t.normalMap.uoffset,t.normalMap.voffset,t.normalMap.rotation)),t.roughnessMap&&(t.roughnessMap=wt._generateTexture(t.roughnessMap.image,THREE.LinearEncoding,t.roughnessMap.uscale,t.roughnessMap.vscale,t.roughnessMap.uoffset,t.roughnessMap.voffset,t.roughnessMap.rotation)),t.metalnessMap&&(t.metalnessMap=wt._generateTexture(t.metalnessMap.image,THREE.LinearEncoding,t.metalnessMap.uscale,t.metalnessMap.vscale,t.metalnessMap.uoffset,t.metalnessMap.voffset,t.metalnessMap.rotation)),t.emissiveMap&&(t.emissiveMap=wt._generateTexture(t.emissiveMap.image,THREE.sRGBEncoding,t.emissiveMap.uscale,t.emissiveMap.vscale,t.emissiveMap.uoffset,t.emissiveMap.voffset,t.emissiveMap.rotation)),t.matcap&&(t.matcap=wt._generateTexture(t.matcap.image,THREE.sRGBEncoding)),t.reflectionMap&&(t.envMap=new THREE.TextureLoader().load(t.reflectionMap.image),t.envMap.encoding=THREE.sRGBEncoding,t.envMap.mapping=THREE.EquirectangularReflectionMapping,delete t.reflectionMap),t.refractionMap&&(t.envMap=new THREE.TextureLoader().load(t.refractionMap.image),t.envMap.encoding=THREE.sRGBEncoding,t.envMap.mapping=THREE.EquirectangularRefractionMapping,delete t.refractionMap);let s=null,e=t.type;switch(delete t.index,delete t.type,e){case"standard":delete t.reflectivity,delete t.shininess,s=new THREE.MeshStandardMaterial(t);break;case"basic":delete t.roughness,delete t.metalness,delete t.shininess,delete t.emissive,delete t.emissiveIntensity,delete t.roughnessMap,delete t.metalnessMap,delete t.emissiveMap,s=new THREE.MeshBasicMaterial(t);break;case"lambert":delete t.roughness,delete t.metalness,delete t.shininess,delete t.roughnessMap,delete t.metalnessMap,s=new THREE.MeshLambertMaterial(t);break;case"phong":delete t.roughness,delete t.metalness,delete t.roughnessMap,delete t.metalnessMap,s=new THREE.MeshPhongMaterial(t);break;case"matcap":delete t.roughness,delete t.metalness,delete t.wireframe,delete t.reflectivity,delete t.shininess,delete t.emissive,delete t.emissiveIntensity,delete t.envMap,delete t.roughnessMap,delete t.metalnessMap,delete t.emissiveMap,delete t.reflectionMap,delete t.refractionMap,delete t.refractionRatio,s=new THREE.MeshMatcapMaterial(t);break;case"toon":delete t.roughness,delete t.metalness,delete t.reflectivity,delete t.shininess,delete t.emissive,delete t.emissiveIntensity,delete t.envMap,delete t.roughnessMap,delete t.metalnessMap,delete t.reflectionMap,delete t.refractionMap,delete t.refractionRatio,s=new THREE.MeshToonMaterial(t);break;case"normal":delete t.roughness,delete t.metalness,delete t.reflectivity,delete t.shininess,delete t.emissive,delete t.emissiveIntensity,delete t.map,delete t.envMap,delete t.roughnessMap,delete t.metalnessMap,delete t.emissiveMap,delete t.reflectionMap,delete t.refractionMap,delete t.refractionRatio,s=new THREE.MeshNormalMaterial(t);break;default:throw new Error(`SyntaxError: Unknown material type ${e}`)}return s}static _generateTexture(t,s,e,r,a,o,n){let i=new THREE.TextureLoader().load(t);return i.encoding=s,i.repeat.set(1/e,1/r),i.wrapS=THREE.RepeatWrapping,i.wrapT=THREE.RepeatWrapping,i.offset=new THREE.Vector2(a,o),i.rotation=n*Math.PI/180,i}};if(typeof window<"u"&&typeof AFRAME<"u"){let S=null;AFRAME.registerComponent("svox",{schema:{model:{type:"string"},worker:{type:"boolean",default:!1}},multiple:!1,_MISSING:"model size=9,scale=0.05,material lighting=flat,colors=A:#FFFFFF B:#FF8800 C:#FF0000,voxels 10B7-2B-C3-C-2B2-C-C2-2B3-C3-2B2-C-C2-2B-C3-C-2B7-11B7-B-6(7A2-)7A-B7-2B-C3-C-B-7A-C7AC-2(7A2-)7A-C7AC-7A-B-C3-C-2B2-C-C2-B-7A2-2(7A-C7AC-)7A2-7A-B2-C-C2-2B3-C3-B-2(7A2-)7A-C7AC-2(7A2-)7A-B3-C3-2B2-C-C2-B-7A2-2(7A-C7AC-)7A2-7A-B2-C-C2-2B-C3-C-B-7A-C7AC-2(7A2-)7A-C7AC-7A-B-C3-C-2B7-B-6(7A2-)7A-B7-11B7-2B-C3-C-2B2-C-C2-2B3-C3-2B2-C-C2-2B-C3-C-2B7-10B",_ERROR:"model size=9,scale=0.05,material lighting=flat,colors=B:#FF8800 C:#FF0000 A:#FFFFFF,voxels 10B7-2(2B2-3C2-2B4-C2-)2B2-3C2-2B7-11B7-B-6(7A2-)7A-B7-2B2-3C2-B-6(7A2-)7A-B2-3C2-2B2-C4-B-2(7A-C7A2C)7A-C7AC-7A-B2-C4-2B2-3C2-B3(-7A-C7AC)-7A-B2-3C2-2B2-C4-B-7A-C2(7AC-7A2C)7AC-7A-B2-C4-2B2-3C2-B-6(7A2-)7A-B2-3C2-2B7-B-6(7A2-)7A-B7-11B7-2(2B2-3C2-2B2-C4-)2B2-3C2-2B7-10B",_workerPool:null,init:function(){let t=this.el,s=this.data,e=s.worker,r=!1,a=s.model,o=window.SVOX.models[a];o||(this._logError({name:"ConfigError",message:"Model not found"}),o=this._MISSING,r=!0,e=!1),e?this._generateModelInWorker(o,t):this._generateModel(o,t,r)},_generateModel:function(t,s,e){let r;try{r=window.model=Gt.readFromString(t)}catch(h){this._logError(h),r=Gt.readFromString(this._ERROR),e=!0}let a=new ne(1024*1024),o=performance.now(),n=Ot.generate(r,a),i=performance.now();this.mesh=wt.generate(n);let l=`Time: ${Math.round(i-o)}ms. Verts:${n.positions.length/3} Faces:${n.indices.length/3} Materials:${this.mesh.material.length}`,c=document.getElementById("svoxstats");c&&!e&&(c.innerHTML="Last render: "+l),s.setObject3D("mesh",this.mesh)},_generateModelInWorker:function(t,s){s.id||(s.id=new Date().valueOf().toString(36)+Math.random().toString(36).substr(2));let e={svoxmodel:t,elementId:s.id};S||(S=new le(this,this._processResult)),S.executeTask(e)},_processResult:function(t){if(t.svoxmesh.error)this._logError(t.svoxmesh.error);else{let s=wt.generate(t.svoxmesh);document.querySelector("#"+t.elementId).setObject3D("mesh",s)}},_toSharedArrayBuffer(t){let s=new Float32Array(new ArrayBuffer(t.length*4));return s.set(t,0),s},_logError:function(t){let s=t.name+": "+t.message,e=document.getElementById("svoxerrors");e&&(e.innerHTML=s),console.error(`SVOXERROR (${this.data.model}) ${s}`)},update:function(t){},remove:function(){let t=["map","normalMap","roughnessMap","metalnessMap","emissiveMap","matcap"];if(this.mesh){for(;this.mesh.material.length>0;)t.forEach(function(s){this.mesh.material[0][s]&&this.mesh.material[0][s].dispose()},this),this.mesh.material[0].dispose(),this.mesh.material.shift();this.mesh.geometry.dispose(),this.el.removeObject3D("mesh"),delete this.mesh}},pause:function(){},play:function(){},events:{}})}var Va={BaseMaterial:ee,Bits:it,BoundingBox:kt,Color:rt,Light:se,Material:re,MaterialList:ae,SvoxMeshGenerator:Ot,Model:ie,ModelReader:Gt,ModelWriter:Xe,Buffers:ne,Voxels:vt,xyzRangeForSize:ft,shiftForSize:pt,voxColorForRGBT:ke,rgbtForVoxColor:bs,WorkerPool:le};})();
+(() => {
+  // src/svox/constants.js
+  var MATSTANDARD = "standard";
+  var MATBASIC = "basic";
+  var MATLAMBERT = "lambert";
+  var MATPHONG = "phong";
+  var MATMATCAP = "matcap";
+  var MATTOON = "toon";
+  var MATNORMAL = "normal";
+  var BOUNDS = "bounds";
+  var MODEL = "model";
+  var FLAT = "flat";
+  var QUAD = "quad";
+  var SMOOTH = "smooth";
+  var BOTH = "both";
+  var FRONT = "front";
+  var BACK = "back";
+  var DOUBLE = "double";
+  var _FACES = ["nx", "px", "ny", "py", "nz", "pz"];
+  var _VERTEX_OFFSETS = [
+    [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]],
+    [[1, 0, 1], [1, 1, 1], [1, 1, 0], [1, 0, 0]],
+    [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]],
+    [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]],
+    [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0]],
+    [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 1]]
+  ];
+  var _NEIGHBORS = [
+    [-1, 0, 0],
+    [1, 0, 0],
+    [0, -1, 0],
+    [0, 1, 0],
+    [0, 0, -1],
+    [0, 0, 1]
+  ];
+  var _FACEINDEXUVS = [
+    { u: "z", v: "y", order: [0, 1, 2, 3], ud: 1, vd: 1, uo: 0, vo: 0 },
+    { u: "z", v: "y", order: [3, 2, 1, 0], ud: -1, vd: 1, uo: 0.75, vo: 0 },
+    { u: "x", v: "z", order: [0, 1, 2, 3], ud: 1, vd: 1, uo: 0.75, vo: 0.5 },
+    { u: "x", v: "z", order: [1, 0, 3, 2], ud: 1, vd: -1, uo: 0.25, vo: 1 },
+    { u: "x", v: "y", order: [3, 2, 1, 0], ud: -1, vd: 1, uo: 1, vo: 0 },
+    { u: "x", v: "y", order: [0, 1, 2, 3], ud: 1, vd: 1, uo: 0.25, vo: 0 }
+  ];
+  var _FACEINDEXUV_MULTIPLIERS = [
+    [[0, 0, 1], [0, 1, 0]],
+    [[0, 0, 1], [0, 1, 0]],
+    [[1, 0, 0], [0, 0, 1]],
+    [[1, 0, 0], [0, 0, 1]],
+    [[1, 0, 0], [0, 1, 0]],
+    [[1, 0, 0], [0, 1, 0]]
+  ];
+
+  // src/svox/color.js
+  var clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+  var Color = class {
+    static fromHex(hex) {
+      const color = new Color();
+      color._set(hex);
+      color.id = "";
+      color.exId = null;
+      color.count = 0;
+      return color;
+    }
+    static fromRgb(r, g, b) {
+      r = Math.round(clamp(r, 0, 1) * 255);
+      g = Math.round(clamp(g, 0, 1) * 255);
+      b = Math.round(clamp(b, 0, 1) * 255);
+      const color = "#" + (r < 16 ? "0" : "") + r.toString(16) + (g < 16 ? "0" : "") + g.toString(16) + (b < 16 ? "0" : "") + b.toString(16);
+      return Color.fromHex(color);
+    }
+    clone() {
+      const clone = new Color();
+      clone._color = this._color;
+      clone.r = this.r;
+      clone.g = this.g;
+      clone.b = this.b;
+      clone._material = this._material;
+      return clone;
+    }
+    multiply(factor) {
+      if (factor instanceof Color) {
+        return Color.fromRgb(this.r * factor.r, this.g * factor.g, this.b * factor.b);
+      } else {
+        return Color.fromRgb(this.r * factor, this.g * factor, this.b * factor);
+      }
+    }
+    normalize() {
+      const d = Math.sqrt(this.r * this.r + this.g * this.g + this.b * this.b);
+      return this.multiply(1 / d);
+    }
+    add(...colors) {
+      const r = this.r + colors.reduce((sum, color) => sum + color.r, 0);
+      const g = this.g + colors.reduce((sum, color) => sum + color.g, 0);
+      const b = this.b + colors.reduce((sum, color) => sum + color.b, 0);
+      return Color.fromRgb(r, g, b);
+    }
+    _setMaterial(material) {
+      if (this._material !== void 0) {
+        throw new Error("A Color can only be added once.");
+      }
+      this._material = material;
+      this.count = 0;
+    }
+    get material() {
+      return this._material;
+    }
+    _set(colorValue) {
+      let color = colorValue;
+      if (typeof color === "string" || color instanceof String) {
+        color = color.trim().toUpperCase();
+        if (color.match(/^#([0-9a-fA-F]{3}|#?[0-9a-fA-F]{6})$/)) {
+          color = color.replace("#", "");
+          this._color = "#" + color;
+          if (color.length === 3) {
+            color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
+          }
+          const value = parseInt(color, 16);
+          this.r = (value >> 16 & 255) / 255;
+          this.g = (value >> 8 & 255) / 255;
+          this.b = (value & 255) / 255;
+          return;
+        }
+      }
+      throw new Error(`SyntaxError: Color ${colorValue} is not a hexadecimal color of the form #000 or #000000.`);
+    }
+    toString() {
+      return this._color;
+    }
+  };
+
+  // src/svox/basematerial.js
+  var BaseMaterial = class {
+    constructor(type, roughness, metalness, opacity, alphaTest, transparent, refractionRatio, wireframe, side, emissiveColor, emissiveIntensity, fog, map, normalMap, roughnessMap, metalnessMap, emissiveMap, matcap, reflectionMap, refractionMap, uscale, vscale, uoffset, voffset, rotation) {
+      type = type || MATSTANDARD;
+      switch (type) {
+        case MATSTANDARD:
+        case MATBASIC:
+        case MATLAMBERT:
+        case MATPHONG:
+        case MATTOON:
+        case MATMATCAP:
+        case MATNORMAL:
+          break;
+        default: {
+          throw new Error("SyntaxError: Unknown material type: " + type);
+        }
+      }
+      this.type = type;
+      if ((map && map.cube || normalMap && normalMap.cube || roughnessMap && roughnessMap.cube || metalnessMap && metalnessMap.cube || emissiveMap && emissiveMap.cube) && !(uscale === -1 && vscale === -1)) {
+        throw new Error("SyntaxError: Cube textures can not be combined with maptransform");
+      }
+      if (reflectionMap && refractionMap) {
+        throw new Error("SyntaxError: One material can have a reflectionmap or a refractionmap, but not both");
+      }
+      this.index = 0;
+      this.roughness = typeof roughness === "number" ? roughness : 1;
+      this.metalness = typeof metalness === "number" ? metalness : 0;
+      this.opacity = typeof opacity === "number" ? opacity : 1;
+      this.alphaTest = typeof alphaTest === "number" ? alphaTest : 0;
+      this.transparent = !!transparent;
+      this.refractionRatio = typeof refractionRatio === "number" ? refractionRatio : 0.9;
+      this.wireframe = !!wireframe;
+      this.side = side || FRONT;
+      if (![FRONT, BACK, DOUBLE].includes(this.side)) {
+        this.side = FRONT;
+      }
+      this.setEmissive(emissiveColor, emissiveIntensity);
+      this.fog = typeof fog === "boolean" ? fog : true;
+      this.map = map;
+      this.normalMap = normalMap;
+      this.roughnessMap = roughnessMap;
+      this.metalnessMap = metalnessMap;
+      this.emissiveMap = emissiveMap;
+      this.matcap = matcap;
+      this.reflectionMap = reflectionMap;
+      this.refractionMap = refractionMap;
+      this.mapTransform = {
+        uscale: uscale || -1,
+        vscale: vscale || -1,
+        uoffset: uoffset || 0,
+        voffset: voffset || 0,
+        rotation: rotation || 0
+      };
+      this.aoActive = false;
+      this._colors = [];
+    }
+    get baseId() {
+      if (this._baseId === void 0) {
+        this._baseId = `${this.type}|${this.roughness}|${this.metalness}|${this.opacity}|${this.alphaTest}|${this.transparent ? 1 : 0}|${this.refractionRatio}|${this.wireframe ? 1 : 0}|${this.side}|` + (this.emissive ? `${this.emissive.color}|${this.emissive.intensity}|` : "||") + `${this.fog ? 1 : 0}|` + (this.map ? `${this.map.id}|` : "|") + (this.normalMap ? `${this.normalMap.id}|` : "|") + (this.roughnessMap ? `${this.roughnessMap.id}|` : "|") + (this.metalnessMap ? `${this.metalnessMap.id}|` : "|") + (this.emissiveMap ? `${this.emissiveMap.id}|` : "|") + (this.matcap ? `${this.matcap.id}|` : "|") + (this.reflectionMap ? `${this.reflectionMap.id}|` : "|") + (this.refractionMap ? `${this.refractionMap.id}|` : "|") + `${this.mapTransform.uscale}|${this.mapTransform.vscale}|${this.mapTransform.uoffset}|${this.mapTransform.voffset}|${this.mapTransform.rotation}`;
+      }
+      return this._baseId;
+    }
+    get isTransparent() {
+      return this.transparent || this.opacity < 1;
+    }
+    setEmissive(color, intensity) {
+      if (color === void 0 || color === "#000" || color === "#000000" || !(intensity || 0)) {
+        this._emissive = void 0;
+      } else {
+        this._emissive = { color: Color.fromHex(color), intensity };
+      }
+    }
+    get emissive() {
+      return this._emissive;
+    }
+    get colors() {
+      return this._colors;
+    }
+    get colorCount() {
+      return this._colors.length;
+    }
+    get colorUsageCount() {
+      return this._colors.reduce((s, c) => s + c.count, 0);
+    }
+  };
+
+  // src/svox/bits.js
+  function set(offset, value, bits, view) {
+    let bufOffset = bits * offset;
+    for (let i = 0; i < bits; ) {
+      const bitOffset = bufOffset & 7;
+      const byteOffset = bufOffset >> 3;
+      const remaining = bits - i;
+      const residual = 8 - bitOffset;
+      const wrote = remaining < residual ? remaining : residual;
+      const mask = ~(255 << wrote);
+      const writeBits = value & mask;
+      value >>= wrote;
+      const destMask = ~(mask << bitOffset);
+      view[byteOffset] = view[byteOffset] & destMask | writeBits << bitOffset;
+      bufOffset += wrote;
+      i += wrote;
+    }
+  }
+  var Bits1 = class {
+    constructor(view) {
+      this.view = view;
+    }
+    get(offset) {
+      return this.view[offset >> 3] >> (offset & 7) & 1;
+    }
+    set(offset, value) {
+      return set(offset, value, 1, this.view);
+    }
+    clear() {
+      this.view.fill(0);
+    }
+  };
+  var Bits2 = class {
+    constructor(view) {
+      this.view = view;
+    }
+    get(offset) {
+      return this.view[offset >> 2] >> ((offset & 3) << 1) & 3;
+    }
+    set(offset, value) {
+      return set(offset, value, 2, this.view);
+    }
+    clear() {
+      this.view.fill(0);
+    }
+  };
+  var Bits4 = class {
+    constructor(view) {
+      this.view = view;
+    }
+    get(offset) {
+      return this.view[offset >> 1] >> ((offset & 1) << 2) & 15;
+    }
+    set(offset, value) {
+      return set(offset, value, 4, this.view);
+    }
+    clear() {
+      this.view.fill(0);
+    }
+  };
+  var Bits8 = class {
+    constructor(view) {
+      this.view = view;
+    }
+    get(offset) {
+      return this.view[offset] >>> 0;
+    }
+    set(offset, value) {
+      return set(offset, value, 8, this.view);
+    }
+    clear() {
+      this.view.fill(0);
+    }
+  };
+  var BitsN = class {
+    constructor(view, bits) {
+      this.view = view;
+      this.bits = bits;
+    }
+    get(offset) {
+      const { view, bits } = this;
+      let bufOffset = offset * bits;
+      let value = 0;
+      for (let i = 0; i < bits; ) {
+        const bitOffset = bufOffset & 7;
+        const byteOffset = bufOffset >> 3;
+        const remaining = bits - i;
+        const residual = 8 - bitOffset;
+        const read = remaining < residual ? remaining : residual;
+        const currentByte = view[byteOffset];
+        const mask = ~(255 << read);
+        const readBits = currentByte >> bitOffset & mask;
+        value |= readBits << i;
+        bufOffset += read;
+        i += read;
+      }
+      return value >>> 0;
+    }
+    set(offset, value) {
+      set(offset, value, this.bits, this.view);
+    }
+    clear() {
+      this.view.fill(0);
+    }
+  };
+  var Bits = class {
+    static create(buffer, bits, offset, length = null) {
+      const view = length ? new Uint8Array(buffer, offset, length) : new Uint8Array(buffer, offset);
+      switch (bits) {
+        case 1:
+          return new Bits1(view);
+        case 2:
+          return new Bits2(view);
+        case 4:
+          return new Bits4(view);
+        case 8:
+          return new Bits8(view);
+        default:
+          return new BitsN(view);
+      }
+    }
+  };
+
+  // src/svox/boundingbox.js
+  var BoundingBox = class {
+    get size() {
+      if (this.minX > this.maxX) {
+        return { x: 0, y: 0, z: 0 };
+      } else {
+        return {
+          x: this.maxX - this.minX + 1,
+          y: this.maxY - this.minY + 1,
+          z: this.maxZ - this.minZ + 1
+        };
+      }
+    }
+    constructor() {
+      this.reset();
+    }
+    reset() {
+      this.minX = Number.POSITIVE_INFINITY;
+      this.minY = Number.POSITIVE_INFINITY;
+      this.minZ = Number.POSITIVE_INFINITY;
+      this.maxX = Number.NEGATIVE_INFINITY;
+      this.maxY = Number.NEGATIVE_INFINITY;
+      this.maxZ = Number.NEGATIVE_INFINITY;
+    }
+    set(x, y, z) {
+      this.minX = Math.min(this.minX, x);
+      this.minY = Math.min(this.minY, y);
+      this.minZ = Math.min(this.minZ, z);
+      this.maxX = Math.max(this.maxX, x);
+      this.maxY = Math.max(this.maxY, y);
+      this.maxZ = Math.max(this.maxZ, z);
+    }
+  };
+
+  // src/svox/light.js
+  var Light = class {
+    constructor(color, strength, direction, position, distance, size, detail) {
+      this.color = color;
+      this.strength = strength;
+      this.direction = direction;
+      this.position = position;
+      this.distance = distance;
+      this.size = size;
+      this.detail = detail;
+    }
+  };
+
+  // src/svox/planar.js
+  var Planar = class {
+    static parse(value) {
+      if (!value) {
+        return void 0;
+      }
+      value = " " + (value || "").toLowerCase();
+      if (value !== " " && !/^(?!$)(\s+(?:none|-x|x|\+x|-y|y|\+y|-z|z|\+z|\s))+\s*$/.test(value)) {
+        throw new Error(`SyntaxError: Planar expression '${value}' is only allowed to be 'none' or contain -x x +x -y y +y -z z +z.`);
+      }
+      const none = value.includes("none");
+      return {
+        nx: !none && value.includes("-x"),
+        x: !none && value.includes(" x"),
+        px: !none && value.includes("+x"),
+        ny: !none && value.includes("-y"),
+        y: !none && value.includes(" y"),
+        py: !none && value.includes("+y"),
+        nz: !none && value.includes("-z"),
+        z: !none && value.includes(" z"),
+        pz: !none && value.includes("+z")
+      };
+    }
+    static toString(planar) {
+      if (!planar) {
+        return void 0;
+      }
+      const result = (planar.nx ? " -x" : "") + (planar.x ? " x" : "") + (planar.px ? " +x" : "") + (planar.ny ? " -y" : "") + (planar.y ? " y" : "") + (planar.py ? " +y" : "") + (planar.nz ? " -z" : "") + (planar.z ? " z" : "") + (planar.pz ? " +z" : "");
+      return result.trim();
+    }
+    static combine(planar1, planar2, defaultPlanar) {
+      if (!planar1 && !planar2) {
+        return defaultPlanar;
+      }
+      if (!planar1) {
+        return planar2;
+      }
+      if (!planar2) {
+        return planar1;
+      }
+      if (planar1 === planar2) {
+        return planar1;
+      }
+      return {
+        nx: planar1.nx || planar2.nx,
+        x: planar1.x || planar2.x,
+        px: planar1.px || planar2.px,
+        ny: planar1.ny || planar2.ny,
+        y: planar1.y || planar2.y,
+        py: planar1.py || planar2.py,
+        nz: planar1.nz || planar2.nz,
+        z: planar1.z || planar2.z,
+        pz: planar1.pz || planar2.pz
+      };
+    }
+  };
+
+  // src/svox/material.js
+  var Material = class {
+    constructor(baseMaterial, lighting, fade, simplify, side) {
+      this._baseMaterial = baseMaterial;
+      this.lighting = lighting;
+      this.fade = !!fade;
+      this.simplify = simplify !== false;
+      this._deform = void 0;
+      this._warp = void 0;
+      this._scatter = void 0;
+      this._flatten = Planar.parse("");
+      this._clamp = Planar.parse("");
+      this._skip = Planar.parse("");
+      this._ao = void 0;
+      this.lights = true;
+      this._side = side;
+      this._colors = [];
+      this.bounds = new BoundingBox();
+    }
+    get baseId() {
+      return this._baseMaterial.baseId;
+    }
+    get index() {
+      return this._baseMaterial.index;
+    }
+    get colors() {
+      return this._colors;
+    }
+    get colorCount() {
+      return this._baseMaterial.colorCount;
+    }
+    get type() {
+      return this._baseMaterial.type;
+    }
+    get roughness() {
+      return this._baseMaterial.roughness;
+    }
+    get metalness() {
+      return this._baseMaterial.metalness;
+    }
+    get opacity() {
+      return this._baseMaterial.opacity;
+    }
+    get alphaTest() {
+      return this._baseMaterial.alphaTest;
+    }
+    get transparent() {
+      return this._baseMaterial.transparent;
+    }
+    get isTransparent() {
+      return this._baseMaterial.isTransparent;
+    }
+    get refractionRatio() {
+      return this._baseMaterial.refractionRatio;
+    }
+    get emissive() {
+      return this._baseMaterial.emissive;
+    }
+    get side() {
+      return this._side;
+    }
+    get fog() {
+      return this._baseMaterial.fog;
+    }
+    get map() {
+      return this._baseMaterial.map;
+    }
+    get normalMap() {
+      return this._baseMaterial.normalMap;
+    }
+    get roughnessMap() {
+      return this._baseMaterial.roughnessMap;
+    }
+    get metalnessMap() {
+      return this._baseMaterial.metalnessMap;
+    }
+    get emissiveMap() {
+      return this._baseMaterial.emissiveMap;
+    }
+    get matcap() {
+      return this._baseMaterial.matcap;
+    }
+    get reflectionMap() {
+      return this._baseMaterial.reflectionMap;
+    }
+    get refractionMap() {
+      return this._baseMaterial.refractionMap;
+    }
+    get mapTransform() {
+      return this._baseMaterial.mapTransform;
+    }
+    setDeform(count, strength, damping) {
+      count = Math.max(count === null || count === void 0 ? 1 : count, 0);
+      strength = strength === null || strength === void 0 ? 1 : strength;
+      damping = damping === null || damping === void 0 ? 1 : damping;
+      if (count > 0 && strength !== 0) {
+        this._deform = { count, strength, damping };
+      } else {
+        this._deform = { count: 0, strength: 0, damping: 0 };
+      }
+    }
+    get deform() {
+      return this._deform;
+    }
+    setWarp(amplitude, frequency) {
+      amplitude = amplitude === void 0 ? 1 : Math.abs(amplitude);
+      frequency = frequency === void 0 ? 1 : Math.abs(frequency);
+      if (amplitude > 1e-3 && frequency > 1e-3) {
+        this._warp = { amplitude, frequency };
+      } else {
+        this._warp = void 0;
+      }
+    }
+    get warp() {
+      return this._warp;
+    }
+    set scatter(value) {
+      if (value === 0) {
+        value = void 0;
+      }
+      this._scatter = Math.abs(value);
+    }
+    get scatter() {
+      return this._scatter;
+    }
+    set flatten(flatten) {
+      this._flatten = Planar.parse(flatten);
+    }
+    get flatten() {
+      return Planar.toString(this._flatten);
+    }
+    set clamp(clamp2) {
+      this._clamp = Planar.parse(clamp2);
+    }
+    get clamp() {
+      return Planar.toString(this._clamp);
+    }
+    set skip(skip) {
+      this._skip = Planar.parse(skip);
+    }
+    get skip() {
+      return Planar.toString(this._skip);
+    }
+    setAo(ao) {
+      this._ao = ao;
+    }
+    get ao() {
+      return this._ao;
+    }
+    set aoSides(sides) {
+      this._aoSides = Planar.parse(sides);
+    }
+    get aoSides() {
+      return Planar.toString(this._aoSides);
+    }
+    addColorHEX(hex) {
+      return this.addColor(Color.fromHex(hex));
+    }
+    addColorRGB(r, g, b) {
+      return this.addColor(Color.fromRgb(r, g, b));
+    }
+    addColor(color) {
+      if (!(color instanceof Color)) {
+        throw new Error("addColor requires a Color object, e.g. material.addColor(Color.fromHex('#FFFFFF'))");
+      }
+      color._setMaterial(this);
+      this._colors.push(color);
+      this._baseMaterial._colors.push(color);
+      return color;
+    }
+  };
+
+  // src/svox/materiallist.js
+  var MaterialList = class {
+    constructor() {
+      this.baseMaterials = [];
+      this.materials = [];
+    }
+    createMaterial(type, lighting, roughness, metalness, fade, simplify, opacity, alphaTest, transparent, refractionRatio, wireframe, side, emissiveColor, emissiveIntensity, fog, map, normalMap, roughnessMap, metalnessMap, emissiveMap, matcap, reflectionmap, refractionmap, uscale, vscale, uoffset, voffset, rotation) {
+      side = side || FRONT;
+      if (![FRONT, BACK, DOUBLE].includes(side)) {
+        side = FRONT;
+      }
+      const baseSide = side === DOUBLE ? DOUBLE : FRONT;
+      let baseMaterial = new BaseMaterial(
+        type,
+        roughness,
+        metalness,
+        opacity,
+        alphaTest,
+        transparent,
+        refractionRatio,
+        wireframe,
+        baseSide,
+        emissiveColor,
+        emissiveIntensity,
+        fog,
+        map,
+        normalMap,
+        roughnessMap,
+        metalnessMap,
+        emissiveMap,
+        matcap,
+        reflectionmap,
+        refractionmap,
+        uscale,
+        vscale,
+        uoffset,
+        voffset,
+        rotation
+      );
+      const baseId = baseMaterial.baseId;
+      const existingBase = this.baseMaterials.find((m) => m.baseId === baseId);
+      if (existingBase) {
+        baseMaterial = existingBase;
+      } else {
+        this.baseMaterials.push(baseMaterial);
+      }
+      const material = new Material(baseMaterial, lighting, fade, simplify, side);
+      this.materials.push(material);
+      return material;
+    }
+    clearMaterials() {
+      this.materials.length = 0;
+    }
+    forEach(func, thisArg, baseOnly) {
+      if (baseOnly) {
+        this.baseMaterials.foreach(func, thisArg);
+      } else {
+        this.materials.forEach(func, thisArg);
+      }
+    }
+    find(func) {
+      return this.materials.find(func);
+    }
+    findColorByExId(exId) {
+      let color = null;
+      this.forEach(function(material) {
+        if (!color) {
+          color = material.colors.find((c) => c.exId === exId);
+        }
+      }, this);
+      return color;
+    }
+    getMaterialListIndex(material) {
+      return this.materials.indexOf(material);
+    }
+  };
+
+  // src/svox/svoxmeshgenerator.js
+  var vertCache = /* @__PURE__ */ new Map();
+  var SvoxMeshGenerator = class {
+    static generate(model, buffers) {
+      model.prepareForRender(buffers);
+      const { nonCulledFaceCount } = model;
+      const mesh = {
+        materials: [],
+        groups: [],
+        indices: Array(nonCulledFaceCount * 6),
+        indicesIndex: 0,
+        maxIndex: -1,
+        positions: new Float32Array(nonCulledFaceCount * 4 * 3),
+        normals: new Float32Array(nonCulledFaceCount * 4 * 3),
+        colors: new Float32Array(nonCulledFaceCount * 4 * 3),
+        uvs: new Float32Array(nonCulledFaceCount * 4 * 2),
+        data: null
+      };
+      model.materials.baseMaterials.forEach(function(material) {
+        material.index = mesh.materials.length;
+        mesh.materials.push(SvoxMeshGenerator._generateMaterial(material, model));
+      }, this);
+      vertCache.clear();
+      SvoxMeshGenerator._generateAll(model, mesh, buffers);
+      return mesh;
+    }
+    static _generateMaterial(definition, modeldefinition) {
+      const material = {
+        type: definition.type,
+        roughness: definition.roughness,
+        metalness: definition.metalness,
+        opacity: definition.opacity,
+        alphaTest: definition.alphaTest,
+        transparent: definition.isTransparent,
+        refractionRatio: definition.refractionRatio,
+        wireframe: definition.wireframe || modeldefinition.wireframe,
+        fog: definition.fog,
+        vertexColors: true,
+        side: definition.side === DOUBLE ? DOUBLE : FRONT
+      };
+      if (definition.type !== MATNORMAL) {
+        material.color = "#FFF";
+      }
+      if (definition.emissive) {
+        material.emissive = definition.emissive.color.toString();
+        material.emissiveIntensity = definition.emissive.intensity;
+      }
+      if (definition.map) {
+        material.map = {
+          image: definition.map.image,
+          uscale: definition.mapTransform.uscale === -1 ? 1 : definition.mapTransform.uscale,
+          vscale: definition.mapTransform.vscale === -1 ? 1 : definition.mapTransform.vscale,
+          uoffset: definition.mapTransform.uoffset,
+          voffset: definition.mapTransform.voffset,
+          rotation: definition.mapTransform.rotation
+        };
+      }
+      if (definition.normalMap) {
+        material.normalMap = {
+          image: definition.normalMap.image,
+          uscale: definition.mapTransform.uscale === -1 ? 1 : definition.mapTransform.uscale,
+          vscale: definition.mapTransform.vscale === -1 ? 1 : definition.mapTransform.vscale,
+          uoffset: definition.mapTransform.uoffset,
+          voffset: definition.mapTransform.voffset,
+          rotation: definition.mapTransform.rotation
+        };
+      }
+      if (definition.roughnessMap) {
+        material.roughnessMap = {
+          image: definition.roughnessMap.image,
+          uscale: definition.mapTransform.uscale === -1 ? 1 : definition.mapTransform.uscale,
+          vscale: definition.mapTransform.vscale === -1 ? 1 : definition.mapTransform.vscale,
+          uoffset: definition.mapTransform.uoffset,
+          voffset: definition.mapTransform.voffset,
+          rotation: definition.mapTransform.rotation
+        };
+      }
+      if (definition.metalnessMap) {
+        material.metalnessMap = {
+          image: definition.metalnessMap.image,
+          uscale: definition.mapTransform.uscale === -1 ? 1 : definition.mapTransform.uscale,
+          vscale: definition.mapTransform.vscale === -1 ? 1 : definition.mapTransform.vscale,
+          uoffset: definition.mapTransform.uoffset,
+          voffset: definition.mapTransform.voffset,
+          rotation: definition.mapTransform.rotation
+        };
+      }
+      if (definition.emissiveMap) {
+        material.emissiveMap = {
+          image: definition.emissiveMap.image,
+          uscale: definition.mapTransform.uscale === -1 ? 1 : definition.mapTransform.uscale,
+          vscale: definition.mapTransform.vscale === -1 ? 1 : definition.mapTransform.vscale,
+          uoffset: definition.mapTransform.uoffset,
+          voffset: definition.mapTransform.voffset,
+          rotation: definition.mapTransform.rotation
+        };
+      }
+      if (definition.matcap) {
+        material.matcap = { image: definition.matcap.image };
+      }
+      if (definition.reflectionMap) {
+        material.reflectionMap = { image: definition.reflectionMap.image };
+      }
+      if (definition.refractionMap) {
+        material.refractionMap = { image: definition.refractionMap.image };
+      }
+      return material;
+    }
+    static _generateAll(model, mesh, buffers) {
+      const materials = model.materials.materials;
+      const { faceMaterials, faceCulled } = buffers;
+      model.materials.baseMaterials.forEach(function(baseMaterial) {
+        const start = mesh.indicesIndex;
+        for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+          const material = materials[faceMaterials[faceIndex]];
+          if (material._baseMaterial === baseMaterial && faceCulled.get(faceIndex) === 0) {
+            SvoxMeshGenerator._generateFace(model, buffers, faceIndex, mesh);
+          }
+        }
+        const end = mesh.indicesIndex;
+        mesh.groups.push({ start, count: end - start, materialIndex: baseMaterial.index });
+      }, this);
+      console.log(vertCache);
+      mesh.indices.length = mesh.indicesIndex;
+      mesh.positions = new Float32Array(mesh.positions, 0, mesh.indicesIndex * 3);
+      mesh.normals = new Float32Array(mesh.normals, 0, mesh.indicesIndex * 3);
+      mesh.colors = new Float32Array(mesh.colors, 0, mesh.indicesIndex * 3);
+      mesh.uvs = new Float32Array(mesh.uvs, 0, mesh.indicesIndex * 2);
+    }
+    static _generateFace(model, buffers, faceIndex, mesh) {
+      const { faceVertIndices, faceVertNormalX, faceVertNormalY, faceVertNormalZ, vertX, vertY, vertZ, faceVertColorR, faceVertColorG, faceVertColorB, faceVertUs, faceVertVs, faceMaterials, faceSmooth } = buffers;
+      const materials = model.materials.materials;
+      const material = materials[faceMaterials[faceIndex]];
+      const vert0Index = faceVertIndices[faceIndex * 4];
+      const vert1Index = faceVertIndices[faceIndex * 4 + 1];
+      const vert2Index = faceVertIndices[faceIndex * 4 + 2];
+      const vert3Index = faceVertIndices[faceIndex * 4 + 3];
+      let vert0X = vertX[vert0Index];
+      let vert0Y = vertY[vert0Index];
+      let vert0Z = vertZ[vert0Index];
+      const vert1X = vertX[vert1Index];
+      const vert1Y = vertY[vert1Index];
+      const vert1Z = vertZ[vert1Index];
+      let vert2X = vertX[vert2Index];
+      let vert2Y = vertY[vert2Index];
+      let vert2Z = vertZ[vert2Index];
+      const vert3X = vertX[vert3Index];
+      const vert3Y = vertY[vert3Index];
+      const vert3Z = vertZ[vert3Index];
+      let norm0X = faceVertNormalX[faceIndex * 4];
+      let norm0Y = faceVertNormalY[faceIndex * 4];
+      let norm0Z = faceVertNormalZ[faceIndex * 4];
+      let norm1X = faceVertNormalX[faceIndex * 4 + 1];
+      let norm1Y = faceVertNormalY[faceIndex * 4 + 1];
+      let norm1Z = faceVertNormalZ[faceIndex * 4 + 1];
+      let norm2X = faceVertNormalX[faceIndex * 4 + 2];
+      let norm2Y = faceVertNormalY[faceIndex * 4 + 2];
+      let norm2Z = faceVertNormalZ[faceIndex * 4 + 2];
+      let norm3X = faceVertNormalX[faceIndex * 4 + 3];
+      let norm3Y = faceVertNormalY[faceIndex * 4 + 3];
+      let norm3Z = faceVertNormalZ[faceIndex * 4 + 3];
+      let col0R = faceVertColorR[faceIndex * 4];
+      let col0G = faceVertColorG[faceIndex * 4];
+      let col0B = faceVertColorB[faceIndex * 4];
+      const col1R = faceVertColorR[faceIndex * 4 + 1];
+      const col1G = faceVertColorG[faceIndex * 4 + 1];
+      const col1B = faceVertColorB[faceIndex * 4 + 1];
+      let col2R = faceVertColorR[faceIndex * 4 + 2];
+      let col2G = faceVertColorG[faceIndex * 4 + 2];
+      let col2B = faceVertColorB[faceIndex * 4 + 2];
+      const col3R = faceVertColorR[faceIndex * 4 + 3];
+      const col3G = faceVertColorG[faceIndex * 4 + 3];
+      const col3B = faceVertColorB[faceIndex * 4 + 3];
+      let uv0U = faceVertUs[faceIndex * 4];
+      let uv0V = faceVertVs[faceIndex * 4];
+      const uv1U = faceVertUs[faceIndex * 4 + 1];
+      const uv1V = faceVertVs[faceIndex * 4 + 1];
+      let uv2U = faceVertUs[faceIndex * 4 + 2];
+      let uv2V = faceVertVs[faceIndex * 4 + 2];
+      const uv3U = faceVertUs[faceIndex * 4 + 3];
+      const uv3V = faceVertVs[faceIndex * 4 + 3];
+      if (material.side === BACK) {
+        let swapX, swapY, swapZ;
+        swapX = vert0X;
+        swapY = vert0Y;
+        swapZ = vert0Z;
+        vert0X = vert2X;
+        vert0Y = vert2Y;
+        vert0Z = vert2Z;
+        vert2X = swapX;
+        vert2Y = swapY;
+        vert2Z = swapZ;
+        swapX = norm0X;
+        swapY = norm0Y;
+        swapZ = norm0Z;
+        norm0X = norm2X;
+        norm0Y = norm2Y;
+        norm0Z = norm2Z;
+        norm2X = swapX;
+        norm2Y = swapY;
+        norm2Z = swapZ;
+        swapX = col0R;
+        swapY = col0G;
+        swapZ = col0B;
+        col0R = col2R;
+        col0G = col2G;
+        col0B = col2B;
+        col2R = swapX;
+        col2G = swapY;
+        col2B = swapZ;
+        swapX = uv0U;
+        swapY = uv0V;
+        uv0U = uv2U;
+        uv0V = uv2V;
+        uv2U = swapX;
+        uv2V = swapY;
+      }
+      const smooth = faceSmooth.get(faceIndex) === 1;
+      if (!(material.lighting === SMOOTH || material.lighting === BOTH && smooth)) {
+        let normFace1X = norm2X + norm1X + norm0X;
+        let normFace1Y = norm2Y + norm1Y + norm0Y;
+        let normFace1Z = norm2Z + norm1Z + norm0Z;
+        let normFace2X = norm0X + norm3X + norm2X;
+        let normFace2Y = norm0Y + norm3Y + norm2Y;
+        let normFace2Z = norm0Z + norm3Z + norm2Z;
+        const normFace1Length = Math.sqrt(normFace1X * normFace1X + normFace1Y * normFace1Y + normFace1Z * normFace1Z);
+        const normFace2Length = Math.sqrt(normFace2X * normFace2X + normFace2Y * normFace2Y + normFace2Z * normFace2Z);
+        const normFace1LengthInv = 1 / normFace1Length;
+        const normFace2LengthInv = 1 / normFace2Length;
+        normFace1X *= normFace1LengthInv;
+        normFace1Y *= normFace1LengthInv;
+        normFace1Z *= normFace1LengthInv;
+        normFace2X *= normFace2LengthInv;
+        normFace2Y *= normFace2LengthInv;
+        normFace2Z *= normFace2LengthInv;
+        if (material.lighting === QUAD) {
+          const combinedFaceLength = Math.sqrt(normFace1X * normFace1X + normFace1Y * normFace1Y + normFace1Z * normFace1Z) + Math.sqrt(normFace2X * normFace2X + normFace2Y * normFace2Y + normFace2Z * normFace2Z);
+          const combinedFaceLengthInv = 1 / combinedFaceLength;
+          normFace1X = normFace2X = (normFace1X + normFace2X) * combinedFaceLengthInv;
+          normFace1Y = normFace2Y = (normFace1Y + normFace2Y) * combinedFaceLengthInv;
+          normFace1Z = normFace2Z = (normFace1Z + normFace2Z) * combinedFaceLengthInv;
+        }
+        norm0X = normFace1X;
+        norm0Y = normFace1Y;
+        norm0Z = normFace1Z;
+        norm1X = normFace1X;
+        norm1Y = normFace1Y;
+        norm1Z = normFace1Z;
+        norm2X = normFace1X;
+        norm2Y = normFace1Y;
+        norm2Z = normFace1Z;
+        norm3X = normFace2X;
+        norm3Y = normFace2Y;
+        norm3Z = normFace2Z;
+      }
+      const indices = mesh.indices;
+      const positions = mesh.positions;
+      const normals = mesh.normals;
+      const colors = mesh.colors;
+      const uvs = mesh.uvs;
+      const vert0Key = vert0X * 3 + vert0Y * 13 + vert0Z * 23 + norm0X * 37 + norm0Y * 41 + norm0Z * 59 + col0R * 61 + col0G * 83 + col0B * 89 + uv0U * 98 + uv0V * 103;
+      const vert1Key = vert1X * 3 + vert1Y * 13 + vert1Z * 23 + norm1X * 37 + norm1Y * 41 + norm1Z * 59 + col1R * 61 + col1G * 83 + col1B * 89 + uv1U * 98 + uv1V * 103;
+      const vert2Key = vert2X * 3 + vert2Y * 13 + vert2Z * 23 + norm2X * 37 + norm2Y * 41 + norm2Z * 59 + col2R * 61 + col2G * 83 + col2B * 89 + uv2U * 98 + uv2V * 103;
+      const vert3Key = vert3X * 3 + vert3Y * 13 + vert3Z * 23 + norm3X * 37 + norm3Y * 41 + norm3Z * 59 + col3R * 61 + col3G * 83 + col3B * 89 + uv3U * 98 + uv3V * 103;
+      const hasVert0 = vertCache.has(vert0Key);
+      const hasVert1 = vertCache.has(vert1Key);
+      const hasVert2 = vertCache.has(vert2Key);
+      const hasVert3 = vertCache.has(vert3Key);
+      let vert0Idx, vert1Idx, vert2Idx, vert3Idx;
+      if (hasVert0) {
+        vert0Idx = vertCache.get(vert0Key);
+      } else {
+        vert0Idx = mesh.maxIndex + 1;
+        const offset30 = vert0Idx * 3;
+        const offset31 = offset30 + 1;
+        const offset32 = offset30 + 2;
+        const offset20 = vert0Idx * 2;
+        const offset21 = offset20 + 1;
+        mesh.maxIndex = vert0Idx;
+        positions[offset30] = vert0X;
+        positions[offset31] = vert0Y;
+        positions[offset32] = vert0Z;
+        normals[offset30] = norm0X;
+        normals[offset31] = norm0Y;
+        normals[offset32] = norm0Z;
+        colors[offset30] = col0R;
+        colors[offset31] = col0G;
+        colors[offset32] = col0B;
+        uvs[offset20] = uv0U;
+        uvs[offset21] = uv0V;
+        vertCache.set(vert0Key, vert0Idx);
+      }
+      if (hasVert1) {
+        vert1Idx = vertCache.get(vert1Key);
+      } else {
+        vert1Idx = mesh.maxIndex + 1;
+        const offset30 = vert1Idx * 3;
+        const offset31 = offset30 + 1;
+        const offset32 = offset30 + 2;
+        const offset20 = vert1Idx * 2;
+        const offset21 = offset20 + 1;
+        mesh.maxIndex = vert1Idx;
+        positions[offset30] = vert1X;
+        positions[offset31] = vert1Y;
+        positions[offset32] = vert1Z;
+        normals[offset30] = norm1X;
+        normals[offset31] = norm1Y;
+        normals[offset32] = norm1Z;
+        colors[offset30] = col1R;
+        colors[offset31] = col1G;
+        colors[offset32] = col1B;
+        uvs[offset20] = uv1U;
+        uvs[offset21] = uv1V;
+        vertCache.set(vert1Key, vert1Idx);
+      }
+      if (hasVert2) {
+        vert2Idx = vertCache.get(vert2Key);
+      } else {
+        vert2Idx = mesh.maxIndex + 1;
+        const offset30 = vert2Idx * 3;
+        const offset31 = offset30 + 1;
+        const offset32 = offset30 + 2;
+        const offset20 = vert2Idx * 2;
+        const offset21 = offset20 + 1;
+        mesh.maxIndex = vert2Idx;
+        positions[offset30] = vert2X;
+        positions[offset31] = vert2Y;
+        positions[offset32] = vert2Z;
+        normals[offset30] = norm2X;
+        normals[offset31] = norm2Y;
+        normals[offset32] = norm2Z;
+        colors[offset30] = col2R;
+        colors[offset31] = col2G;
+        colors[offset32] = col2B;
+        uvs[offset20] = uv2U;
+        uvs[offset21] = uv2V;
+        vertCache.set(vert2Key, vert2Idx);
+      }
+      if (hasVert3) {
+        vert3Idx = vertCache.get(vert3Key);
+      } else {
+        vert3Idx = mesh.maxIndex + 1;
+        const offset30 = vert3Idx * 3;
+        const offset31 = offset30 + 1;
+        const offset32 = offset30 + 2;
+        const offset20 = vert3Idx * 2;
+        const offset21 = offset20 + 1;
+        mesh.maxIndex = vert3Idx;
+        positions[offset30] = vert3X;
+        positions[offset31] = vert3Y;
+        positions[offset32] = vert3Z;
+        normals[offset30] = norm3X;
+        normals[offset31] = norm3Y;
+        normals[offset32] = norm3Z;
+        colors[offset30] = col3R;
+        colors[offset31] = col3G;
+        colors[offset32] = col3B;
+        uvs[offset20] = uv3U;
+        uvs[offset21] = uv3V;
+        vertCache.set(vert3Key, vert3Idx);
+      }
+      const iIdx = mesh.indicesIndex;
+      indices[iIdx] = vert2Idx;
+      indices[iIdx + 1] = vert1Idx;
+      indices[iIdx + 2] = vert0Idx;
+      indices[iIdx + 3] = vert0Idx;
+      indices[iIdx + 4] = vert3Idx;
+      indices[iIdx + 5] = vert2Idx;
+      mesh.indicesIndex += 6;
+    }
+  };
+
+  // src/svox/voxels.js
+  var VERSION = 0;
+  var EMPTY_VOXEL_PALETTE_INDEX = 0;
+  var MAX_SIZE = 128;
+  var HEADER_SIZE = 8;
+  var VOXEL_TYPE_DIFFUSE = 0;
+  var VOXEL_TYPE_REMOVE = 255;
+  var REMOVE_VOXEL_COLOR = VOXEL_TYPE_REMOVE << 24 >>> 0;
+  var VOX_CHUNK_FILTERS = {
+    NONE: 0,
+    PAINT: 1,
+    KEEP: 2
+  };
+  var RESERVED_PALETTE_INDEXES = 1;
+  var iPalOpToIPalSnap = /* @__PURE__ */ new Map();
+  var shiftForSize = (size) => Math.floor(size % 2 === 0 ? size / 2 - 1 : size / 2);
+  var xyzRangeForSize = (size) => {
+    const [x, y, z] = size;
+    const xShift = shiftForSize(x);
+    const yShift = shiftForSize(y);
+    const zShift = shiftForSize(z);
+    const maxX = x - xShift - 1;
+    const maxY = y - yShift - 1;
+    const maxZ = z - zShift - 1;
+    const minX = -xShift;
+    const minY = -yShift;
+    const minZ = -zShift;
+    return [minX, maxX, minY, maxY, minZ, maxZ];
+  };
+  var PALETTE_ENTRY_SIZE_INTS = 1;
+  var PALETTE_ENTRY_SIZE_BYTES = PALETTE_ENTRY_SIZE_INTS * 4;
+  function createViewsForBitsPerIndex(size, bitsPerIndex, buffer = null) {
+    const numPaletteEntries = 2 ** bitsPerIndex - RESERVED_PALETTE_INDEXES;
+    const paletteBytes = PALETTE_ENTRY_SIZE_BYTES * numPaletteEntries;
+    const indexBits = size[0] * size[1] * size[2] * bitsPerIndex;
+    const indexBytes = Math.floor(indexBits / 8) + 1;
+    const bytes = HEADER_SIZE + paletteBytes + indexBytes;
+    if (buffer == null) {
+      if (typeof Buffer !== "undefined") {
+        buffer = Buffer.alloc(bytes).buffer;
+      } else {
+        buffer = new ArrayBuffer(bytes);
+      }
+    }
+    const header = new Uint8Array(buffer, 0, HEADER_SIZE);
+    const paletteLength = paletteBytes / PALETTE_ENTRY_SIZE_BYTES;
+    const palette = new Uint32Array(buffer, HEADER_SIZE, paletteLength);
+    const indices = Bits.create(buffer, bitsPerIndex, HEADER_SIZE + paletteBytes);
+    header[0] = VERSION;
+    [header[1], header[2], header[3]] = size;
+    header[4] = bitsPerIndex;
+    return [buffer, palette, indices];
+  }
+  var Voxels = class {
+    constructor(size = null, paletteBuffer = null, indicesBuffer = null, bitsPerIndex = 8, paletteOffset = 0, paletteByteLength = null, indicesOffset = 0, indicesByteLength = null) {
+      if (paletteBuffer && indicesBuffer) {
+        this.size = [size[0], size[1], size[2]];
+        this.bitsPerIndex = bitsPerIndex;
+        paletteByteLength = paletteByteLength || paletteBuffer.length;
+        indicesByteLength = indicesByteLength || indicesBuffer.length;
+        this.palette = new Uint32Array(paletteBuffer, paletteOffset || 0, paletteByteLength / 4);
+        this.indices = Bits.create(indicesBuffer, bitsPerIndex, indicesOffset, indicesByteLength);
+        this.xShift = shiftForSize(size[0]);
+        this.yShift = shiftForSize(size[1]);
+        this.zShift = shiftForSize(size[2]);
+        this._rebuildRefCounts();
+      } else if (size) {
+        const [buffer, palette, indices] = createViewsForBitsPerIndex(size, 1);
+        this.palette = palette;
+        this.indices = indices;
+        this._refCounts = new Array(this.palette.length).fill(0);
+        this._recomputeSizeFieldsForBuffer(buffer);
+      }
+    }
+    _recomputeSizeFieldsForBuffer(buffer) {
+      const header = new Uint8Array(buffer, 0, HEADER_SIZE);
+      this.size = [0, 0, 0];
+      [, this.size[0], this.size[1], this.size[2], this.bitsPerIndex] = header;
+      this.xShift = shiftForSize(this.size[0]);
+      this.yShift = shiftForSize(this.size[1]);
+      this.zShift = shiftForSize(this.size[2]);
+    }
+    getPaletteIndexAt(x, y, z) {
+      const { indices } = this;
+      const offset = this._getOffset(x, y, z);
+      return indices.get(offset);
+    }
+    getPaletteIndexAtOffset(offset) {
+      const { indices } = this;
+      return indices.get(offset);
+    }
+    getColorAt(x, y, z) {
+      const idx = this.getPaletteIndexAt(x, y, z);
+      return this.colorForPaletteIndex(idx);
+    }
+    hasVoxelAt(x, y, z) {
+      return this.getPaletteIndexAt(x, y, z) !== EMPTY_VOXEL_PALETTE_INDEX;
+    }
+    removeVoxelAt(x, y, z) {
+      return this.setPaletteIndexAt(x, y, z, EMPTY_VOXEL_PALETTE_INDEX);
+    }
+    getTotalNonEmptyVoxels() {
+      let sum = 0;
+      for (let i = 0; i < this._refCounts.length; i += 1) {
+        sum += this._refCounts[i];
+      }
+      return sum;
+    }
+    getPaletteColor(idx) {
+      return this.palette[(idx - RESERVED_PALETTE_INDEXES) * PALETTE_ENTRY_SIZE_INTS];
+    }
+    setPaletteColor(idx, color) {
+      this.palette[(idx - RESERVED_PALETTE_INDEXES) * PALETTE_ENTRY_SIZE_INTS] = color;
+    }
+    paletteHasReferences(idx) {
+      return this._refCounts[idx - RESERVED_PALETTE_INDEXES] !== 0;
+    }
+    resetPaletteRefcountToOne(idx) {
+      this._refCounts[idx - RESERVED_PALETTE_INDEXES] = 1;
+    }
+    incrementPaletteRefcount(idx) {
+      this._refCounts[idx - RESERVED_PALETTE_INDEXES] += 1;
+    }
+    decrementPaletteRefcount(idx) {
+      this._refCounts[idx - RESERVED_PALETTE_INDEXES] -= 1;
+    }
+    static isNonEmptyPaletteIndex(idx) {
+      return idx !== 0;
+    }
+    setPaletteIndexAt(x, y, z, paletteIndex) {
+      const offset = this._getOffset(x, y, z);
+      this.setPaletteIndexAtOffset(offset, paletteIndex);
+    }
+    setPaletteIndexAtOffset(offset, paletteIndex) {
+      const { indices } = this;
+      const currentPaletteIndex = this.getPaletteIndexAtOffset(offset);
+      if (Voxels.isNonEmptyPaletteIndex(currentPaletteIndex)) {
+        this.decrementPaletteRefcount(currentPaletteIndex);
+      }
+      if (Voxels.isNonEmptyPaletteIndex(paletteIndex)) {
+        this.incrementPaletteRefcount(paletteIndex);
+      }
+      indices.set(offset, paletteIndex);
+    }
+    setEmptyAt(x, y, z) {
+      this.setPaletteIndexAt(x, y, z, 0);
+    }
+    clear() {
+      this.indices.clear();
+      this._refCounts.fill(0);
+    }
+    setColorAt(x, y, z, color) {
+      const offset = this._getOffset(x, y, z);
+      return this.setColorAtOffset(offset, color);
+    }
+    setColorAtOffset(offset, color) {
+      const { palette, indices } = this;
+      const currentPaletteIndex = this.getPaletteIndexAtOffset(offset);
+      const currentIsColor = Voxels.isNonEmptyPaletteIndex(currentPaletteIndex);
+      if (currentIsColor) {
+        this.decrementPaletteRefcount(currentPaletteIndex);
+      }
+      for (let i = 0; i < palette.length; i += 1) {
+        const paletteIndex = i + RESERVED_PALETTE_INDEXES;
+        const palColor = this.getPaletteColor(paletteIndex);
+        if (palColor === color) {
+          this.incrementPaletteRefcount(paletteIndex);
+          indices.set(offset, paletteIndex);
+          return paletteIndex;
+        }
+      }
+      if (currentIsColor && !this.paletteHasReferences(currentPaletteIndex)) {
+        this.setPaletteColor(currentPaletteIndex, color);
+        this.resetPaletteRefcountToOne(currentPaletteIndex);
+        return currentPaletteIndex;
+      }
+      const newEntryPaletteIndex = this._getFreePaletteIndex();
+      this.setPaletteColor(newEntryPaletteIndex, color);
+      this.resetPaletteRefcountToOne(newEntryPaletteIndex);
+      this.indices.set(offset, newEntryPaletteIndex);
+      return newEntryPaletteIndex;
+    }
+    colorForPaletteIndex(idx) {
+      return this.palette[(idx - RESERVED_PALETTE_INDEXES) * PALETTE_ENTRY_SIZE_INTS];
+    }
+    filterByChunk(targetChunk, offsetX, offsetY, offsetZ, filter) {
+      if (filter === VOX_CHUNK_FILTERS.NONE)
+        return;
+      const targetSize = targetChunk.size;
+      const [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize);
+      const { size } = this;
+      const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(size);
+      for (let x = minX; x <= maxX; x += 1) {
+        for (let y = minY; y <= maxY; y += 1) {
+          for (let z = minZ; z <= maxZ; z += 1) {
+            const iPalOp = this.getPaletteIndexAt(x, y, z);
+            if (iPalOp === 0)
+              continue;
+            const targetX = x + offsetX;
+            const targetY = y + offsetY;
+            const targetZ = z + offsetZ;
+            const targetOutOfRange = targetX > targetMaxX || targetX < targetMinX || targetY > targetMaxY || targetY < targetMinY || targetZ > targetMaxZ || targetZ < targetMinZ;
+            const targetHasVoxel = !targetOutOfRange && targetChunk.hasVoxelAt(targetX, targetY, targetZ);
+            if (filter === VOX_CHUNK_FILTERS.PAINT && !targetHasVoxel || filter === VOX_CHUNK_FILTERS.KEEP && targetHasVoxel) {
+              this.setEmptyAt(x, y, z);
+            }
+          }
+        }
+      }
+    }
+    _getFreePaletteIndex() {
+      const { palette, size, indices, bitsPerIndex } = this;
+      for (let i = 0; i < palette.length; i += 1) {
+        const paletteIndex = i + RESERVED_PALETTE_INDEXES;
+        if (!this.paletteHasReferences(paletteIndex)) {
+          return paletteIndex;
+        }
+      }
+      const newBitsPerIndex = bitsPerIndex * 2;
+      const [newBuffer, newPalette, newIndices] = createViewsForBitsPerIndex(size, newBitsPerIndex);
+      for (let i = 0; i < palette.length * PALETTE_ENTRY_SIZE_INTS; i += 1) {
+        newPalette[i] = palette[i];
+      }
+      while (this._refCounts.length < newPalette.length) {
+        this._refCounts.push(0);
+      }
+      for (let i = 0, s = size[0] * size[1] * size[2]; i < s; i += 1) {
+        const idx = indices.get(i);
+        newIndices.set(i, idx);
+      }
+      this.palette = newPalette;
+      this.indices = newIndices;
+      this._recomputeSizeFieldsForBuffer(newBuffer);
+      return this._getFreePaletteIndex();
+    }
+    resizeToFit(x, y, z) {
+      const { size } = this;
+      const sx = Math.max(1, size[0], Math.abs(x) * 2 + 1);
+      const sy = Math.max(1, size[1], Math.abs(y) * 2 + 1);
+      const sz = Math.max(1, size[2], Math.abs(z) * 2 + 1);
+      this.resizeTo([sx, sy, sz]);
+    }
+    resizeTo(size) {
+      if (this.size[0] >= size[0] && this.size[1] >= size[1] && this.size[2] >= size[2])
+        return;
+      const chunk = new Voxels(size);
+      const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(this.size);
+      for (let x = minX; x <= maxX; x += 1) {
+        for (let y = minY; y <= maxY; y += 1) {
+          for (let z = minZ; z <= maxZ; z += 1) {
+            const idx = this.getPaletteIndexAt(x, y, z);
+            if (idx !== 0) {
+              chunk.setColorAt(x, y, z, this.getColorAt(x, y, z));
+            }
+          }
+        }
+      }
+      const { buffer } = chunk.palette;
+      [this.size[0], this.size[1], this.size[2]] = size;
+      const { bitsPerIndex } = chunk;
+      this.bitsPerIndex = bitsPerIndex;
+      const [, palette, indices] = createViewsForBitsPerIndex(size, bitsPerIndex, buffer);
+      this.palette = palette;
+      this.indices = indices;
+      this._refCounts = chunk._refCounts;
+      this._recomputeSizeFieldsForBuffer(buffer);
+    }
+    static fromJSON(json) {
+      if (typeof json === "string")
+        return Voxels.deserialize(json);
+      const { size, palette, indices } = json;
+      const chunk = new Voxels(size);
+      for (let i = 0; i < palette.length + RESERVED_PALETTE_INDEXES; i += 1) {
+        for (let j = 0; j < indices.length; j += 1) {
+          const paletteIndex = indices[j];
+          if (paletteIndex === i) {
+            if (paletteIndex >= RESERVED_PALETTE_INDEXES) {
+              const color = palette[paletteIndex - RESERVED_PALETTE_INDEXES];
+              chunk.setColorAtOffset(j, color);
+            } else if (paletteIndex === i) {
+              chunk.setPaletteIndexAtOffset(j, paletteIndex);
+            }
+          }
+        }
+      }
+      return chunk;
+    }
+    toJSON(arg, readable) {
+      if (!readable)
+        return this.serialize();
+      const palette = [];
+      const indices = [];
+      for (let i = 0; i < this.palette.length; i += 1) {
+        const paletteIndex = i + RESERVED_PALETTE_INDEXES;
+        const color = this.getPaletteColor(paletteIndex);
+        if (color > 0) {
+          palette.push(color);
+        }
+      }
+      for (let i = 0, s = this.size[0] * this.size[1] * this.size[2]; i < s; i += 1) {
+        indices.push(this.indices.get(i));
+      }
+      return {
+        size: [...this.size],
+        palette,
+        indices
+      };
+    }
+    clone() {
+      return new Voxels(
+        this.size,
+        this.palette.buffer.slice(0),
+        this.indices.view.buffer.slice(0),
+        this.bitsPerIndex,
+        this.palette.byteOffset,
+        this.palette.byteLength,
+        this.indices.view.byteOffset,
+        this.indices.view.byteLength
+      );
+    }
+    _getOffset(x, y, z) {
+      const { size, xShift, yShift, zShift } = this;
+      return (x + xShift) * size[1] * size[2] + (y + yShift) * size[2] + (z + zShift);
+    }
+    _rebuildRefCounts() {
+      this._refCounts = new Array(this.palette.length).fill(0);
+      for (let i = 0, s = this.size[0] * this.size[1] * this.size[2]; i < s; i += 1) {
+        const paletteIndex = this.getPaletteIndexAtOffset(i);
+        if (Voxels.isNonEmptyPaletteIndex(paletteIndex)) {
+          this.incrementPaletteRefcount(paletteIndex);
+        }
+      }
+    }
+    applyToChunk(targetChunk, offsetX = 0, offsetY = 0, offsetZ = 0) {
+      iPalOpToIPalSnap.clear();
+      let targetSize = targetChunk.size;
+      let [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize);
+      const { size } = this;
+      const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(size);
+      for (let x = minX; x <= maxX; x += 1) {
+        for (let y = minY; y <= maxY; y += 1) {
+          for (let z = minZ; z <= maxZ; z += 1) {
+            const iPalOp = this.getPaletteIndexAt(x, y, z);
+            if (iPalOp !== 0) {
+              const targetX = x + offsetX;
+              const targetY = y + offsetY;
+              const targetZ = z + offsetZ;
+              let requiredSizeX = targetSize[0];
+              let requiredSizeY = targetSize[1];
+              let requiredSizeZ = targetSize[2];
+              if (targetX > targetMaxX) {
+                requiredSizeX = targetX * 2;
+              }
+              if (targetX < targetMinX) {
+                requiredSizeX = Math.max(requiredSizeX, -targetX * 2 + 1);
+              }
+              if (targetY > targetMaxY) {
+                requiredSizeY = targetY * 2;
+              }
+              if (targetY < targetMinY) {
+                requiredSizeY = Math.max(requiredSizeY, -targetY * 2 + 1);
+              }
+              if (targetZ > targetMaxZ) {
+                requiredSizeZ = targetZ * 2;
+              }
+              if (targetZ < targetMinZ) {
+                requiredSizeZ = Math.max(requiredSizeZ, -targetZ * 2 + 1);
+              }
+              if (requiredSizeX > MAX_SIZE || requiredSizeY > MAX_SIZE || requiredSizeZ > MAX_SIZE) {
+                continue;
+              }
+              if (targetSize[0] < requiredSizeX || targetSize[1] < requiredSizeY || targetSize[2] < requiredSizeZ) {
+                targetChunk.resizeTo([requiredSizeX, requiredSizeY, requiredSizeZ]);
+                targetSize = targetChunk.size;
+                [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize);
+                iPalOpToIPalSnap.clear();
+              }
+              const newIPalSnap = iPalOpToIPalSnap.get(iPalOp);
+              if (newIPalSnap === void 0) {
+                const color = this.getColorAt(x, y, z);
+                if (color === REMOVE_VOXEL_COLOR) {
+                  targetChunk.setEmptyAt(targetX, targetY, targetZ);
+                } else {
+                  const iPalSnap = targetChunk.setColorAt(targetX, targetY, targetZ, color);
+                  iPalOpToIPalSnap.set(iPalOp, iPalSnap);
+                }
+              } else {
+                const currentIPalSnap = targetChunk.getPaletteIndexAt(targetX, targetY, targetZ);
+                if (currentIPalSnap !== newIPalSnap) {
+                  targetChunk.setPaletteIndexAt(targetX, targetY, targetZ, newIPalSnap);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    createInverse = (targetChunk, offset) => {
+      iPalOpToIPalSnap.clear();
+      const targetSize = targetChunk.size;
+      const [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize);
+      const { size } = this;
+      const inverse = new Voxels(size);
+      const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(size);
+      for (let x = minX; x <= maxX; x += 1) {
+        for (let y = minY; y <= maxY; y += 1) {
+          for (let z = minZ; z <= maxZ; z += 1) {
+            const iPalOp = this.getPaletteIndexAt(x, y, z);
+            if (iPalOp === 0)
+              continue;
+            const targetX = x + offset[0];
+            const targetY = y + offset[1];
+            const targetZ = z + offset[2];
+            if (targetX > targetMaxX || targetX < targetMinX || targetY > targetMaxY || targetY < targetMinY || targetZ > targetMaxZ || targetZ < targetMinZ || !targetChunk.hasVoxelAt(targetX, targetY, targetZ)) {
+              inverse.setColorAt(x, y, z, REMOVE_VOXEL_COLOR);
+            } else {
+              const currentColor = targetChunk.getColorAt(targetX, targetY, targetZ);
+              inverse.setColorAt(x, y, z, currentColor);
+            }
+          }
+        }
+      }
+      return inverse;
+    };
+    mergeWith(targetChunk, offset, targetOffset, targetAlwaysWins = false) {
+      iPalOpToIPalSnap.clear();
+      const thisPalIndexToWinPalIndex = iPalOpToIPalSnap;
+      const offsetX = targetOffset[0] - offset[0];
+      const offsetY = targetOffset[1] - offset[1];
+      const offsetZ = targetOffset[2] - offset[2];
+      const targetSize = targetChunk.size;
+      const [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize);
+      const { size } = this;
+      const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(size);
+      for (let x = minX; x <= maxX; x += 1) {
+        for (let y = minY; y <= maxY; y += 1) {
+          for (let z = minZ; z <= maxZ; z += 1) {
+            const thisPaletteIndex = this.getPaletteIndexAt(x, y, z);
+            if (thisPaletteIndex === 0)
+              continue;
+            const targetX = x + offsetX;
+            const targetY = y + offsetY;
+            const targetZ = z + offsetZ;
+            const targetOutOfRange = targetX > targetMaxX || targetX < targetMinX || targetY > targetMaxY || targetY < targetMinY || targetZ > targetMaxZ || targetZ < targetMinZ;
+            const targetHasVoxel = !targetOutOfRange && targetChunk.hasVoxelAt(targetX, targetY, targetZ);
+            if (!targetHasVoxel)
+              continue;
+            if (thisPalIndexToWinPalIndex.has(thisPaletteIndex)) {
+              this.setPaletteIndexAt(x, y, z, thisPalIndexToWinPalIndex.get(thisPaletteIndex));
+            } else {
+              if (targetAlwaysWins || targetChunk.getColorAt(targetX, targetY, targetZ) > this.getColorAt(x, y, z)) {
+                this.removeVoxelAt(x, y, z);
+              }
+              const newPalIndex = this.getPaletteIndexAt(x, y, z);
+              thisPalIndexToWinPalIndex.set(thisPaletteIndex, newPalIndex);
+            }
+          }
+        }
+      }
+    }
+  };
+  function voxColorForRGBT(r, g, b, t = VOXEL_TYPE_DIFFUSE) {
+    return (r | g << 8 | b << 16 | t << 24) >>> 0;
+  }
+  function rgbtForVoxColor(voxColor) {
+    const r = voxColor & 255;
+    const g = (voxColor & 65280) >> 8;
+    const b = (voxColor & 16711680) >> 16;
+    const t = (voxColor & 4278190080) >> 24;
+    return {
+      r,
+      g,
+      b,
+      t
+    };
+  }
+
+  // src/svox/noise.js
+  function noise_default() {
+    const p = [];
+    for (let i = 0; i < 256; i++) {
+      p[i] = Math.floor(Math.random() * 256);
+      p[i + 256] = p[i];
+    }
+    function fade(t) {
+      return t * t * t * (t * (t * 6 - 15) + 10);
+    }
+    function lerp(t, a, b) {
+      return a + t * (b - a);
+    }
+    function grad(hash, x, y, z) {
+      const h = hash & 15;
+      const u = h < 8 ? x : y;
+      const v = h < 4 ? y : h === 12 || h === 14 ? x : z;
+      return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
+    }
+    return {
+      noise: function(x, y, z) {
+        const floorX = Math.floor(x);
+        const floorY = Math.floor(y);
+        const floorZ = Math.floor(z);
+        const X = floorX & 255;
+        const Y = floorY & 255;
+        const Z = floorZ & 255;
+        x -= floorX;
+        y -= floorY;
+        z -= floorZ;
+        const xMinus1 = x - 1;
+        const yMinus1 = y - 1;
+        const zMinus1 = z - 1;
+        const u = fade(x);
+        const v = fade(y);
+        const w = fade(z);
+        const A = p[X] + Y;
+        const AA = p[A] + Z;
+        const AB = p[A + 1] + Z;
+        const B = p[X + 1] + Y;
+        const BA = p[B] + Z;
+        const BB = p[B + 1] + Z;
+        return lerp(
+          w,
+          lerp(
+            v,
+            lerp(
+              u,
+              grad(p[AA], x, y, z),
+              grad(p[BA], xMinus1, y, z)
+            ),
+            lerp(
+              u,
+              grad(p[AB], x, yMinus1, z),
+              grad(p[BB], xMinus1, yMinus1, z)
+            )
+          ),
+          lerp(
+            v,
+            lerp(
+              u,
+              grad(p[AA + 1], x, y, zMinus1),
+              grad(p[BA + 1], xMinus1, y, z - 1)
+            ),
+            lerp(
+              u,
+              grad(p[AB + 1], x, yMinus1, zMinus1),
+              grad(p[BB + 1], xMinus1, yMinus1, zMinus1)
+            )
+          )
+        );
+      }
+    };
+  }
+
+  // src/svox/deformer.js
+  var Deformer = class {
+    static changeShape(model, buffers, shape) {
+      const { faceEquidistant } = buffers;
+      switch (shape) {
+        case "sphere":
+          this._circularDeform(model, buffers, 1, 1, 1);
+          break;
+        case "cylinder-x":
+          this._circularDeform(model, buffers, 0, 1, 1);
+          break;
+        case "cylinder-y":
+          this._circularDeform(model, buffers, 1, 0, 1);
+          break;
+        case "cylinder-z":
+          this._circularDeform(model, buffers, 1, 1, 0);
+          break;
+        default:
+          for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+            faceEquidistant.set(faceIndex, 0);
+          }
+          break;
+      }
+    }
+    static _circularDeform(model, buffers, xStrength, yStrength, zStrength) {
+      const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(model.voxChunk.size);
+      const xMid = (minX + maxX) / 2 + 0.5;
+      const yMid = (minY + maxY) / 2 + 0.5;
+      const zMid = (minZ + maxZ) / 2 + 0.5;
+      const { vertX, vertY, vertZ, vertRing } = buffers;
+      for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
+        const vx = vertX[vertIndex];
+        const vy = vertY[vertIndex];
+        const vz = vertZ[vertIndex];
+        const x = vx - xMid;
+        const y = vy - yMid;
+        const z = vz - zMid;
+        const sphereSize = Math.max(Math.abs(x * xStrength), Math.abs(y * yStrength), Math.abs(z * zStrength));
+        const vertexDistance = Math.sqrt(x * x * xStrength + y * y * yStrength + z * z * zStrength);
+        if (vertexDistance === 0)
+          continue;
+        const factor = sphereSize / vertexDistance;
+        vertX[vertIndex] = x * (1 - xStrength + xStrength * factor) + xMid;
+        vertY[vertIndex] = y * (1 - yStrength + yStrength * factor) + yMid;
+        vertZ[vertIndex] = z * (1 - zStrength + zStrength * factor) + zMid;
+        vertRing[vertIndex] = sphereSize;
+      }
+      this._markEquidistantFaces(model, buffers);
+    }
+    static _markEquidistantFaces(model, buffers) {
+      const { faceVertIndices, vertRing, faceEquidistant } = buffers;
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        const faceVertIndex0 = faceIndex * 4;
+        const faceVertIndex1 = faceVertIndex0 + 1;
+        const faceVertIndex2 = faceVertIndex0 + 2;
+        const faceVertIndex3 = faceVertIndex0 + 3;
+        faceEquidistant.set(faceIndex, vertRing[faceVertIndices[faceVertIndex0]] === vertRing[faceVertIndices[faceVertIndex1]] && vertRing[faceVertIndices[faceVertIndex0]] === vertRing[faceVertIndices[faceVertIndex2]] && vertRing[faceVertIndices[faceVertIndex0]] === vertRing[faceVertIndices[faceVertIndex3]] ? 1 : 0);
+      }
+    }
+    static maximumDeformCount(model) {
+      let maximumCount = 0;
+      model.materials.forEach(function(material) {
+        if (material.deform) {
+          maximumCount = Math.max(maximumCount, material.deform.count);
+        }
+      });
+      return maximumCount;
+    }
+    static deform(model, buffers, maximumDeformCount) {
+      const { vertLinkIndices, vertLinkCounts, vertDeformCount, vertDeformDamping, vertDeformStrength, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertClampedX, vertClampedY, vertClampedZ, vertX, vertY, vertZ, vertTmpX, vertTmpY, vertTmpZ, vertHasTmp } = buffers;
+      for (let step = 0; step < maximumDeformCount; step++) {
+        let hasDeforms = false;
+        for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
+          const deformCount = vertDeformCount[vertIndex];
+          if (deformCount <= step)
+            continue;
+          const vertLinkCount = vertLinkCounts[vertIndex];
+          if (vertLinkCount === 0)
+            continue;
+          hasDeforms = true;
+          const vx = vertX[vertIndex];
+          const vy = vertY[vertIndex];
+          const vz = vertZ[vertIndex];
+          const deformDamping = vertDeformDamping[vertIndex];
+          const deformStrength = vertDeformStrength[vertIndex];
+          const notClampOrFlattenX = 1 - (vertClampedX.get(vertIndex) | vertFlattenedX.get(vertIndex));
+          const notClampOrFlattenY = 1 - (vertClampedY.get(vertIndex) | vertFlattenedY.get(vertIndex));
+          const notClampOrFlattenZ = 1 - (vertClampedZ.get(vertIndex) | vertFlattenedZ.get(vertIndex));
+          let x = 0;
+          let y = 0;
+          let z = 0;
+          for (let i = 0; i < vertLinkCount; i++) {
+            const linkIndex = vertLinkIndices[vertIndex * 6 + i];
+            x += vertX[linkIndex];
+            y += vertY[linkIndex];
+            z += vertZ[linkIndex];
+          }
+          const strength = Math.pow(deformDamping, step) * deformStrength;
+          const offsetX = x / vertLinkCount - vx;
+          const offsetY = y / vertLinkCount - vy;
+          const offsetZ = z / vertLinkCount - vz;
+          vertTmpX[vertIndex] = vx + notClampOrFlattenX * offsetX * strength;
+          vertTmpY[vertIndex] = vy + notClampOrFlattenY * offsetY * strength;
+          vertTmpZ[vertIndex] = vz + notClampOrFlattenZ * offsetZ * strength;
+          vertHasTmp.set(vertIndex, notClampOrFlattenX | notClampOrFlattenY | notClampOrFlattenZ);
+        }
+        if (hasDeforms) {
+          for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
+            if (vertHasTmp.get(vertIndex) === 0)
+              continue;
+            vertX[vertIndex] = vertTmpX[vertIndex];
+            vertY[vertIndex] = vertTmpY[vertIndex];
+            vertZ[vertIndex] = vertTmpZ[vertIndex];
+          }
+          vertHasTmp.clear();
+        }
+      }
+    }
+    static warpAndScatter(model, buffers) {
+      const noise = noise_default().noise;
+      const { nx: tnx, px: tpx, ny: tny, py: tpy, nz: tnz, pz: tpz } = model._tile;
+      let [vxMinX, vxMaxX, vxMinY, vxMaxY, vxMinZ, vxMaxZ] = xyzRangeForSize(model.voxChunk.size);
+      const { vertX, vertY, vertZ, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertClampedX, vertClampedY, vertClampedZ } = buffers;
+      vxMinX += 0.1;
+      vxMinY += 0.1;
+      vxMinZ += 0.1;
+      vxMaxX += 0.9;
+      vxMaxY += 0.9;
+      vxMaxZ += 0.9;
+      for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
+        const vx = vertX[vertIndex];
+        const vy = vertY[vertIndex];
+        const vz = vertZ[vertIndex];
+        if (tnx && vx < vxMinX || tpx && vx > vxMaxX || tny && vy < vxMinY || tpy && vy > vxMaxY || tnz && vz < vxMinZ || tpz && vz > vxMaxZ) {
+          continue;
+        }
+        const amplitude = vertWarpAmplitude[vertIndex];
+        const frequency = vertWarpFrequency[vertIndex];
+        const scatter = vertScatter[vertIndex];
+        const hasAmplitude = amplitude > 0;
+        const hasScatter = scatter > 0;
+        if (hasAmplitude || hasScatter) {
+          let xOffset = 0;
+          let yOffset = 0;
+          let zOffset = 0;
+          if (hasAmplitude) {
+            xOffset = noise((vx + 0.19) * frequency, vy * frequency, vz * frequency) * amplitude;
+            yOffset = noise((vy + 0.17) * frequency, vz * frequency, vx * frequency) * amplitude;
+            zOffset = noise((vz + 0.13) * frequency, vx * frequency, vy * frequency) * amplitude;
+          }
+          if (hasScatter) {
+            xOffset += (Math.random() * 2 - 1) * scatter;
+            yOffset += (Math.random() * 2 - 1) * scatter;
+            zOffset += (Math.random() * 2 - 1) * scatter;
+          }
+          const notClampOrFlattenX = 1 - (vertClampedX.get(vertIndex) | vertFlattenedX.get(vertIndex));
+          const notClampOrFlattenY = 1 - (vertClampedY.get(vertIndex) | vertFlattenedY.get(vertIndex));
+          const notClampOrFlattenZ = 1 - (vertClampedZ.get(vertIndex) | vertFlattenedZ.get(vertIndex));
+          vertX[vertIndex] = vx + notClampOrFlattenX * xOffset;
+          vertY[vertIndex] = vy + notClampOrFlattenY * yOffset;
+          vertZ[vertIndex] = vz + notClampOrFlattenZ * zOffset;
+        }
+      }
+    }
+  };
+
+  // src/svox/vertexlinker.js
+  var VertexLinker = class {
+    static linkVertices(model, buffers, faceIndex) {
+      const { faceClamped, vertNrOfClampedLinks, faceVertIndices, vertLinkIndices, vertLinkCounts } = buffers;
+      const clamped = faceClamped.get(faceIndex);
+      if (clamped === 1) {
+        for (let v = 0; v < 4; v++) {
+          const vertIndex = faceVertIndices[faceIndex * 4 + v];
+          let hasSelfLink = false;
+          for (let l = 0, c = vertLinkCounts[vertIndex]; l < c; l++) {
+            if (vertLinkIndices[vertIndex * 6 + l] === vertIndex) {
+              hasSelfLink = true;
+              break;
+            }
+          }
+          if (!hasSelfLink) {
+            vertLinkIndices[vertIndex * 6 + vertLinkCounts[vertIndex]] = vertIndex;
+            vertLinkCounts[vertIndex]++;
+            vertNrOfClampedLinks[vertIndex]++;
+          }
+        }
+      } else {
+        for (let v = 0; v < 4; v++) {
+          const vertIndexFrom = faceVertIndices[faceIndex * 4 + v];
+          const vertIndexTo = faceVertIndices[faceIndex * 4 + (v + 1) % 4];
+          let hasForwardLink = false;
+          for (let l = 0, c = vertLinkCounts[vertIndexFrom]; l < c; l++) {
+            if (vertLinkIndices[vertIndexFrom * 6 + l] === vertIndexTo) {
+              hasForwardLink = true;
+              break;
+            }
+          }
+          if (!hasForwardLink) {
+            vertLinkIndices[vertIndexFrom * 6 + vertLinkCounts[vertIndexFrom]] = vertIndexTo;
+            vertLinkCounts[vertIndexFrom]++;
+          }
+          let hasBackwardLink = false;
+          for (let l = 0, c = vertLinkCounts[vertIndexTo]; l < c; l++) {
+            if (vertLinkIndices[vertIndexTo * 6 + l] === vertIndexFrom) {
+              hasBackwardLink = true;
+              break;
+            }
+          }
+          if (!hasBackwardLink) {
+            vertLinkIndices[vertIndexTo * 6 + vertLinkCounts[vertIndexTo]] = vertIndexFrom;
+            vertLinkCounts[vertIndexTo]++;
+          }
+        }
+      }
+    }
+    static fixClampedLinks(model, buffers) {
+      const { faceVertIndices, vertNrOfClampedLinks, vertFullyClamped, vertLinkCounts, vertLinkIndices } = buffers;
+      for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
+        const nrOfClampedLinks = vertNrOfClampedLinks[vertIndex];
+        const nrOfLinks = vertLinkCounts[vertIndex];
+        if (nrOfClampedLinks === nrOfLinks) {
+          vertFullyClamped.set(vertIndex, 1);
+          vertLinkCounts[vertIndex] = 0;
+        }
+      }
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        for (let v = 0; v < 4; v++) {
+          const vertIndexFrom = faceVertIndices[faceIndex * 4 + v];
+          const vertIndexTo = faceVertIndices[faceIndex * 4 + (v + 1) % 4];
+          if (vertFullyClamped.get(vertIndexFrom) === 1) {
+            let hasForwardLink = false;
+            for (let l = 0, c2 = vertLinkCounts[vertIndexFrom]; l < c2; l++) {
+              if (vertLinkIndices[vertIndexFrom * 6 + l] === vertIndexTo) {
+                hasForwardLink = true;
+                break;
+              }
+            }
+            if (!hasForwardLink) {
+              vertLinkIndices[vertIndexFrom * 6 + vertLinkCounts[vertIndexFrom]] = vertIndexTo;
+              vertLinkCounts[vertIndexFrom]++;
+            }
+          }
+          if (vertFullyClamped.get(vertIndexTo) === 1) {
+            let hasBackwardLink = false;
+            for (let l = 0, c2 = vertLinkCounts[vertIndexTo]; l < c2; l++) {
+              if (vertLinkIndices[vertIndexTo * 6 + l] === vertIndexFrom) {
+                hasBackwardLink = true;
+                break;
+              }
+            }
+            if (!hasBackwardLink) {
+              vertLinkIndices[vertIndexTo * 6 + vertLinkCounts[vertIndexTo]] = vertIndexFrom;
+              vertLinkCounts[vertIndexTo]++;
+            }
+          }
+        }
+      }
+    }
+  };
+
+  // src/svox/normalscalculator.js
+  var NormalsCalculator = class {
+    static calculateNormals(model, buffers) {
+      const tile = model.tile;
+      const { faceNameIndices, faceEquidistant, faceSmooth, faceFlattened, faceClamped, vertX, vertY, vertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertSmoothNormalX, vertSmoothNormalY, vertSmoothNormalZ, vertBothNormalX, vertBothNormalY, vertBothNormalZ } = buffers;
+      const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(model.voxChunk.size);
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        const faceOffset = faceIndex * 4;
+        for (let v = 0; v < 4; v++) {
+          const vertIndex = faceVertIndices[faceOffset + v];
+          vertSmoothNormalX[vertIndex] = 0;
+          vertSmoothNormalY[vertIndex] = 0;
+          vertSmoothNormalZ[vertIndex] = 0;
+          vertBothNormalX[vertIndex] = 0;
+          vertBothNormalY[vertIndex] = 0;
+          vertBothNormalZ[vertIndex] = 0;
+        }
+      }
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        const faceNameIndex = faceNameIndices[faceIndex];
+        const equidistant = faceEquidistant.get(faceIndex);
+        const flattened = faceFlattened.get(faceIndex);
+        const clamped = faceClamped.get(faceIndex);
+        const faceSmoothValue = equidistant | 1 - (flattened | clamped);
+        faceSmooth.set(faceIndex, faceSmoothValue);
+        const vert1Index = faceVertIndices[faceIndex * 4];
+        const vert2Index = faceVertIndices[faceIndex * 4 + 1];
+        const vert3Index = faceVertIndices[faceIndex * 4 + 2];
+        const vert4Index = faceVertIndices[faceIndex * 4 + 3];
+        const vmidX = (vertX[vert1Index] + vertX[vert2Index] + vertX[vert3Index] + vertX[vert4Index]) / 4;
+        const vmidY = (vertY[vert1Index] + vertY[vert2Index] + vertY[vert3Index] + vertY[vert4Index]) / 4;
+        const vmidZ = (vertZ[vert1Index] + vertZ[vert2Index] + vertZ[vert3Index] + vertZ[vert4Index]) / 4;
+        for (let v = 0; v < 4; v++) {
+          const vertIndex = faceVertIndices[faceIndex * 4 + v];
+          const prevVertIndex = faceVertIndices[faceIndex * 4 + (v + 3) % 4];
+          const vX = vertX[vertIndex];
+          const vXPrev = vertX[prevVertIndex];
+          const vY = vertY[vertIndex];
+          const vYPrev = vertY[prevVertIndex];
+          const vZ = vertZ[vertIndex];
+          const vZPrev = vertZ[prevVertIndex];
+          let smoothX = vertSmoothNormalX[vertIndex];
+          let smoothY = vertSmoothNormalY[vertIndex];
+          let smoothZ = vertSmoothNormalZ[vertIndex];
+          let bothX = vertBothNormalX[vertIndex];
+          let bothY = vertBothNormalY[vertIndex];
+          let bothZ = vertBothNormalZ[vertIndex];
+          let e1X = vXPrev - vX;
+          let e1Y = vYPrev - vY;
+          let e1Z = vZPrev - vZ;
+          let e2X = vmidX - vX;
+          let e2Y = vmidY - vY;
+          let e2Z = vmidZ - vZ;
+          let e1l = Math.sqrt(e1X * e1X + e1Y * e1Y + e1Z * e1Z);
+          let e2l = Math.sqrt(e2X * e2X + e2Y * e2Y + e2Z * e2Z);
+          e1l = e1l === 0 ? 1 : e1l;
+          e2l = e2l === 0 ? 1 : e2l;
+          const e1d = 1 / e1l;
+          e1X *= e1d;
+          e1Y *= e1d;
+          e1Z *= e1d;
+          const e2d = 1 / e2l;
+          e2X *= e2d;
+          e2Y *= e2d;
+          e2Z *= e2d;
+          let normalX = e1Y * e2Z - e1Z * e2Y;
+          let normalY = e1Z * e2X - e1X * e2Z;
+          let normalZ = e1X * e2Y - e1Y * e2X;
+          const voxMinXBuf = minX + 0.1;
+          const voxMaxXBuf = maxX + 0.9;
+          const voxMinYBuf = minY + 0.1;
+          const voxMaxYBuf = maxY + 0.9;
+          const voxMinZBuf = minZ + 0.1;
+          const voxMaxZBuf = maxZ + 0.9;
+          if (tile) {
+            if ((tile.nx && faceNameIndex === 0 || tile.px && faceNameIndex === 1) && (vY < voxMinYBuf || vY > voxMaxYBuf || vZ < voxMinZBuf || vZ > voxMaxZBuf)) {
+              normalY = 0;
+              normalZ = 0;
+            }
+            ;
+            if ((tile.ny && faceNameIndex === 2 || tile.py && faceNameIndex === 3) && (vX < voxMinXBuf || vX > voxMaxXBuf || vZ < voxMinZBuf || vZ > voxMaxZBuf)) {
+              normalX = 0;
+              normalZ = 0;
+            }
+            ;
+            if ((tile.nz && faceNameIndex === 4 || tile.pz && faceNameIndex === 5) && (vX < voxMinXBuf || vX > voxMaxXBuf || vY < voxMinYBuf || vY > voxMaxYBuf)) {
+              normalX = 0;
+              normalY = 0;
+            }
+            ;
+          }
+          let nl = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
+          nl = nl === 0 ? 1 : nl;
+          const nd = 1 / nl;
+          normalX *= nd;
+          normalY *= nd;
+          normalZ *= nd;
+          faceVertFlatNormalX[faceIndex * 4 + v] = normalX;
+          faceVertFlatNormalY[faceIndex * 4 + v] = normalY;
+          faceVertFlatNormalZ[faceIndex * 4 + v] = normalZ;
+          const mul = e1X * e2X + e1Y * e2Y + e1Z * e2Z;
+          const angle = Math.acos(mul);
+          smoothX += normalX * angle;
+          smoothY += normalY * angle;
+          smoothZ += normalZ * angle;
+          bothX += faceSmoothValue * (normalX * angle);
+          bothY += faceSmoothValue * (normalY * angle);
+          bothZ += faceSmoothValue * (normalZ * angle);
+          vertSmoothNormalX[vertIndex] = smoothX;
+          vertSmoothNormalY[vertIndex] = smoothY;
+          vertSmoothNormalZ[vertIndex] = smoothZ;
+          vertBothNormalX[vertIndex] = bothX;
+          vertBothNormalY[vertIndex] = bothY;
+          vertBothNormalZ[vertIndex] = bothZ;
+        }
+      }
+      for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
+        const smoothX = vertSmoothNormalX[vertIndex];
+        const smoothY = vertSmoothNormalY[vertIndex];
+        const smoothZ = vertSmoothNormalZ[vertIndex];
+        const bothX = vertBothNormalX[vertIndex];
+        const bothY = vertBothNormalY[vertIndex];
+        const bothZ = vertBothNormalZ[vertIndex];
+        const sl = Math.sqrt(smoothX * smoothX + smoothY * smoothY + smoothZ * smoothZ);
+        const bl = Math.sqrt(bothX * bothX + bothY * bothY + bothZ * bothZ);
+        if (sl !== 0) {
+          vertSmoothNormalX[vertIndex] = smoothX / sl;
+          vertSmoothNormalY[vertIndex] = smoothY / sl;
+          vertSmoothNormalZ[vertIndex] = smoothZ / sl;
+        }
+        if (bl !== 0) {
+          vertBothNormalX[vertIndex] = bothX / bl;
+          vertBothNormalY[vertIndex] = bothY / bl;
+          vertBothNormalZ[vertIndex] = bothZ / bl;
+        }
+      }
+      const materials = model.materials.materials;
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        const isSmooth = faceSmooth.get(faceIndex) === 1;
+        const material = materials[faceMaterials[faceIndex]];
+        for (let i = 0; i < 4; i++) {
+          const faceVertNormalIndex = faceIndex * 4 + i;
+          const vertIndex = faceVertIndices[faceIndex * 4 + i];
+          faceVertSmoothNormalX[faceVertNormalIndex] = vertSmoothNormalX[vertIndex];
+          faceVertSmoothNormalY[faceVertNormalIndex] = vertSmoothNormalY[vertIndex];
+          faceVertSmoothNormalZ[faceVertNormalIndex] = vertSmoothNormalZ[vertIndex];
+          faceVertBothNormalX[faceVertNormalIndex] = !isSmooth || vertBothNormalX[vertIndex] === 0 ? faceVertFlatNormalX[faceVertNormalIndex] : vertBothNormalX[vertIndex];
+          faceVertBothNormalY[faceVertNormalIndex] = !isSmooth || vertBothNormalY[vertIndex] === 0 ? faceVertFlatNormalY[faceVertNormalIndex] : vertBothNormalY[vertIndex];
+          faceVertBothNormalZ[faceVertNormalIndex] = !isSmooth || vertBothNormalZ[vertIndex] === 0 ? faceVertFlatNormalZ[faceVertNormalIndex] : vertBothNormalZ[vertIndex];
+          switch (material.lighting) {
+            case SMOOTH:
+              faceVertNormalX[faceVertNormalIndex] = faceVertSmoothNormalX[faceVertNormalIndex];
+              faceVertNormalY[faceVertNormalIndex] = faceVertSmoothNormalY[faceVertNormalIndex];
+              faceVertNormalZ[faceVertNormalIndex] = faceVertSmoothNormalZ[faceVertNormalIndex];
+              break;
+            case BOTH:
+              faceVertNormalX[faceVertNormalIndex] = faceVertBothNormalX[faceVertNormalIndex];
+              faceVertNormalY[faceVertNormalIndex] = faceVertBothNormalY[faceVertNormalIndex];
+              faceVertNormalZ[faceVertNormalIndex] = faceVertBothNormalZ[faceVertNormalIndex];
+              break;
+            default:
+              faceVertNormalX[faceVertNormalIndex] = faceVertFlatNormalX[faceVertNormalIndex];
+              faceVertNormalY[faceVertNormalIndex] = faceVertFlatNormalY[faceVertNormalIndex];
+              faceVertNormalZ[faceVertNormalIndex] = faceVertFlatNormalZ[faceVertNormalIndex];
+              break;
+          }
+        }
+      }
+    }
+  };
+
+  // src/svox/matrix.js
+  var Matrix = class {
+    constructor() {
+      const m = [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ];
+      this.m = new Float32Array(m);
+    }
+    transformPoint(v) {
+      const m = this.m;
+      const div = m[12] * v.x + m[13] * v.y + m[14] * v.z + m[15];
+      const x = (m[0] * v.x + m[1] * v.y + m[2] * v.z + m[3]) / div;
+      const y = (m[4] * v.x + m[5] * v.y + m[6] * v.z + m[7]) / div;
+      const z = (m[8] * v.x + m[9] * v.y + m[10] * v.z + m[11]) / div;
+      v.x = x;
+      v.y = y;
+      v.z = z;
+    }
+    transformPointInline(xs, ys, zs, index) {
+      const vx = xs[index];
+      const vy = ys[index];
+      const vz = zs[index];
+      const m = this.m;
+      const div = m[12] * vx + m[13] * vy + m[14] * vz + m[15];
+      const x = (m[0] * vx + m[1] * vy + m[2] * vz + m[3]) / div;
+      const y = (m[4] * vx + m[5] * vy + m[6] * vz + m[7]) / div;
+      const z = (m[8] * vx + m[9] * vy + m[10] * vz + m[11]) / div;
+      xs[index] = x;
+      ys[index] = y;
+      zs[index] = z;
+    }
+    transformVector(v) {
+      const m = this.m;
+      const x = m[0] * v.x + m[1] * v.y + m[2] * v.z;
+      const y = m[4] * v.x + m[5] * v.y + m[6] * v.z;
+      const z = m[8] * v.x + m[9] * v.y + m[10] * v.z;
+      v.x = x;
+      v.y = y;
+      v.z = z;
+    }
+    transformVectorInline(xs, ys, zs, index) {
+      const vx = xs[index];
+      const vy = ys[index];
+      const vz = zs[index];
+      const m = this.m;
+      const x = m[0] * vx + m[1] * vy + m[2] * vz;
+      const y = m[4] * vx + m[5] * vy + m[6] * vz;
+      const z = m[8] * vx + m[9] * vy + m[10] * vz;
+      xs[index] = x;
+      ys[index] = y;
+      zs[index] = z;
+    }
+    static identity(result) {
+      result = result || new Matrix();
+      const m = result.m;
+      m[0] = m[5] = m[10] = m[15] = 1;
+      m[1] = m[2] = m[3] = m[4] = m[6] = m[7] = m[8] = m[9] = m[11] = m[12] = m[13] = m[14] = 0;
+      return result;
+    }
+    static multiply(left, right, result) {
+      result = result || new Matrix();
+      const a = left.m;
+      const b = right.m;
+      const r = result.m;
+      r[0] = a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12];
+      r[1] = a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13];
+      r[2] = a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14];
+      r[3] = a[0] * b[3] + a[1] * b[7] + a[2] * b[11] + a[3] * b[15];
+      r[4] = a[4] * b[0] + a[5] * b[4] + a[6] * b[8] + a[7] * b[12];
+      r[5] = a[4] * b[1] + a[5] * b[5] + a[6] * b[9] + a[7] * b[13];
+      r[6] = a[4] * b[2] + a[5] * b[6] + a[6] * b[10] + a[7] * b[14];
+      r[7] = a[4] * b[3] + a[5] * b[7] + a[6] * b[11] + a[7] * b[15];
+      r[8] = a[8] * b[0] + a[9] * b[4] + a[10] * b[8] + a[11] * b[12];
+      r[9] = a[8] * b[1] + a[9] * b[5] + a[10] * b[9] + a[11] * b[13];
+      r[10] = a[8] * b[2] + a[9] * b[6] + a[10] * b[10] + a[11] * b[14];
+      r[11] = a[8] * b[3] + a[9] * b[7] + a[10] * b[11] + a[11] * b[15];
+      r[12] = a[12] * b[0] + a[13] * b[4] + a[14] * b[8] + a[15] * b[12];
+      r[13] = a[12] * b[1] + a[13] * b[5] + a[14] * b[9] + a[15] * b[13];
+      r[14] = a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14];
+      r[15] = a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15];
+      return result;
+    }
+    static transpose(matrix, result) {
+      result = result || new Matrix();
+      const m = matrix.m;
+      const r = result.m;
+      r[0] = m[0];
+      r[1] = m[4];
+      r[2] = m[8];
+      r[3] = m[12];
+      r[4] = m[1];
+      r[5] = m[5];
+      r[6] = m[9];
+      r[7] = m[13];
+      r[8] = m[2];
+      r[9] = m[6];
+      r[10] = m[10];
+      r[11] = m[14];
+      r[12] = m[3];
+      r[13] = m[7];
+      r[14] = m[11];
+      r[15] = m[15];
+      return result;
+    }
+    static inverse(matrix, result) {
+      result = result || new Matrix();
+      const m = matrix.m;
+      const r = result.m;
+      r[0] = m[5] * m[10] * m[15] - m[5] * m[14] * m[11] - m[6] * m[9] * m[15] + m[6] * m[13] * m[11] + m[7] * m[9] * m[14] - m[7] * m[13] * m[10];
+      r[1] = -m[1] * m[10] * m[15] + m[1] * m[14] * m[11] + m[2] * m[9] * m[15] - m[2] * m[13] * m[11] - m[3] * m[9] * m[14] + m[3] * m[13] * m[10];
+      r[2] = m[1] * m[6] * m[15] - m[1] * m[14] * m[7] - m[2] * m[5] * m[15] + m[2] * m[13] * m[7] + m[3] * m[5] * m[14] - m[3] * m[13] * m[6];
+      r[3] = -m[1] * m[6] * m[11] + m[1] * m[10] * m[7] + m[2] * m[5] * m[11] - m[2] * m[9] * m[7] - m[3] * m[5] * m[10] + m[3] * m[9] * m[6];
+      r[4] = -m[4] * m[10] * m[15] + m[4] * m[14] * m[11] + m[6] * m[8] * m[15] - m[6] * m[12] * m[11] - m[7] * m[8] * m[14] + m[7] * m[12] * m[10];
+      r[5] = m[0] * m[10] * m[15] - m[0] * m[14] * m[11] - m[2] * m[8] * m[15] + m[2] * m[12] * m[11] + m[3] * m[8] * m[14] - m[3] * m[12] * m[10];
+      r[6] = -m[0] * m[6] * m[15] + m[0] * m[14] * m[7] + m[2] * m[4] * m[15] - m[2] * m[12] * m[7] - m[3] * m[4] * m[14] + m[3] * m[12] * m[6];
+      r[7] = m[0] * m[6] * m[11] - m[0] * m[10] * m[7] - m[2] * m[4] * m[11] + m[2] * m[8] * m[7] + m[3] * m[4] * m[10] - m[3] * m[8] * m[6];
+      r[8] = m[4] * m[9] * m[15] - m[4] * m[13] * m[11] - m[5] * m[8] * m[15] + m[5] * m[12] * m[11] + m[7] * m[8] * m[13] - m[7] * m[12] * m[9];
+      r[9] = -m[0] * m[9] * m[15] + m[0] * m[13] * m[11] + m[1] * m[8] * m[15] - m[1] * m[12] * m[11] - m[3] * m[8] * m[13] + m[3] * m[12] * m[9];
+      r[10] = m[0] * m[5] * m[15] - m[0] * m[13] * m[7] - m[1] * m[4] * m[15] + m[1] * m[12] * m[7] + m[3] * m[4] * m[13] - m[3] * m[12] * m[5];
+      r[11] = -m[0] * m[5] * m[11] + m[0] * m[9] * m[7] + m[1] * m[4] * m[11] - m[1] * m[8] * m[7] - m[3] * m[4] * m[9] + m[3] * m[8] * m[5];
+      r[12] = -m[4] * m[9] * m[14] + m[4] * m[13] * m[10] + m[5] * m[8] * m[14] - m[5] * m[12] * m[10] - m[6] * m[8] * m[13] + m[6] * m[12] * m[9];
+      r[13] = m[0] * m[9] * m[14] - m[0] * m[13] * m[10] - m[1] * m[8] * m[14] + m[1] * m[12] * m[10] + m[2] * m[8] * m[13] - m[2] * m[12] * m[9];
+      r[14] = -m[0] * m[5] * m[14] + m[0] * m[13] * m[6] + m[1] * m[4] * m[14] - m[1] * m[12] * m[6] - m[2] * m[4] * m[13] + m[2] * m[12] * m[5];
+      r[15] = m[0] * m[5] * m[10] - m[0] * m[9] * m[6] - m[1] * m[4] * m[10] + m[1] * m[8] * m[6] + m[2] * m[4] * m[9] - m[2] * m[8] * m[5];
+      const det = m[0] * r[0] + m[1] * r[4] + m[2] * r[8] + m[3] * r[12];
+      for (let i = 0; i < 16; i++)
+        r[i] /= det;
+      return result;
+    }
+    static scale(x, y, z, result) {
+      result = result || new Matrix();
+      const m = result.m;
+      m[0] = x;
+      m[1] = 0;
+      m[2] = 0;
+      m[3] = 0;
+      m[4] = 0;
+      m[5] = y;
+      m[6] = 0;
+      m[7] = 0;
+      m[8] = 0;
+      m[9] = 0;
+      m[10] = z;
+      m[11] = 0;
+      m[12] = 0;
+      m[13] = 0;
+      m[14] = 0;
+      m[15] = 1;
+      return result;
+    }
+    static translate(x, y, z, result) {
+      result = result || new Matrix();
+      const m = result.m;
+      m[0] = 1;
+      m[1] = 0;
+      m[2] = 0;
+      m[3] = x;
+      m[4] = 0;
+      m[5] = 1;
+      m[6] = 0;
+      m[7] = y;
+      m[8] = 0;
+      m[9] = 0;
+      m[10] = 1;
+      m[11] = z;
+      m[12] = 0;
+      m[13] = 0;
+      m[14] = 0;
+      m[15] = 1;
+      return result;
+    }
+    static rotate(a, x, y, z, result) {
+      if (!a || !x && !y && !z) {
+        return Matrix.identity(result);
+      }
+      result = result || new Matrix();
+      const m = result.m;
+      const d = Math.sqrt(x * x + y * y + z * z);
+      a *= Math.PI / 180;
+      x /= d;
+      y /= d;
+      z /= d;
+      const c = Math.cos(a);
+      const s = Math.sin(a);
+      const t = 1 - c;
+      m[0] = x * x * t + c;
+      m[1] = x * y * t - z * s;
+      m[2] = x * z * t + y * s;
+      m[3] = 0;
+      m[4] = y * x * t + z * s;
+      m[5] = y * y * t + c;
+      m[6] = y * z * t - x * s;
+      m[7] = 0;
+      m[8] = z * x * t - y * s;
+      m[9] = z * y * t + x * s;
+      m[10] = z * z * t + c;
+      m[11] = 0;
+      m[12] = 0;
+      m[13] = 0;
+      m[14] = 0;
+      m[15] = 1;
+      return result;
+    }
+    static lookAtORIGINAL(ex, ey, ez, cx, cy, cz, ux, uy, uz, result) {
+      result = result || new Matrix();
+      const m = result.m;
+      let fx = ex - cx;
+      let fy = ey - cy;
+      let fz = ez - cz;
+      let d = Math.sqrt(fx * fx + fy * fy + fz * fz);
+      fx /= d;
+      fy /= d;
+      fz /= d;
+      let sx = uy * fz - uz * fy;
+      let sy = uz * fx - ux * fz;
+      let sz = ux * fy - uy * fx;
+      d = Math.sqrt(sx * sx + sy * sy + sz * sz);
+      sx /= d;
+      sy /= d;
+      sz /= d;
+      let tx = fy * sz - fz * sy;
+      let ty = fz * sx - fx * sz;
+      let tz = fx * sy - fy * sx;
+      d = Math.sqrt(tx * tx + ty * ty + tz * tz);
+      tx /= d;
+      ty /= d;
+      tz /= d;
+      m[0] = sx;
+      m[1] = sy;
+      m[2] = sz;
+      m[3] = -(sx * ex + sy * ey + sz * ez);
+      m[4] = tx;
+      m[5] = ty;
+      m[6] = tz;
+      m[7] = -(tx * ex + ty * ey + tz * ez);
+      m[8] = fx;
+      m[9] = fy;
+      m[10] = fz;
+      m[11] = -(fx * ex + fy * ey + fz * ez);
+      m[12] = 0;
+      m[13] = 0;
+      m[14] = 0;
+      m[15] = 1;
+      return result;
+    }
+    static lookAtTRYOUT(nx, ny, nz, result) {
+      result = result || new Matrix();
+      const m = result.m;
+      const len = Math.sqrt(nx * nx + nz * nz);
+      m[0] = nz / len;
+      m[1] = 0;
+      m[2] = -nx / len;
+      m[3] = 0;
+      m[4] = nx * ny / len;
+      m[5] = -len;
+      m[6] = nz * ny / len;
+      m[7] = 0;
+      m[8] = nx;
+      m[9] = ny;
+      m[10] = nz;
+      m[11] = 0;
+      m[12] = 0;
+      m[13] = 0;
+      m[14] = 0;
+      m[15] = 1;
+      return result;
+    }
+    static lookAt(nx, ny, nz, result) {
+      result = result || new Matrix();
+      const m = result.m;
+      const len = Math.sqrt(nx * nx + nz * nz);
+      const c2 = len ? nx / len : 1;
+      const s2 = len ? nz / len : 0;
+      m[0] = nx;
+      m[1] = -s2;
+      m[2] = -nz * c2;
+      m[3] = 0;
+      m[4] = ny;
+      m[5] = 0;
+      m[6] = len;
+      m[7] = 0;
+      m[8] = nz;
+      m[9] = c2;
+      m[10] = -nz * s2;
+      m[11] = 0;
+      m[12] = 0;
+      m[13] = 0;
+      m[14] = 0;
+      m[15] = 1;
+      return result;
+    }
+  };
+
+  // src/svox/vertextransformer.js
+  var normalXs = [null, null, null, null];
+  var normalYs = [null, null, null, null];
+  var normalZs = [null, null, null, null];
+  var VertexTransformer = class {
+    static transformVertices(model, buffers) {
+      const { vertX, vertY, vertZ, faceVertNormalX, faceVertFlatNormalX, faceVertNormalY, faceVertFlatNormalY, faceVertNormalZ, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = buffers;
+      const bor = model.determineBoundsOffsetAndRescale(model.resize, buffers);
+      let vertexTransform = new Matrix();
+      vertexTransform = Matrix.multiply(vertexTransform, Matrix.translate(model.position.x, model.position.y, model.position.z));
+      vertexTransform = Matrix.multiply(vertexTransform, Matrix.rotate(model.rotation.z, 0, 0, 1));
+      vertexTransform = Matrix.multiply(vertexTransform, Matrix.rotate(model.rotation.y, 0, 1, 0));
+      vertexTransform = Matrix.multiply(vertexTransform, Matrix.rotate(model.rotation.x, 1, 0, 0));
+      vertexTransform = Matrix.multiply(vertexTransform, Matrix.scale(model.scale.x, model.scale.y, model.scale.z));
+      vertexTransform = Matrix.multiply(vertexTransform, Matrix.scale(bor.rescale, bor.rescale, bor.rescale));
+      vertexTransform = Matrix.multiply(vertexTransform, Matrix.translate(bor.offset.x, bor.offset.y, bor.offset.z));
+      let normalTransform = Matrix.inverse(vertexTransform);
+      normalTransform = Matrix.transpose(normalTransform);
+      for (let vertIndex = 0, c = model.vertCount; vertIndex < c; vertIndex++) {
+        vertexTransform.transformPointInline(vertX, vertY, vertZ, vertIndex);
+      }
+      normalXs[0] = faceVertNormalX;
+      normalYs[0] = faceVertNormalY;
+      normalZs[0] = faceVertNormalZ;
+      normalXs[1] = faceVertFlatNormalX;
+      normalYs[1] = faceVertFlatNormalY;
+      normalZs[1] = faceVertFlatNormalZ;
+      normalXs[2] = faceVertSmoothNormalX;
+      normalYs[2] = faceVertSmoothNormalY;
+      normalZs[2] = faceVertSmoothNormalZ;
+      normalXs[3] = faceVertBothNormalX;
+      normalYs[3] = faceVertBothNormalY;
+      normalZs[3] = faceVertBothNormalZ;
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        const faceOffset = faceIndex * 4;
+        for (let normalIndex = 0; normalIndex < 4; normalIndex++) {
+          for (let normalType = 0, c2 = normalXs.length; normalType < c2; normalType++) {
+            const xs = normalXs[normalType];
+            const ys = normalYs[normalType];
+            const zs = normalZs[normalType];
+            const idx = faceOffset + normalIndex;
+            normalTransform.transformVectorInline(xs, ys, zs, idx);
+            const normalX = xs[idx];
+            const normalY = ys[idx];
+            const normalZ = zs[idx];
+            const normalLength = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
+            if (normalLength > 0) {
+              const d = 1 / normalLength;
+              xs[idx] = normalX * d;
+              ys[idx] = normalY * d;
+              zs[idx] = normalZ * d;
+            }
+          }
+        }
+      }
+    }
+  };
+
+  // src/svox/lightscalculator.js
+  var LightsCalculator = class {
+    static calculateLights(model, buffers) {
+      const lights = model.lights;
+      if (lights.length === 0) {
+        return;
+      }
+      for (const light of lights) {
+        if (light.direction && !light.normalizedDirection) {
+          const length = Math.sqrt(light.direction.x * light.direction.x + light.direction.y * light.direction.y + light.direction.z * light.direction.z);
+          light.normalizedDirection = { x: light.direction.x, y: light.direction.y, z: light.direction.z };
+          if (length > 0) {
+            const d = 1 / length;
+            light.normalizedDirection.x *= d;
+          }
+        }
+      }
+      const materials = model.materials.materials;
+      const { faceMaterials, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceVertIndices, vertX, vertY, vertZ, faceVertLightR, faceVertLightG, faceVertLightB } = buffers;
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        const material = materials[faceMaterials[faceIndex]];
+        const faceOffset = faceIndex * 4;
+        if (!material.lights) {
+          for (let v = 0; v < 4; v++) {
+            const faceVertOffset = faceOffset + v;
+            faceVertLightR[faceVertOffset] = 1;
+            faceVertLightG[faceVertOffset] = 1;
+            faceVertLightB[faceVertOffset] = 1;
+          }
+        } else {
+          for (let v = 0; v < 4; v++) {
+            const faceVertOffset = faceOffset + v;
+            const vertIndex = faceVertIndices[faceVertOffset];
+            const vx = vertX[vertIndex];
+            const vy = vertY[vertIndex];
+            const vz = vertZ[vertIndex];
+            const nx = faceVertNormalX[faceVertOffset];
+            const ny = faceVertNormalY[faceVertOffset];
+            const nz = faceVertNormalZ[faceVertOffset];
+            faceVertLightR[faceVertOffset] = 0;
+            faceVertLightG[faceVertOffset] = 0;
+            faceVertLightB[faceVertOffset] = 0;
+            for (const light of lights) {
+              const { color, strength, distance, normalizedDirection, position } = light;
+              let exposure = strength;
+              let length = 0;
+              if (position) {
+                const lvx = position.x - vx;
+                const lvy = position.y - vy;
+                const lvz = position.z - vz;
+                length = Math.sqrt(lvx * lvx + lvy * lvy + lvz * lvz);
+                const d = 1 / length;
+                exposure = strength * Math.max(nx * lvx * d + ny * lvy * d + nz * lvz * d, 0);
+              } else if (normalizedDirection) {
+                exposure = strength * Math.max(nx * normalizedDirection.x + ny * normalizedDirection.y + nz * normalizedDirection.z, 0);
+              }
+              if (position && distance) {
+                exposure = exposure * (1 - Math.min(length / distance, 1));
+              }
+              faceVertLightR[faceVertOffset] += color.r * exposure;
+              faceVertLightG[faceVertOffset] += color.g * exposure;
+              faceVertLightB[faceVertOffset] += color.b * exposure;
+            }
+          }
+        }
+      }
+    }
+  };
+
+  // src/svox/aocalculator.js
+  var OCTREE_NODE_POOL = [];
+  var aoCache = /* @__PURE__ */ new Map();
+  var getOctreeNode = () => {
+    return OCTREE_NODE_POOL.pop() || {
+      minx: Number.MAX_VALUE,
+      miny: Number.MAX_VALUE,
+      minz: Number.MAX_VALUE,
+      maxx: -Number.MAX_VALUE,
+      maxy: -Number.MAX_VALUE,
+      maxz: -Number.MAX_VALUE,
+      partitions: Array(8).fill(null),
+      triangles: []
+    };
+  };
+  var releaseOctreeNode = (node) => {
+    for (const partition of node.partitions) {
+      if (partition) {
+        releaseOctreeNode(partition);
+      }
+    }
+    node.minx = Number.MAX_VALUE;
+    node.miny = Number.MAX_VALUE;
+    node.minz = Number.MAX_VALUE;
+    node.maxx = -Number.MAX_VALUE;
+    node.maxy = -Number.MAX_VALUE;
+    node.maxz = -Number.MAX_VALUE;
+    node.partitions.fill(null);
+    node.triangles.length = 0;
+    OCTREE_NODE_POOL.push(node);
+  };
+  var AOCalculator = class {
+    static calculateAmbientOcclusion(model, buffers) {
+      const doAo = model.ao || model.materials.find(function(m) {
+        return m.ao;
+      });
+      if (!doAo) {
+        return;
+      }
+      const { faceMaterials, faceVertIndices, faceVertAO, vertX, vertY, vertZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ } = buffers;
+      const { faceCount } = model;
+      const materials = model.materials.materials;
+      const triangles = this._getAllFaceTriangles(model, buffers);
+      let octree = this._trianglesToOctree(triangles, model, buffers);
+      if (model._aoSides) {
+        octree = this._aoSidesToOctree(model, buffers, octree);
+      }
+      const nrOfSamples = model.aoSamples;
+      const samples = this._generateFibonacciSamples(nrOfSamples);
+      aoCache.clear();
+      const modelScaleX = model.scale.x;
+      const modelScaleY = model.scale.y;
+      const modelScaleZ = model.scale.z;
+      for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
+        const material = materials[faceMaterials[faceIndex]];
+        const ao = material.ao || model.ao;
+        const faceOffset = faceIndex * 4;
+        faceVertAO[faceOffset] = 0;
+        faceVertAO[faceOffset + 1] = 0;
+        faceVertAO[faceOffset + 2] = 0;
+        faceVertAO[faceOffset + 3] = 0;
+        if (!ao || ao.maxDistance === 0 || ao.strength === 0 || ao.angle < 1 || material.opacity === 0)
+          continue;
+        const max = ao.maxDistance * Math.max(modelScaleX, modelScaleY, modelScaleZ);
+        const strength = ao.strength;
+        const angle = Math.cos(ao.angle / 180 * Math.PI);
+        for (let v = 0; v < 4; v++) {
+          const faceVertOffset = faceOffset + v;
+          const vertIndex = faceVertIndices[faceVertOffset];
+          const vx = vertX[vertIndex];
+          const vy = vertY[vertIndex];
+          const vz = vertZ[vertIndex];
+          const nx = faceVertNormalX[faceVertOffset];
+          const ny = faceVertNormalY[faceVertOffset];
+          const nz = faceVertNormalZ[faceVertOffset];
+          const vKey = vx * 16384 + vy * 128 + vz;
+          const nKey = nx * 1e7 + ny * 1e5 + nz * 1e3;
+          const cacheKey = vKey * 1e9 + nKey;
+          const cachedAo = aoCache.get(cacheKey);
+          if (cachedAo !== void 0) {
+            faceVertAO[faceVertOffset] = cachedAo;
+            continue;
+          }
+          const oppositeVertIndex = faceVertIndices[faceOffset + (v + 2) % 4];
+          const oppositeVertX = vertX[oppositeVertIndex];
+          const oppositeVertY = vertY[oppositeVertIndex];
+          const oppositeVertZ = vertZ[oppositeVertIndex];
+          const originX = vx * 0.99999 + oppositeVertX * 1e-5 + nx * 1e-5;
+          const originY = vy * 0.99999 + oppositeVertY * 1e-5 + ny * 1e-5;
+          const originZ = vz * 0.99999 + oppositeVertZ * 1e-5 + nz * 1e-5;
+          let total = 0;
+          let count = 0;
+          for (const [directionX, directionY, directionZ] of samples) {
+            const dot = directionX * nx + directionY * ny + directionZ * nz;
+            if (dot <= angle)
+              continue;
+            const endX = originX + directionX * max;
+            const endY = originY + directionY * max;
+            const endZ = originZ + directionZ * max;
+            let distance = this._distanceToOctree(model, buffers, octree, originX, originY, originZ, directionX, directionY, directionZ, max, endX, endY, endZ);
+            if (distance) {
+              distance = distance / max;
+            } else {
+              distance = 1;
+            }
+            total += distance;
+            count++;
+          }
+          let ao2 = 0;
+          if (count !== 0) {
+            total = Math.max(Math.min(total / count, 1), 0);
+            ao2 = 1 - Math.pow(total, strength);
+          }
+          faceVertAO[faceVertOffset] = ao2;
+          aoCache.set(cacheKey, ao2);
+        }
+      }
+      releaseOctreeNode(octree);
+    }
+    static _getAllFaceTriangles(model, buffers) {
+      const { faceMaterials } = buffers;
+      const { faceCount } = model;
+      const triangles = [];
+      const materials = model.materials.materials;
+      for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
+        const material = materials[faceMaterials[faceIndex]];
+        if (material.opacity < 0.75)
+          continue;
+        const triIndex = faceIndex * 2;
+        triangles.push(triIndex);
+        triangles.push(triIndex + 1);
+      }
+      return triangles;
+    }
+    static _trianglesToOctree(triangles, model, buffers) {
+      const { faceVertIndices, vertX, vertY, vertZ } = buffers;
+      const length = triangles.length;
+      if (length <= 32) {
+        const partition = getOctreeNode();
+        partition.triangles = triangles;
+        for (let t = 0; t < length; t++) {
+          const triIndex = triangles[t];
+          const faceIndex = triIndex >> 1;
+          const faceOffset = faceIndex * 4;
+          let triVertIndex0, triVertIndex1, triVertIndex2;
+          if ((triIndex & 1) === 0) {
+            triVertIndex0 = faceVertIndices[faceOffset + 2];
+            triVertIndex1 = faceVertIndices[faceOffset + 1];
+            triVertIndex2 = faceVertIndices[faceOffset + 0];
+          } else {
+            triVertIndex0 = faceVertIndices[faceOffset + 0];
+            triVertIndex1 = faceVertIndices[faceOffset + 3];
+            triVertIndex2 = faceVertIndices[faceOffset + 2];
+          }
+          const x0 = vertX[triVertIndex0];
+          const y0 = vertY[triVertIndex0];
+          const z0 = vertZ[triVertIndex0];
+          const x1 = vertX[triVertIndex1];
+          const y1 = vertY[triVertIndex1];
+          const z1 = vertZ[triVertIndex1];
+          const x2 = vertX[triVertIndex2];
+          const y2 = vertY[triVertIndex2];
+          const z2 = vertZ[triVertIndex2];
+          partition.minx = Math.min(partition.minx, x0, x1, x2);
+          partition.miny = Math.min(partition.miny, y0, y1, y2);
+          partition.minz = Math.min(partition.minz, z0, z1, z2);
+          partition.maxx = Math.max(partition.maxx, x0, x1, x2);
+          partition.maxy = Math.max(partition.maxy, y0, y1, y2);
+          partition.maxz = Math.max(partition.maxz, z0, z1, z2);
+        }
+        return partition;
+      } else {
+        let midx = 0;
+        let midy = 0;
+        let midz = 0;
+        for (let t = 0; t < length; t++) {
+          const triIndex = triangles[t];
+          const faceIndex = triIndex >> 1;
+          const faceOffset = faceIndex * 4;
+          let triVertIndex0, triVertIndex1, triVertIndex2;
+          if ((triIndex & 1) === 0) {
+            triVertIndex0 = faceVertIndices[faceOffset + 2];
+            triVertIndex1 = faceVertIndices[faceOffset + 1];
+            triVertIndex2 = faceVertIndices[faceOffset + 0];
+          } else {
+            triVertIndex0 = faceVertIndices[faceOffset + 0];
+            triVertIndex1 = faceVertIndices[faceOffset + 3];
+            triVertIndex2 = faceVertIndices[faceOffset + 2];
+          }
+          const x0 = vertX[triVertIndex0];
+          const y0 = vertY[triVertIndex0];
+          const z0 = vertZ[triVertIndex0];
+          const x1 = vertX[triVertIndex1];
+          const y1 = vertY[triVertIndex1];
+          const z1 = vertZ[triVertIndex1];
+          const x2 = vertX[triVertIndex2];
+          const y2 = vertY[triVertIndex2];
+          const z2 = vertZ[triVertIndex2];
+          midx += x0 + x1 + x2;
+          midy += y0 + y1 + y2;
+          midz += z0 + z1 + z2;
+        }
+        const d = 1 / length;
+        midx *= d;
+        midy *= d;
+        midz *= d;
+        const subTriangles = Array(8).fill(null);
+        for (let t = 0; t < length; t++) {
+          const triIndex = triangles[t];
+          const faceIndex = triIndex >> 1;
+          const faceOffset = faceIndex * 4;
+          let triVertIndex0, triVertIndex1, triVertIndex2;
+          if ((triIndex & 1) === 0) {
+            triVertIndex0 = faceVertIndices[faceOffset + 2];
+            triVertIndex1 = faceVertIndices[faceOffset + 1];
+            triVertIndex2 = faceVertIndices[faceOffset + 0];
+          } else {
+            triVertIndex0 = faceVertIndices[faceOffset + 0];
+            triVertIndex1 = faceVertIndices[faceOffset + 3];
+            triVertIndex2 = faceVertIndices[faceOffset + 2];
+          }
+          const x0 = vertX[triVertIndex0];
+          const y0 = vertY[triVertIndex0];
+          const z0 = vertZ[triVertIndex0];
+          const x1 = vertX[triVertIndex1];
+          const y1 = vertY[triVertIndex1];
+          const z1 = vertZ[triVertIndex1];
+          const x2 = vertX[triVertIndex2];
+          const y2 = vertY[triVertIndex2];
+          const z2 = vertZ[triVertIndex2];
+          const x = x0 + x1 + x2 < midx ? 0 : 1;
+          const y = y0 + y1 + y2 < midy ? 0 : 1;
+          const z = z0 + z1 + z2 < midz ? 0 : 1;
+          const index = x + y * 2 + z * 4;
+          if (subTriangles[index] === null) {
+            subTriangles[index] = [triIndex];
+          } else {
+            subTriangles[index].push(triIndex);
+          }
+        }
+        const partition = getOctreeNode();
+        for (let index = 0; index < 8; index++) {
+          if (subTriangles[index] === null)
+            continue;
+          const subPartition = this._trianglesToOctree(subTriangles[index], model, buffers);
+          partition.partitions[index] = subPartition;
+          partition.minx = Math.min(partition.minx, subPartition.minx);
+          partition.miny = Math.min(partition.miny, subPartition.miny);
+          partition.minz = Math.min(partition.minz, subPartition.minz);
+          partition.maxx = Math.max(partition.maxx, subPartition.maxx);
+          partition.maxy = Math.max(partition.maxy, subPartition.maxy);
+          partition.maxz = Math.max(partition.maxz, subPartition.maxz);
+        }
+        return partition;
+      }
+    }
+    static _distanceToOctree(model, buffers, octree, originX, originY, originZ, directionX, directionY, directionZ, max, endX, endY, endZ) {
+      if (this._hitsBox(originX, originY, originZ, endX, endY, endZ, octree) === false) {
+        return null;
+      }
+      if (octree.triangles.length > 0) {
+        return this._distanceToModel(model, buffers, octree.triangles, originX, originY, originZ, directionX, directionY, directionZ, max);
+      }
+      let minDistance = max;
+      const partitions = octree.partitions;
+      for (let index = 0; index < 8; index++) {
+        const partition = partitions[index];
+        if (partition === null)
+          continue;
+        const dist = this._distanceToOctree(model, buffers, partition, originX, originY, originZ, directionX, directionY, directionZ, max, endX, endY, endZ);
+        if (dist) {
+          minDistance = Math.min(minDistance, dist);
+        }
+      }
+      return minDistance;
+    }
+    static _aoSidesToOctree(model, buffers, octree) {
+      const bounds = model.determineBoundsOffsetAndRescale(MODEL, buffers).bounds;
+      let { vertCount, faceCount } = model;
+      const { faceVertIndices, faceCulled, vertX, vertY, vertZ } = buffers;
+      const pushNewTriangleIntoFaceVerts = (x0, y0, z0, x1, y1, z1, x2, y2, z2) => {
+        const newFaceVertOffset = faceCount * 4;
+        vertX[vertCount] = x0;
+        vertY[vertCount] = y0;
+        vertZ[vertCount] = z0;
+        vertX[vertCount + 1] = x1;
+        vertY[vertCount + 1] = y1;
+        vertZ[vertCount + 1] = z1;
+        vertX[vertCount + 2] = x2;
+        vertY[vertCount + 2] = y2;
+        vertZ[vertCount + 2] = z2;
+        faceVertIndices[newFaceVertOffset] = vertCount + 2;
+        faceVertIndices[newFaceVertOffset + 1] = vertCount + 1;
+        faceVertIndices[newFaceVertOffset + 2] = vertCount + 0;
+        faceCulled.set(faceCount, 1);
+        const newTriIndex = faceCount * 2;
+        faceCount++;
+        vertCount += 3;
+        return newTriIndex;
+      };
+      const sideTriangles = [];
+      if (model._aoSides.nx) {
+        sideTriangles.push(pushNewTriangleIntoFaceVerts(bounds.minX - 0.05, 1e6, -1e6, bounds.minX - 0.05, 1e6, 1e6, bounds.minX - 0.05, -1e7, 0));
+      }
+      if (model._aoSides.px) {
+        sideTriangles.push(pushNewTriangleIntoFaceVerts(bounds.maxX + 0.05, 1e6, 1e6, bounds.maxX + 0.05, 1e6, -1e6, bounds.maxX + 0.05, -1e7, 0));
+      }
+      if (model._aoSides.ny) {
+        sideTriangles.push(pushNewTriangleIntoFaceVerts(1e6, bounds.minY - 0.05, -1e6, -1e6, bounds.minY - 0.05, -1e6, 0, bounds.minY - 0.05, 1e7));
+      }
+      if (model._aoSides.py) {
+        sideTriangles.push(pushNewTriangleIntoFaceVerts(-1e6, bounds.maxY + 0.05, -1e6, 1e6, bounds.maxY + 0.05, -1e6, 0, bounds.maxY + 0.05, 1e7));
+      }
+      if (model._aoSides.nz) {
+        sideTriangles.push(pushNewTriangleIntoFaceVerts(1e6, 1e6, bounds.minZ - 0.05, -1e6, 1e6, bounds.minZ - 0.05, 0, -1e7, bounds.minZ - 0.05));
+      }
+      if (model._aoSides.pz) {
+        sideTriangles.push(pushNewTriangleIntoFaceVerts(-1e6, 1e6, bounds.maxZ + 0.05, 1e6, 1e6, bounds.maxZ + 0.05, 0, -1e7, bounds.maxZ + 0.05));
+      }
+      if (sideTriangles.length > 0) {
+        const sideOctree = this._trianglesToOctree(sideTriangles, model, buffers);
+        const octree2 = getOctreeNode();
+        octree2.partitions = [octree2, sideOctree];
+      }
+      return octree;
+    }
+    static _hitsBox(originX, originY, originZ, endX, endY, endZ, box) {
+      const boxMinX = box.minx;
+      if (originX < boxMinX && endX < boxMinX)
+        return false;
+      const boxMaxX = box.maxx;
+      if (originX > boxMaxX && endX > boxMaxX)
+        return false;
+      const boxMinY = box.miny;
+      if (originY < boxMinY && endY < boxMinY)
+        return false;
+      const boxMaxY = box.maxy;
+      if (originY > boxMaxY && endY > boxMaxY)
+        return false;
+      const boxMinZ = box.minz;
+      if (originZ < boxMinZ && endZ < boxMinZ)
+        return false;
+      const boxMaxZ = box.maxz;
+      if (originZ > boxMaxZ && endZ > boxMaxZ)
+        return false;
+      const cx = originX - (boxMinX + boxMaxX) * 0.5;
+      const ex = (boxMaxX - boxMinX) * 0.5;
+      const dx = (endX - originX) * 0.5;
+      const adx = Math.abs(dx);
+      if (Math.abs(cx) > ex + adx) {
+        return false;
+      }
+      const ey = (boxMaxY - boxMinY) * 0.5;
+      const dy = (endY - originY) * 0.5;
+      const ady = Math.abs(dy);
+      const cy = originY - (boxMinY + boxMaxY) * 0.5;
+      if (Math.abs(cy) > ey + ady) {
+        return false;
+      }
+      const ez = (boxMaxZ - boxMinZ) * 0.5;
+      const dz = (endZ - originZ) * 0.5;
+      const adz = Math.abs(dz);
+      const cz = originZ - (boxMinZ + boxMaxZ) * 0.5;
+      if (Math.abs(cz) > ez + adz) {
+        return false;
+      }
+      if (Math.abs(dy * cz - dz * cy) > ey * adz + ez * ady + Number.EPSILON) {
+        return false;
+      }
+      if (Math.abs(dz * cx - dx * cz) > ez * adx + ex * adz + Number.EPSILON) {
+        return false;
+      }
+      if (Math.abs(dx * cy - dy * cx) > ex * ady + ey * adx + Number.EPSILON) {
+        return false;
+      }
+      return true;
+    }
+    static _distanceToModel(model, buffers, triangles, originX, originY, originZ, directionX, directionY, directionZ, max) {
+      let minDistance = null;
+      const { faceVertIndices } = buffers;
+      for (let t = 0; t < triangles.length; t++) {
+        const triIndex = triangles[t];
+        const faceIndex = triIndex >> 1;
+        const faceVertOffset = faceIndex * 4;
+        let vert0Index, vert1Index, vert2Index;
+        if ((triIndex & 1) === 0) {
+          vert0Index = faceVertIndices[faceVertOffset + 2];
+          vert1Index = faceVertIndices[faceVertOffset + 1];
+          vert2Index = faceVertIndices[faceVertOffset + 0];
+        } else {
+          vert0Index = faceVertIndices[faceVertOffset + 0];
+          vert1Index = faceVertIndices[faceVertOffset + 3];
+          vert2Index = faceVertIndices[faceVertOffset + 2];
+        }
+        const dist = this._triangleDistance(model, buffers, vert0Index, vert1Index, vert2Index, originX, originY, originZ, directionX, directionY, directionZ);
+        if (dist) {
+          if (!minDistance) {
+            if (dist < max) {
+              minDistance = dist;
+            }
+          } else {
+            minDistance = Math.min(minDistance, dist);
+          }
+        }
+      }
+      return minDistance;
+    }
+    static _triangleDistance(model, buffers, vertIndex0, vertIndex1, vertIndex2, originX, originY, originZ, directionX, directionY, directionZ) {
+      const { vertX, vertY, vertZ } = buffers;
+      const vert0X = vertX[vertIndex0];
+      const vert0Y = vertY[vertIndex0];
+      const vert0Z = vertZ[vertIndex0];
+      const vert1X = vertX[vertIndex1];
+      const vert1Y = vertY[vertIndex1];
+      const vert1Z = vertZ[vertIndex1];
+      const vert2X = vertX[vertIndex2];
+      const vert2Y = vertY[vertIndex2];
+      const vert2Z = vertZ[vertIndex2];
+      const edge1x = vert1X - vert0X;
+      const edge1y = vert1Y - vert0Y;
+      const edge1z = vert1Z - vert0Z;
+      const edge2x = vert2X - vert0X;
+      const edge2y = vert2Y - vert0Y;
+      const edge2z = vert2Z - vert0Z;
+      const h0 = directionY * edge2z - directionZ * edge2y;
+      const h1 = directionZ * edge2x - directionX * edge2z;
+      const h2 = directionX * edge2y - directionY * edge2x;
+      const a = edge1x * h0 + edge1y * h1 + edge1z * h2;
+      if (a < Number.EPSILON) {
+        return null;
+      }
+      const f = 1 / a;
+      const sx = originX - vert0X;
+      const sy = originY - vert0Y;
+      const sz = originZ - vert0Z;
+      const u = f * (sx * h0 + sy * h1 + sz * h2);
+      if (u < 0 || u > 1) {
+        return null;
+      }
+      const q0 = sy * edge1z - sz * edge1y;
+      const q1 = sz * edge1x - sx * edge1z;
+      const q2 = sx * edge1y - sy * edge1x;
+      const v = f * (directionX * q0 + directionY * q1 + directionZ * q2);
+      if (v < 0 || u + v > 1) {
+        return null;
+      }
+      const t = f * (edge2x * q0 + edge2y * q1 + edge2z * q2);
+      if (t <= Number.EPSILON) {
+        return null;
+      }
+      return t;
+    }
+    static _generateFibonacciSamples(count) {
+      const samples = [];
+      const gr = (Math.sqrt(5) + 1) / 2;
+      const ga = (2 - gr) * (2 * Math.PI);
+      for (let i = 1; i <= count; ++i) {
+        const lat = Math.asin(-1 + 2 * i / (count + 1));
+        const lon = ga * i;
+        const x = Math.cos(lon) * Math.cos(lat);
+        const y = Math.sin(lat);
+        const z = Math.sin(lon) * Math.cos(lat);
+        samples.push([x, y, z]);
+      }
+      return samples;
+    }
+    static _generateOctahedronSamples(verticalCount) {
+      const samples = [];
+      const verticalAngle = Math.PI / 2 / verticalCount;
+      for (let vc = 0; vc <= verticalCount; vc++) {
+        const va = vc * verticalAngle;
+        const y = Math.cos(va);
+        const d = Math.sin(va);
+        let horizontalCount = Math.max(1, vc * 4);
+        const horizontalAngle = Math.PI * 2 / horizontalCount;
+        for (let hc = 0; hc < horizontalCount; hc++) {
+          const ha = hc * horizontalAngle;
+          const x = d * Math.sin(ha);
+          const z = d * Math.cos(ha);
+          samples.push({ x, y, z });
+          if (vc < verticalCount) {
+            samples.push({ x, y: -y, z });
+          }
+        }
+        horizontalCount += 4;
+      }
+      return samples;
+    }
+  };
+
+  // src/svox/uvassigner.js
+  var UVAssigner = class {
+    static assignUVs(model, buffers) {
+      const { faceMaterials, faceNameIndices, faceVertUs, faceVertVs } = buffers;
+      const materialUseOffsets = [];
+      const materialUScales = [];
+      const materialVScales = [];
+      const materials = model.materials.materials;
+      for (let materialIndex = 0; materialIndex < materials.length; materialIndex++) {
+        const material = materials[materialIndex];
+        let useOffset = 0;
+        let uscale = 1;
+        let vscale = 1;
+        if (material.map || material.normalMap || material.roughnessMap || material.metalnessMap || material.emissiveMap) {
+          const sizeX = model.voxChunk.size[0];
+          const sizeY = model.voxChunk.size[1];
+          const sizeZ = model.voxChunk.size[2];
+          if (material.mapTransform.uscale === -1) {
+            uscale = 1 / Math.max(sizeX, sizeY, sizeZ);
+          }
+          if (material.mapTransform.vscale === -1) {
+            vscale = 1 / Math.max(sizeX, sizeY, sizeZ);
+          }
+          if (material.map && material.map.cube || material.normalMap && material.normalMap.cube || material.roughnessMap && material.roughnessMap.cube || material.metalnessMap && material.metalnessMap.cube || material.emissiveMap && material.emissiveMap.cube) {
+            useOffset = 1;
+            uscale = uscale / 4;
+            vscale = vscale / 2;
+          }
+        }
+        materialUseOffsets.push(useOffset);
+        materialUScales.push(uscale);
+        materialVScales.push(vscale);
+      }
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        const faceMaterialIndex = faceMaterials[faceIndex];
+        const useOffset = materialUseOffsets[faceMaterialIndex];
+        const uscale = materialUScales[faceMaterialIndex];
+        const vscale = materialVScales[faceMaterialIndex];
+        const faceUVs = _FACEINDEXUVS[faceNameIndices[faceIndex]];
+        const faceOffset = faceIndex * 4;
+        const voxU0 = faceVertUs[faceOffset + faceUVs.order[0]];
+        const voxV0 = faceVertVs[faceOffset + faceUVs.order[0]];
+        const voxU1 = faceVertUs[faceOffset + faceUVs.order[1]];
+        const voxV1 = faceVertVs[faceOffset + faceUVs.order[1]];
+        const voxU2 = faceVertUs[faceOffset + faceUVs.order[2]];
+        const voxV2 = faceVertVs[faceOffset + faceUVs.order[2]];
+        const voxU3 = faceVertUs[faceOffset + faceUVs.order[3]];
+        const voxV3 = faceVertVs[faceOffset + faceUVs.order[3]];
+        const uv1 = faceOffset + faceUVs.order[0];
+        const uv2 = faceOffset + faceUVs.order[1];
+        const uv3 = faceOffset + faceUVs.order[2];
+        const uv4 = faceOffset + faceUVs.order[3];
+        const uOffset = useOffset * faceUVs.uo;
+        const vOffset = useOffset * faceUVs.vo;
+        const uScale = faceUVs.ud * uscale;
+        const vScale = faceUVs.vd * vscale;
+        faceVertUs[uv1] = uOffset + (voxU0 + 1e-4) * uScale;
+        faceVertVs[uv1] = vOffset + (voxV0 + 1e-4) * vScale;
+        faceVertUs[uv2] = uOffset + (voxU1 + 1e-4) * uScale;
+        faceVertVs[uv2] = vOffset + (voxV1 + 0.9999) * vScale;
+        faceVertUs[uv3] = uOffset + (voxU2 + 0.9999) * uScale;
+        faceVertVs[uv3] = vOffset + (voxV2 + 0.9999) * vScale;
+        faceVertUs[uv4] = uOffset + (voxU3 + 0.9999) * uScale;
+        faceVertVs[uv4] = vOffset + (voxV3 + 1e-4) * vScale;
+      }
+    }
+  };
+
+  // src/svox/colorcombiner.js
+  var ColorCombiner = class {
+    static combineColors(model, buffers) {
+      const { vertColorR, vertColorG, vertColorB, vertColorCount, faceVertColorR, faceVertColorG, faceVertColorB, faceVertLightR, faceVertLightG, faceVertLightB, faceVertIndices, faceMaterials, faceVertAO } = buffers;
+      const materials = model.materials.materials;
+      const fadeAny = !!model.materials.find((m) => m.colors.length > 1 && m.fade);
+      const fadeMaterials = Array(materials.length).fill(false);
+      for (let m = 0, l = materials.length; m < l; m++) {
+        if (fadeAny && materials[m].colors.length > 1 && materials[m].fade) {
+          fadeMaterials[m] = true;
+        }
+      }
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        const fadeFace = fadeMaterials[faceMaterials[faceIndex]];
+        if (fadeFace) {
+          for (let v = 0; v < 4; v++) {
+            let r = 0;
+            let g = 0;
+            let b = 0;
+            let count = 0;
+            const faceVertOffset = faceIndex * 4 + v;
+            const vertIndex = faceVertIndices[faceVertOffset];
+            const colorCount = vertColorCount[vertIndex];
+            for (let c2 = 0; c2 < colorCount; c2++) {
+              const faceColorOffset = vertIndex * 6 + c2;
+              r += vertColorR[faceColorOffset];
+              g += vertColorG[faceColorOffset];
+              b += vertColorB[faceColorOffset];
+              count++;
+            }
+            const d = 1 / count;
+            faceVertColorR[faceVertOffset] = r * d;
+            faceVertColorG[faceVertOffset] = g * d;
+            faceVertColorB[faceVertOffset] = b * d;
+          }
+        }
+      }
+      const doAo = model.ao || model.materials.find(function(m) {
+        return m.ao;
+      });
+      const doLights = model.lights.length > 0;
+      if (doAo && doLights) {
+        for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+          const material = materials[faceMaterials[faceIndex]];
+          const vAoShared = material.ao || model.ao;
+          const vAoSharedColor = vAoShared ? vAoShared.color : null;
+          for (let v = 0; v < 4; v++) {
+            const faceVertOffset = faceIndex * 4 + v;
+            const vR = faceVertColorR[faceVertOffset];
+            const vG = faceVertColorG[faceVertOffset];
+            const vB = faceVertColorB[faceVertOffset];
+            const vAoColorR = vAoSharedColor ? vAoSharedColor.r : vR;
+            const vAoColorG = vAoSharedColor ? vAoSharedColor.g : vG;
+            const vAoColorB = vAoSharedColor ? vAoSharedColor.b : vB;
+            const vAo = 1 - faceVertAO[faceVertOffset];
+            faceVertColorR[faceVertOffset] = vR * faceVertLightR[faceVertOffset] * vAo + vAoColorR * (1 - vAo);
+            faceVertColorG[faceVertOffset] = vG * faceVertLightG[faceVertOffset] * vAo + vAoColorG * (1 - vAo);
+            faceVertColorB[faceVertOffset] = vB * faceVertLightB[faceVertOffset] * vAo + vAoColorB * (1 - vAo);
+          }
+        }
+      } else if (doLights && !doAo) {
+        for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+          for (let v = 0; v < 4; v++) {
+            const faceVertOffset = faceIndex * 4 + v;
+            faceVertColorR[faceVertOffset] = faceVertColorR[faceVertOffset] * faceVertLightR[faceVertOffset];
+            faceVertColorG[faceVertOffset] = faceVertColorG[faceVertOffset] * faceVertLightG[faceVertOffset];
+            faceVertColorB[faceVertOffset] = faceVertColorB[faceVertOffset] * faceVertLightB[faceVertOffset];
+          }
+        }
+      } else if (!doLights && doAo) {
+        for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+          const material = materials[faceMaterials[faceIndex]];
+          const vAoShared = material.ao || model.ao;
+          if (!vAoShared)
+            continue;
+          const vAoSharedColor = vAoShared.color;
+          for (let v = 0; v < 4; v++) {
+            const faceVertOffset = faceIndex * 4 + v;
+            const vR = faceVertColorR[faceVertOffset];
+            const vG = faceVertColorG[faceVertOffset];
+            const vB = faceVertColorB[faceVertOffset];
+            const vAoColorR = vAoSharedColor ? vAoSharedColor.r : vR;
+            const vAoColorG = vAoSharedColor ? vAoSharedColor.g : vG;
+            const vAoColorB = vAoSharedColor ? vAoSharedColor.b : vB;
+            const vAo = 1 - faceVertAO[faceVertOffset];
+            faceVertColorR[faceVertOffset] = vAo * vR + vAoColorR * (1 - vAo);
+            faceVertColorG[faceVertOffset] = vAo * vG + vAoColorG * (1 - vAo);
+            faceVertColorB[faceVertOffset] = vAo * vB + vAoColorB * (1 - vAo);
+          }
+        }
+      }
+    }
+  };
+
+  // src/svox/simplifier.js
+  var EPS = 1e-4;
+  var contexti1 = {
+    filled: false,
+    lastVoxelAxis1: 0,
+    lastVoxelAxis2: 0,
+    maxVoxelAxis3: 0,
+    lastFaceIndex: 0
+  };
+  var contexti2 = {
+    filled: false,
+    lastVoxelAxis1: 0,
+    lastVoxelAxis2: 0,
+    maxVoxelAxis3: 0,
+    lastFaceIndex: 0
+  };
+  var contexti3 = {
+    filled: false,
+    lastVoxelAxis1: 0,
+    lastVoxelAxis2: 0,
+    maxVoxelAxis3: 0,
+    lastFaceIndex: 0
+  };
+  var contexti4 = {
+    filled: false,
+    lastVoxelAxis1: 0,
+    lastVoxelAxis2: 0,
+    maxVoxelAxis3: 0,
+    lastFaceIndex: 0
+  };
+  var Simplifier = class {
+    static simplify(model, buffers) {
+      if (!model.simplify) {
+        return;
+      }
+      const clearContexts = function() {
+        contexti1.filled = false;
+        contexti2.filled = false;
+        contexti3.filled = false;
+        contexti4.filled = false;
+      };
+      const materials = model.materials.materials;
+      const { faceCulled, faceNameIndices, vertX, vertY, vertZ, voxelXZYFaceIndices, voxelXYZFaceIndices, voxelYZXFaceIndices } = buffers;
+      for (let i = voxelXZYFaceIndices.length - model.faceCount, l = voxelXZYFaceIndices.length; i < l; i++) {
+        const key = voxelXZYFaceIndices[i];
+        const faceIndex = key & (1 << 28) - 1;
+        if (faceCulled.get(faceIndex))
+          continue;
+        const xzy = key / (1 << 28);
+        const x = xzy >> 16 & 255;
+        const z = xzy >> 8 & 255;
+        const y = xzy & 255;
+        const faceNameIndex = faceNameIndices[faceIndex];
+        switch (faceNameIndex) {
+          case 0:
+            this._mergeFaces(materials, model, buffers, contexti1, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            break;
+          case 1:
+            this._mergeFaces(materials, model, buffers, contexti2, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            break;
+          case 4:
+            this._mergeFaces(materials, model, buffers, contexti3, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            break;
+          case 5:
+            this._mergeFaces(materials, model, buffers, contexti4, faceIndex, x, z, y, vertX, vertZ, vertY, 0, 1, 2, 3);
+            break;
+        }
+      }
+      clearContexts();
+      for (let i = voxelXYZFaceIndices.length - model.faceCount, l = voxelXYZFaceIndices.length; i < l; i++) {
+        const key = voxelXYZFaceIndices[i];
+        const faceIndex = key & (1 << 28) - 1;
+        if (faceCulled.get(faceIndex))
+          continue;
+        const xyz = key / (1 << 28);
+        const x = xyz >> 16 & 255;
+        const y = xyz >> 8 & 255;
+        const z = xyz & 255;
+        const faceNameIndex = faceNameIndices[faceIndex];
+        switch (faceNameIndex) {
+          case 0:
+            this._mergeFaces(materials, model, buffers, contexti1, faceIndex, x, y, z, vertX, vertY, vertZ, 1, 2, 3, 0);
+            break;
+          case 1:
+            this._mergeFaces(materials, model, buffers, contexti2, faceIndex, x, y, z, vertX, vertY, vertZ, 3, 0, 1, 2);
+            break;
+          case 2:
+            this._mergeFaces(materials, model, buffers, contexti3, faceIndex, x, y, z, vertX, vertY, vertZ, 0, 1, 2, 3);
+            break;
+          case 3:
+            this._mergeFaces(materials, model, buffers, contexti4, faceIndex, x, y, z, vertX, vertY, vertZ, 2, 3, 0, 1);
+            break;
+        }
+      }
+      clearContexts();
+      for (let i = voxelYZXFaceIndices.length - model.faceCount, l = voxelYZXFaceIndices.length; i < l; i++) {
+        const key = voxelYZXFaceIndices[i];
+        const faceIndex = key & (1 << 28) - 1;
+        if (faceCulled.get(faceIndex))
+          continue;
+        const yzx = key / (1 << 28);
+        const y = yzx >> 16 & 255;
+        const z = yzx >> 8 & 255;
+        const x = yzx & 255;
+        const faceNameIndex = faceNameIndices[faceIndex];
+        switch (faceNameIndex) {
+          case 2:
+            this._mergeFaces(materials, model, buffers, contexti1, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
+            break;
+          case 3:
+            this._mergeFaces(materials, model, buffers, contexti2, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
+            break;
+          case 4:
+            this._mergeFaces(materials, model, buffers, contexti3, faceIndex, y, z, x, vertY, vertZ, vertX, 3, 0, 1, 2);
+            break;
+          case 5:
+            this._mergeFaces(materials, model, buffers, contexti4, faceIndex, y, z, x, vertY, vertZ, vertX, 1, 2, 3, 0);
+            break;
+        }
+      }
+      clearContexts();
+    }
+    static _mergeFaces(materials, model, buffers, context, faceIndex, vaxis1, vaxis2, vaxis3, axis1Arr, axis2Arr, axis3Arr, v0, v1, v2, v3) {
+      const { faceCulled, faceMaterials, vertX, vertY, vertZ, faceVertIndices, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceVertColorR, faceVertColorG, faceVertColorB, faceVertUs, faceVertVs, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ } = buffers;
+      const materialIndex = faceMaterials[faceIndex];
+      const material = materials[materialIndex];
+      if (context.filled && context.lastVoxelAxis1 === vaxis1 && context.lastVoxelAxis2 === vaxis2 && (material.simplify === true || material.simplify === null && model.simplify === true) && faceCulled.get(faceIndex) === 0) {
+        if (context.maxVoxelAxis3 !== vaxis3 - 1) {
+          context.filled = true;
+          context.lastVoxelAxis1 = vaxis1;
+          context.lastVoxelAxis2 = vaxis2;
+          context.maxVoxelAxis3 = vaxis3;
+          context.lastFaceIndex = faceIndex;
+          return;
+        }
+        const faceOffset = faceIndex * 4;
+        const lastFaceIndex = context.lastFaceIndex;
+        const lastFaceOffset = lastFaceIndex * 4;
+        if (faceMaterials[lastFaceIndex] !== materialIndex)
+          return;
+        const faceVertNormal0X = faceVertNormalX[faceOffset];
+        const faceVertNormal0Y = faceVertNormalY[faceOffset];
+        const faceVertNormal0Z = faceVertNormalZ[faceOffset];
+        const faceVertNormal1X = faceVertNormalX[faceOffset + 1];
+        const faceVertNormal1Y = faceVertNormalY[faceOffset + 1];
+        const faceVertNormal1Z = faceVertNormalZ[faceOffset + 1];
+        const faceVertNormal2X = faceVertNormalX[faceOffset + 2];
+        const faceVertNormal2Y = faceVertNormalY[faceOffset + 2];
+        const faceVertNormal2Z = faceVertNormalZ[faceOffset + 2];
+        const faceVertNormal3X = faceVertNormalX[faceOffset + 3];
+        const faceVertNormal3Y = faceVertNormalY[faceOffset + 3];
+        const faceVertNormal3Z = faceVertNormalZ[faceOffset + 3];
+        const lastFaceVertNormal0X = faceVertNormalX[lastFaceOffset];
+        const lastFaceVertNormal0Y = faceVertNormalY[lastFaceOffset];
+        const lastFaceVertNormal0Z = faceVertNormalZ[lastFaceOffset];
+        const lastFaceVertNormal1X = faceVertNormalX[lastFaceOffset + 1];
+        const lastFaceVertNormal1Y = faceVertNormalY[lastFaceOffset + 1];
+        const lastFaceVertNormal1Z = faceVertNormalZ[lastFaceOffset + 1];
+        const lastFaceVertNormal2X = faceVertNormalX[lastFaceOffset + 2];
+        const lastFaceVertNormal2Y = faceVertNormalY[lastFaceOffset + 2];
+        const lastFaceVertNormal2Z = faceVertNormalZ[lastFaceOffset + 2];
+        const lastFaceVertNormal3X = faceVertNormalX[lastFaceOffset + 3];
+        const lastFaceVertNormal3Y = faceVertNormalY[lastFaceOffset + 3];
+        const lastFaceVertNormal3Z = faceVertNormalZ[lastFaceOffset + 3];
+        const normalsEqual = this._normalEquals(faceVertNormal0X, faceVertNormal0Y, faceVertNormal0Z, lastFaceVertNormal0X, lastFaceVertNormal0Y, lastFaceVertNormal0Z) && this._normalEquals(faceVertNormal1X, faceVertNormal1Y, faceVertNormal1Z, lastFaceVertNormal1X, lastFaceVertNormal1Y, lastFaceVertNormal1Z) && this._normalEquals(faceVertNormal2X, faceVertNormal2Y, faceVertNormal2Z, lastFaceVertNormal2X, lastFaceVertNormal2Y, lastFaceVertNormal2Z) && this._normalEquals(faceVertNormal3X, faceVertNormal3Y, faceVertNormal3Z, lastFaceVertNormal3X, lastFaceVertNormal3Y, lastFaceVertNormal3Z);
+        if (!normalsEqual)
+          return;
+        const faceVertColor0R = faceVertColorR[faceOffset];
+        const faceVertColor0G = faceVertColorG[faceOffset];
+        const faceVertColor0B = faceVertColorB[faceOffset];
+        const faceVertColor1R = faceVertColorR[faceOffset + 1];
+        const faceVertColor1G = faceVertColorG[faceOffset + 1];
+        const faceVertColor1B = faceVertColorB[faceOffset + 1];
+        const faceVertColor2R = faceVertColorR[faceOffset + 2];
+        const faceVertColor2G = faceVertColorG[faceOffset + 2];
+        const faceVertColor2B = faceVertColorB[faceOffset + 2];
+        const faceVertColor3R = faceVertColorR[faceOffset + 3];
+        const faceVertColor3G = faceVertColorG[faceOffset + 3];
+        const faceVertColor3B = faceVertColorB[faceOffset + 3];
+        const lastFaceVertColor0R = faceVertColorR[lastFaceOffset];
+        const lastFaceVertColor0G = faceVertColorG[lastFaceOffset];
+        const lastFaceVertColor0B = faceVertColorB[lastFaceOffset];
+        const lastFaceVertColor1R = faceVertColorR[lastFaceOffset + 1];
+        const lastFaceVertColor1G = faceVertColorG[lastFaceOffset + 1];
+        const lastFaceVertColor1B = faceVertColorB[lastFaceOffset + 1];
+        const lastFaceVertColor2R = faceVertColorR[lastFaceOffset + 2];
+        const lastFaceVertColor2G = faceVertColorG[lastFaceOffset + 2];
+        const lastFaceVertColor2B = faceVertColorB[lastFaceOffset + 2];
+        const lastFaceVertColor3R = faceVertColorR[lastFaceOffset + 3];
+        const lastFaceVertColor3G = faceVertColorG[lastFaceOffset + 3];
+        const lastFaceVertColor3B = faceVertColorB[lastFaceOffset + 3];
+        const colorsEqual = faceVertColor0R === lastFaceVertColor0R && faceVertColor0G === lastFaceVertColor0G && faceVertColor0B === lastFaceVertColor0B && faceVertColor1R === lastFaceVertColor1R && faceVertColor1G === lastFaceVertColor1G && faceVertColor1B === lastFaceVertColor1B && faceVertColor2R === lastFaceVertColor2R && faceVertColor2G === lastFaceVertColor2G && faceVertColor2B === lastFaceVertColor2B && faceVertColor3R === lastFaceVertColor3R && faceVertColor3G === lastFaceVertColor3G && faceVertColor3B === lastFaceVertColor3B;
+        if (!colorsEqual)
+          return;
+        const faceVertIndexV0 = faceVertIndices[faceOffset + v0];
+        const faceVertIndexV1 = faceVertIndices[faceOffset + v1];
+        const faceVertIndexV2 = faceVertIndices[faceOffset + v2];
+        const faceVertIndexV3 = faceVertIndices[faceOffset + v3];
+        const faceVertV0X = vertX[faceVertIndexV0];
+        const faceVertV0Y = vertY[faceVertIndexV0];
+        const faceVertV0Z = vertZ[faceVertIndexV0];
+        const faceVertV1X = vertX[faceVertIndexV1];
+        const faceVertV1Y = vertY[faceVertIndexV1];
+        const faceVertV1Z = vertZ[faceVertIndexV1];
+        const lastFaceVertIndexV0 = faceVertIndices[lastFaceOffset + v0];
+        const lastFaceVertIndexV1 = faceVertIndices[lastFaceOffset + v1];
+        const lastFaceVertIndexV2 = faceVertIndices[lastFaceOffset + v2];
+        const lastFaceVertIndexV3 = faceVertIndices[lastFaceOffset + v3];
+        const lastFaceVertV0X = vertX[lastFaceVertIndexV0];
+        const lastFaceVertV0Y = vertY[lastFaceVertIndexV0];
+        const lastFaceVertV0Z = vertZ[lastFaceVertIndexV0];
+        const faceLength = Math.sqrt(
+          (faceVertV1X - faceVertV0X) * (faceVertV1X - faceVertV0X) + (faceVertV1Y - faceVertV0Y) * (faceVertV1Y - faceVertV0Y) + (faceVertV1Z - faceVertV0Z) * (faceVertV1Z - faceVertV0Z)
+        );
+        const totalLength = Math.sqrt(
+          (faceVertV1X - lastFaceVertV0X) * (faceVertV1X - lastFaceVertV0X) + (faceVertV1Y - lastFaceVertV0Y) * (faceVertV1Y - lastFaceVertV0Y) + (faceVertV1Z - lastFaceVertV0Z) * (faceVertV1Z - lastFaceVertV0Z)
+        );
+        const ratio = faceLength / totalLength;
+        const positionsEqual = Math.abs(axis1Arr[lastFaceVertIndexV1] - (1 - ratio) * axis1Arr[faceVertIndexV1] - ratio * axis1Arr[lastFaceVertIndexV0]) <= EPS && Math.abs(axis2Arr[lastFaceVertIndexV1] - (1 - ratio) * axis2Arr[faceVertIndexV1] - ratio * axis2Arr[lastFaceVertIndexV0]) <= EPS && Math.abs(axis3Arr[lastFaceVertIndexV1] - (1 - ratio) * axis3Arr[faceVertIndexV1] - ratio * axis3Arr[lastFaceVertIndexV0]) <= EPS && Math.abs(axis1Arr[lastFaceVertIndexV2] - (1 - ratio) * axis1Arr[faceVertIndexV2] - ratio * axis1Arr[lastFaceVertIndexV3]) <= EPS && Math.abs(axis2Arr[lastFaceVertIndexV2] - (1 - ratio) * axis2Arr[faceVertIndexV2] - ratio * axis2Arr[lastFaceVertIndexV3]) <= EPS && Math.abs(axis3Arr[lastFaceVertIndexV2] - (1 - ratio) * axis3Arr[faceVertIndexV2] - ratio * axis3Arr[lastFaceVertIndexV3]) <= EPS;
+        if (!positionsEqual)
+          return;
+        faceVertIndices[lastFaceOffset + v1] = faceVertIndexV1;
+        faceVertIndices[lastFaceOffset + v2] = faceVertIndexV2;
+        faceVertUs[lastFaceOffset + v1] = faceVertUs[faceOffset + v1];
+        faceVertVs[lastFaceOffset + v1] = faceVertVs[faceOffset + v1];
+        faceVertUs[lastFaceOffset + v2] = faceVertUs[faceOffset + v2];
+        faceVertVs[lastFaceOffset + v2] = faceVertVs[faceOffset + v2];
+        faceVertFlatNormalX[lastFaceOffset + v1] = faceVertFlatNormalX[faceOffset + v1];
+        faceVertFlatNormalY[lastFaceOffset + v1] = faceVertFlatNormalY[faceOffset + v1];
+        faceVertFlatNormalZ[lastFaceOffset + v1] = faceVertFlatNormalZ[faceOffset + v1];
+        faceVertFlatNormalX[lastFaceOffset + v2] = faceVertFlatNormalX[faceOffset + v2];
+        faceVertFlatNormalY[lastFaceOffset + v2] = faceVertFlatNormalY[faceOffset + v2];
+        faceVertFlatNormalZ[lastFaceOffset + v2] = faceVertFlatNormalZ[faceOffset + v2];
+        faceVertSmoothNormalX[lastFaceOffset + v1] = faceVertSmoothNormalX[faceOffset + v1];
+        faceVertSmoothNormalY[lastFaceOffset + v1] = faceVertSmoothNormalY[faceOffset + v1];
+        faceVertSmoothNormalZ[lastFaceOffset + v1] = faceVertSmoothNormalZ[faceOffset + v1];
+        faceVertSmoothNormalX[lastFaceOffset + v2] = faceVertSmoothNormalX[faceOffset + v2];
+        faceVertSmoothNormalY[lastFaceOffset + v2] = faceVertSmoothNormalY[faceOffset + v2];
+        faceVertSmoothNormalZ[lastFaceOffset + v2] = faceVertSmoothNormalZ[faceOffset + v2];
+        faceVertBothNormalX[lastFaceOffset + v1] = faceVertBothNormalX[faceOffset + v1];
+        faceVertBothNormalY[lastFaceOffset + v1] = faceVertBothNormalY[faceOffset + v1];
+        faceVertBothNormalZ[lastFaceOffset + v1] = faceVertBothNormalZ[faceOffset + v1];
+        faceVertBothNormalX[lastFaceOffset + v2] = faceVertBothNormalX[faceOffset + v2];
+        faceVertBothNormalY[lastFaceOffset + v2] = faceVertBothNormalY[faceOffset + v2];
+        faceVertBothNormalZ[lastFaceOffset + v2] = faceVertBothNormalZ[faceOffset + v2];
+        context.maxVoxelAxis3 = vaxis3;
+        faceCulled.set(faceIndex, 1);
+        model.nonCulledFaceCount--;
+        return true;
+      }
+      context.filled = true;
+      context.lastVoxelAxis1 = vaxis1;
+      context.lastVoxelAxis2 = vaxis2;
+      context.maxVoxelAxis3 = vaxis3;
+      context.lastFaceIndex = faceIndex;
+      return false;
+    }
+    static _normalEquals(n1x, n1y, n1z, n2x, n2y, n2z) {
+      return Math.abs(n1x - n2x) < 0.01 && Math.abs(n1y - n2y) < 0.01 && Math.abs(n1z - n2z) < 0.01;
+    }
+  };
+
+  // src/svox/facealigner.js
+  var FaceAligner = class {
+    static alignFaceDiagonals(model, buffers) {
+      let maxDist = 0.1 * Math.min(model.scale.x, model.scale.y, model.scale.z);
+      maxDist *= maxDist;
+      const { faceCulled, faceVertIndices, vertX, vertY, vertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertUs, faceVertVs, faceVertColorR, faceVertColorG, faceVertColorB, faceVertNormalX, faceVertNormalY, faceVertNormalZ } = buffers;
+      for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
+        if (faceCulled.get(faceIndex) === 1)
+          continue;
+        const faceVertOffset = faceIndex * 4;
+        const vert0Index = faceVertIndices[faceVertOffset];
+        const vert1Index = faceVertIndices[faceVertOffset + 1];
+        const vert2Index = faceVertIndices[faceVertOffset + 2];
+        const vert3Index = faceVertIndices[faceVertOffset + 3];
+        let vert0X = vertX[vert0Index];
+        let vert0Y = vertY[vert0Index];
+        let vert0Z = vertZ[vert0Index];
+        let vert1X = vertX[vert1Index];
+        let vert1Y = vertY[vert1Index];
+        let vert1Z = vertZ[vert1Index];
+        let vert2X = vertX[vert2Index];
+        let vert2Y = vertY[vert2Index];
+        let vert2Z = vertZ[vert2Index];
+        let vert3X = vertX[vert3Index];
+        let vert3Y = vertY[vert3Index];
+        let vert3Z = vertZ[vert3Index];
+        const mid02X = (vert0X + vert2X) / 2;
+        const mid02Y = (vert0Y + vert2Y) / 2;
+        const mid02Z = (vert0Z + vert2Z) / 2;
+        const distance1toMid = (vert1X - mid02X) * (vert1X - mid02X) + (vert1Y - mid02Y) * (vert1Y - mid02Y) + (vert1Z - mid02Z) * (vert1Z - mid02Z);
+        const distance3toMid = (vert3X - mid02X) * (vert3X - mid02X) + (vert3Y - mid02Y) * (vert3Y - mid02Y) + (vert3Z - mid02Z) * (vert3Z - mid02Z);
+        const mid13X = (vert1X + vert3X) / 2;
+        const mid13Y = (vert1Y + vert3Y) / 2;
+        const mid13Z = (vert1Z + vert3Z) / 2;
+        const distance0toMid = (vert0X - mid13X) * (vert0X - mid13X) + (vert0Y - mid13Y) * (vert0Y - mid13Y) + (vert0Z - mid13Z) * (vert0Z - mid13Z);
+        const distance2toMid = (vert2X - mid13X) * (vert2X - mid13X) + (vert2Y - mid13Y) * (vert2Y - mid13Y) + (vert2Z - mid13Z) * (vert2Z - mid13Z);
+        if (distance1toMid < maxDist || distance3toMid < maxDist) {
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertIndices);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertNormalX);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertNormalY);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertNormalZ);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertFlatNormalX);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertFlatNormalY);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertFlatNormalZ);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertSmoothNormalX);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertSmoothNormalY);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertSmoothNormalZ);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertBothNormalX);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertBothNormalY);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertBothNormalZ);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertUs);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertVs);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertColorR);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertColorG);
+          this._shiftFaceVertsAtOffset(faceVertOffset, faceVertColorB);
+        } else if (distance0toMid < maxDist || distance2toMid < maxDist) {
+        } else {
+          let min = this._getVertexSumInline(vert0X, vert0Y, vert0Z);
+          while (this._getVertexSumInline(vert1X, vert1Y, vert1Z) < min || this._getVertexSumInline(vert2X, vert2Y, vert2Z) < min || this._getVertexSumInline(vert3X, vert3Y, vert3Z) < min) {
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertIndices);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertNormalX);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertNormalY);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertNormalZ);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertFlatNormalX);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertFlatNormalY);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertFlatNormalZ);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertSmoothNormalX);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertSmoothNormalY);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertSmoothNormalZ);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertBothNormalX);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertBothNormalY);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertBothNormalZ);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertUs);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertVs);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertColorR);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertColorG);
+            this._shiftFaceVertsAtOffset(faceVertOffset, faceVertColorB);
+            const tx = vert0X;
+            const ty = vert0Y;
+            const tz = vert0Z;
+            vert0X = vert1X;
+            vert0Y = vert1Y;
+            vert0Z = vert1Z;
+            vert1X = vert2X;
+            vert1Y = vert2Y;
+            vert1Z = vert2Z;
+            vert2X = vert3X;
+            vert2Y = vert3Y;
+            vert2Z = vert3Z;
+            vert3X = tx;
+            vert3Y = ty;
+            vert3Z = tz;
+            min = this._getVertexSumInline(vert0X, vert0Y, vert0Z);
+          }
+        }
+      }
+    }
+    static _getVertexSumInline(vx, vy, vz) {
+      return Math.abs(vx) + Math.abs(vy) + Math.abs(vz);
+    }
+    static _shiftFaceVertsAtOffset(offset, arr) {
+      const t = arr[offset];
+      arr[offset] = arr[offset + 1];
+      arr[offset + 1] = arr[offset + 2];
+      arr[offset + 2] = arr[offset + 3];
+      arr[offset + 3] = t;
+    }
+  };
+
+  // src/svox/model.js
+  var SORT_NUMBERS = (a, b) => a - b;
+  var Model = class {
+    set origin(origin) {
+      this._origin = Planar.parse(origin);
+    }
+    get origin() {
+      return Planar.toString(this._origin);
+    }
+    set flatten(flatten) {
+      this._flatten = Planar.parse(flatten);
+    }
+    get flatten() {
+      return Planar.toString(this._flatten);
+    }
+    set clamp(clamp2) {
+      this._clamp = Planar.parse(clamp2);
+    }
+    get clamp() {
+      return Planar.toString(this._clamp);
+    }
+    set skip(skip) {
+      this._skip = Planar.parse(skip);
+    }
+    get skip() {
+      return Planar.toString(this._skip);
+    }
+    set tile(tile) {
+      this._tile = Planar.parse(tile || " ");
+      if (this._tile.x)
+        this._tile = Planar.combine(this._tile, { nx: true, px: true });
+      if (this._tile.y)
+        this._tile = Planar.combine(this._tile, { ny: true, py: true });
+      if (this._tile.z)
+        this._tile = Planar.combine(this._tile, { nz: true, pz: true });
+      this._tile.x = false;
+      this._tile.y = false;
+      this._tile.z = false;
+    }
+    get tile() {
+      return Planar.toString(this._tile);
+    }
+    set shape(shape) {
+      this._shape = (shape || "box").trim();
+      if (!["box", "sphere", "cylinder-x", "cylinder-y", "cylinder-z"].includes(this._shape)) {
+        throw new Error(`SyntaxError Unrecognized shape ${this._shape}. Allowed are box, sphere, cylinder-x, cylinder-y and cylinder-z`);
+      }
+    }
+    get shape() {
+      return this._shape;
+    }
+    setAo(ao) {
+      this._ao = ao;
+    }
+    get ao() {
+      return this._ao;
+    }
+    set aoSides(sides) {
+      this._aoSides = Planar.parse(sides);
+    }
+    get aoSides() {
+      return Planar.toString(this._aoSides);
+    }
+    set aoSamples(samples) {
+      this._aoSamples = Math.round(samples);
+    }
+    get aoSamples() {
+      return this._aoSamples;
+    }
+    constructor() {
+      this.name = "main";
+      this.lights = [];
+      this.textures = {};
+      this.materials = new MaterialList();
+      this.voxChunk = null;
+      this.scale = { x: 1, y: 1, z: 1 };
+      this.rotation = { x: 0, y: 0, z: 0 };
+      this.position = { x: 0, y: 0, z: 0 };
+      this.resize = false;
+      this._origin = Planar.parse("x y z");
+      this._flatten = Planar.parse("");
+      this._clamp = Planar.parse("");
+      this._skip = Planar.parse("");
+      this._tile = Planar.parse("");
+      this._ao = void 0;
+      this._aoSamples = 50;
+      this._aoSides = Planar.parse("");
+      this.shape = "box";
+      this.wireframe = false;
+      this.simplify = true;
+      this.triCount = 0;
+      this.octCount = 0;
+      this.octMissCount = 0;
+      this.faceCount = 0;
+      this.vertCount = 0;
+      this.nonCulledFaceCount = 0;
+    }
+    prepareForWrite() {
+      if (this.lights.some((light) => light.size)) {
+        this.materials.materials[0].colors[0].count = 1;
+      }
+    }
+    prepareForRender(buffers) {
+      const { tmpVertIndexLookup, tmpVoxelXZYFaceIndices, tmpVoxelXYZFaceIndices, tmpVoxelYZXFaceIndices } = buffers;
+      const { voxChunk } = this;
+      this.prepareForWrite();
+      const maximumDeformCount = Deformer.maximumDeformCount(this);
+      this.faceCount = 0;
+      this.vertCount = 0;
+      const allowDeform = maximumDeformCount > 0;
+      const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(voxChunk.size);
+      const materials = this.materials.materials;
+      const xShift = shiftForSize(voxChunk.size[0]);
+      const yShift = shiftForSize(voxChunk.size[1]);
+      const zShift = shiftForSize(voxChunk.size[2]);
+      for (let vx = minX; vx <= maxX; vx++) {
+        for (let vy = minY; vy <= maxY; vy++) {
+          for (let vz = minZ; vz <= maxZ; vz++) {
+            const paletteIndex = voxChunk.getPaletteIndexAt(vx, vy, vz);
+            if (paletteIndex === 0)
+              continue;
+            const pvx = vx + xShift;
+            const pvy = vy + yShift;
+            const pvz = vz + zShift;
+            const pvxTop = pvx << 16;
+            const pvzMid = pvz << 8;
+            const xzyKey = (pvxTop | pvzMid | pvy) * (1 << 28);
+            const xyzKey = (pvxTop | pvy << 8 | pvz) * (1 << 28);
+            const yzxKey = (pvy << 16 | pvzMid | pvx) * (1 << 28);
+            for (let faceNameIndex = 0, l = _FACES.length; faceNameIndex < l; faceNameIndex++) {
+              const neighbor = _NEIGHBORS[faceNameIndex];
+              let neighborPaletteIndex;
+              const nvx = vx + neighbor[0];
+              const nvy = vy + neighbor[1];
+              const nvz = vz + neighbor[2];
+              if (nvx < minX || nvx > maxX || nvy < minY || nvy > maxY || nvz < minZ || nvz > maxZ) {
+                neighborPaletteIndex = 0;
+              } else {
+                neighborPaletteIndex = voxChunk.getPaletteIndexAt(nvx, nvy, nvz);
+              }
+              const created = this._createFace(voxChunk, buffers, materials, vx, vy, vz, xShift, yShift, zShift, paletteIndex, neighborPaletteIndex, faceNameIndex, allowDeform, tmpVertIndexLookup);
+              if (created) {
+                const faceIndex = this.faceCount - 1;
+                tmpVoxelXZYFaceIndices[faceIndex] = xzyKey + faceIndex;
+                tmpVoxelXYZFaceIndices[faceIndex] = xyzKey + faceIndex;
+                tmpVoxelYZXFaceIndices[faceIndex] = yzxKey + faceIndex;
+              }
+            }
+          }
+        }
+      }
+      this.nonCulledFaceCount = this.faceCount;
+      tmpVertIndexLookup.clear();
+      buffers.voxelXZYFaceIndices = tmpVoxelXZYFaceIndices.slice(0, this.faceCount);
+      buffers.voxelXYZFaceIndices = tmpVoxelXYZFaceIndices.slice(0, this.faceCount);
+      buffers.voxelYZXFaceIndices = tmpVoxelYZXFaceIndices.slice(0, this.faceCount);
+      buffers.voxelXZYFaceIndices.sort(SORT_NUMBERS);
+      buffers.voxelXYZFaceIndices.sort(SORT_NUMBERS);
+      buffers.voxelYZXFaceIndices.sort(SORT_NUMBERS);
+      VertexLinker.fixClampedLinks(this, buffers);
+      Deformer.changeShape(this, buffers, this._shape);
+      Deformer.deform(this, buffers, maximumDeformCount);
+      Deformer.warpAndScatter(this, buffers);
+      NormalsCalculator.calculateNormals(this, buffers);
+      VertexTransformer.transformVertices(this, buffers);
+      LightsCalculator.calculateLights(this, buffers);
+      AOCalculator.calculateAmbientOcclusion(this, buffers);
+      ColorCombiner.combineColors(this, buffers);
+      UVAssigner.assignUVs(this, buffers);
+      Simplifier.simplify(this, buffers);
+      FaceAligner.alignFaceDiagonals(this, buffers);
+    }
+    determineBoundsOffsetAndRescale(resize, buffers) {
+      const bos = { bounds: null, offset: null, rescale: 1 };
+      let minX, minY, minZ, maxX, maxY, maxZ;
+      const { vertX, vertY, vertZ } = buffers;
+      if (resize === BOUNDS || resize === MODEL) {
+        minX = Number.POSITIVE_INFINITY;
+        minY = Number.POSITIVE_INFINITY;
+        minZ = Number.POSITIVE_INFINITY;
+        maxX = Number.NEGATIVE_INFINITY;
+        maxY = Number.NEGATIVE_INFINITY;
+        maxZ = Number.NEGATIVE_INFINITY;
+        for (let vertIndex = 0, c = this.vertCount; vertIndex < c; vertIndex++) {
+          const vx = vertX[vertIndex];
+          const vy = vertY[vertIndex];
+          const vz = vertZ[vertIndex];
+          if (vx < minX)
+            minX = vx;
+          if (vy < minY)
+            minY = vy;
+          if (vz < minZ)
+            minZ = vz;
+          if (vx > maxX)
+            maxX = vx;
+          if (vy > maxY)
+            maxY = vy;
+          if (vz > maxZ)
+            maxZ = vz;
+        }
+        if (resize === MODEL) {
+          const [minX2, maxX2, minY2, maxY2, minZ2, maxZ2] = xyzRangeForSize(this.voxChunk.size);
+          const scaleX = (maxX2 - minX2 + 1) / (maxX2 - minX2);
+          const scaleY = (maxY2 - minY2 + 1) / (maxY2 - minY2);
+          const scaleZ = (maxZ2 - minZ2 + 1) / (maxZ2 - minZ2);
+          bos.rescale = Math.min(scaleX, scaleY, scaleZ);
+        }
+      }
+      if (!resize) {
+        minX = this.bounds.minX;
+        maxX = this.bounds.maxX + 1;
+        minY = this.bounds.minY;
+        maxY = this.bounds.maxY + 1;
+        minZ = this.bounds.minZ;
+        maxZ = this.bounds.maxZ + 1;
+      }
+      let offsetX = -(minX + maxX) / 2;
+      let offsetY = -(minY + maxY) / 2;
+      let offsetZ = -(minZ + maxZ) / 2;
+      if (this._origin.nx)
+        offsetX = -minX;
+      if (this._origin.px)
+        offsetX = -maxX;
+      if (this._origin.ny)
+        offsetY = -minY;
+      if (this._origin.py)
+        offsetY = -maxY;
+      if (this._origin.nz)
+        offsetZ = -minZ;
+      if (this._origin.pz)
+        offsetZ = -maxZ;
+      bos.bounds = { minX, minY, minZ, maxX, maxY, maxZ };
+      bos.offset = { x: offsetX, y: offsetY, z: offsetZ };
+      return bos;
+    }
+    _createFace(voxChunk, buffers, materials, vx, vy, vz, xShift, yShift, zShift, paletteIndex, neighborPaletteIndex, faceNameIndex, linkVertices, vertIndexLookup) {
+      const color = voxChunk.colorForPaletteIndex(paletteIndex);
+      const materialIndex = (color & 4278190080) >> 24;
+      const material = materials[materialIndex];
+      if (material.opacity === 0) {
+        return false;
+      } else if (neighborPaletteIndex === 0) {
+      } else {
+        const neightborMaterialIndex = (voxChunk.colorForPaletteIndex(neighborPaletteIndex) & 4278190080) >> 24;
+        const neighborMaterial = materials[neightborMaterialIndex];
+        if (!neighborMaterial.isTransparent && !material.wireframe) {
+          return false;
+        } else if (!material.isTransparent && !material.wireframe) {
+        } else if (material.isTransparent && !material.wireframe && neighborPaletteIndex !== 0 && materials[(voxChunk.colorForPaletteIndex(neighborPaletteIndex) & 4278190080) >> 24].wireframe) {
+        } else {
+          return false;
+        }
+      }
+      const flattened = this._isFacePlanar(material, vx, vy, vz, faceNameIndex, material._flatten, this._flatten);
+      const clamped = this._isFacePlanar(material, vx, vy, vz, faceNameIndex, material._clamp, this._clamp);
+      const skipped = this._isFacePlanar(material, vx, vy, vz, faceNameIndex, material._skip, this._skip);
+      if (skipped)
+        return false;
+      const { faceVertIndices, faceVertColorR, faceVertColorG, faceVertColorB, faceFlattened, faceClamped, faceSmooth, faceCulled, faceMaterials, faceNameIndices, faceVertUs, faceVertVs } = buffers;
+      const { faceCount } = this;
+      const faceVertOffset = faceCount * 4;
+      const vr = (color & 255) / 255;
+      const vg = ((color & 65280) >> 8) / 255;
+      const vb = ((color & 16711680) >> 16) / 255;
+      faceVertIndices[faceVertOffset] = this._createVertex(buffers, material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, 0, flattened, clamped, vertIndexLookup);
+      faceVertIndices[faceVertOffset + 1] = this._createVertex(buffers, material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, 1, flattened, clamped, vertIndexLookup);
+      faceVertIndices[faceVertOffset + 2] = this._createVertex(buffers, material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, 2, flattened, clamped, vertIndexLookup);
+      faceVertIndices[faceVertOffset + 3] = this._createVertex(buffers, material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, 3, flattened, clamped, vertIndexLookup);
+      for (let v2 = 0; v2 < 4; v2++) {
+        faceVertColorR[faceVertOffset + v2] = vr;
+        faceVertColorG[faceVertOffset + v2] = vg;
+        faceVertColorB[faceVertOffset + v2] = vb;
+      }
+      faceFlattened.set(faceCount, flattened ? 1 : 0);
+      faceClamped.set(faceCount, clamped ? 1 : 0);
+      faceSmooth.set(faceCount, 0);
+      faceCulled.set(faceCount, 0);
+      faceMaterials[faceCount] = materialIndex;
+      faceNameIndices[faceCount] = faceNameIndex;
+      const faceUVs = _FACEINDEXUV_MULTIPLIERS[faceNameIndex];
+      const faceUVsU = faceUVs[0];
+      const faceUVsV = faceUVs[1];
+      const vxs = vx + xShift;
+      const vys = vy + yShift;
+      const vzs = vz + zShift;
+      const u = vxs * faceUVsU[0] + vys * faceUVsU[1] + vzs * faceUVsU[2];
+      const v = vxs * faceUVsV[0] + vys * faceUVsV[1] + vzs * faceUVsV[2];
+      for (let i = 0; i < 4; i++) {
+        faceVertUs[faceVertOffset + i] = u;
+        faceVertVs[faceVertOffset + i] = v;
+      }
+      if (linkVertices) {
+        VertexLinker.linkVertices(this, buffers, faceCount);
+      }
+      this.faceCount++;
+      return true;
+    }
+    _createVertex(buffers, material, vx, vy, vz, vr, vg, vb, xShift, yShift, zShift, faceNameIndex, vi, flattened, clamped, vertIndexLookup) {
+      const vertexOffset = _VERTEX_OFFSETS[faceNameIndex][vi];
+      const x = vx + vertexOffset[0];
+      const y = vy + vertexOffset[1];
+      const z = vz + vertexOffset[2];
+      const key = x + xShift << 20 | y + yShift << 10 | z + zShift;
+      const { _clamp: modelClamp, _flatten: modelFlatten } = this;
+      const { vertDeformCount, vertDeformDamping, vertDeformStrength, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertX, vertY, vertZ, vertLinkCounts, vertFullyClamped, vertRing, vertClampedX, vertClampedY, vertClampedZ, vertColorR, vertColorG, vertColorB, vertColorCount, vertFlattenedX, vertFlattenedY, vertFlattenedZ } = buffers;
+      const { deform, warp, scatter } = material;
+      let vertIndex;
+      if (vertIndexLookup.has(key)) {
+        vertIndex = vertIndexLookup.get(key);
+        if (!deform) {
+          vertDeformCount[vertIndex] = 0;
+          vertDeformDamping[vertIndex] = 0;
+          vertDeformStrength[vertIndex] = 0;
+        } else if (vertDeformCount[vertIndex] !== 0 && this._getDeformIntegral(material.deform) < this._getDeformIntegralAtVertex(buffers, vertIndex)) {
+          vertDeformStrength[vertIndex] = deform.strength;
+          vertDeformDamping[vertIndex] = deform.damping;
+          vertDeformCount[vertIndex] = deform.count;
+        }
+        if (!warp) {
+          vertWarpAmplitude[vertIndex] = 0;
+          vertWarpFrequency[vertIndex] = 0;
+        } else if (vertWarpAmplitude[vertIndex] !== 0 && (warp.amplitude < vertWarpAmplitude[vertIndex] || warp.amplitude === vertWarpAmplitude[vertIndex] && warp.frequency > vertWarpFrequency[vertIndex])) {
+          vertWarpAmplitude[vertIndex] = warp.amplitude;
+          vertWarpFrequency[vertIndex] = warp.frequency;
+        }
+        if (!scatter) {
+          vertScatter[vertIndex] = 0;
+        } else if (vertScatter[vertIndex] !== 0 && Math.abs(scatter) < Math.abs(vertScatter[vertIndex])) {
+          vertScatter[vertIndex] = scatter;
+        }
+      } else {
+        vertIndex = this.vertCount;
+        vertIndexLookup.set(key, vertIndex);
+        vertX[vertIndex] = x;
+        vertY[vertIndex] = y;
+        vertZ[vertIndex] = z;
+        if (deform) {
+          vertDeformDamping[vertIndex] = deform.damping;
+          vertDeformCount[vertIndex] = deform.count;
+          vertDeformStrength[vertIndex] = deform.strength;
+          vertLinkCounts[vertIndex] = 0;
+          vertFullyClamped.set(vertIndex, 0);
+        } else {
+          vertDeformCount[vertIndex] = 0;
+        }
+        if (warp) {
+          vertWarpAmplitude[vertIndex] = warp.amplitude;
+          vertWarpFrequency[vertIndex] = warp.frequency;
+        } else {
+          vertWarpAmplitude[vertIndex] = 0;
+        }
+        if (scatter) {
+          vertScatter[vertIndex] = scatter;
+        } else {
+          vertScatter[vertIndex] = 0;
+        }
+        vertColorCount[vertIndex] = 0;
+        vertRing[vertIndex] = 0;
+        vertClampedX.set(vertIndex, 0);
+        vertClampedY.set(vertIndex, 0);
+        vertClampedZ.set(vertIndex, 0);
+        vertFlattenedX.set(vertIndex, 0);
+        vertFlattenedY.set(vertIndex, 0);
+        vertFlattenedZ.set(vertIndex, 0);
+      }
+      this._setIsVertexPlanar(material, x, y, z, material._flatten, modelFlatten, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertIndex);
+      this._setIsVertexPlanar(material, x, y, z, material._clamp, modelClamp, vertClampedX, vertClampedY, vertClampedZ, vertIndex);
+      if (material.fade) {
+        const vertColorIndex = vertColorCount[vertIndex];
+        const vertColorOffset = vertIndex * 6;
+        vertColorR[vertColorOffset + vertColorIndex] = vr;
+        vertColorG[vertColorOffset + vertColorIndex] = vg;
+        vertColorB[vertColorOffset + vertColorIndex] = vb;
+        vertColorCount[vertIndex]++;
+      }
+      this.vertCount++;
+      return vertIndex;
+    }
+    _getDeformIntegral(deform) {
+      return deform.damping === 1 ? deform.strength * (deform.count + 1) : deform.strength * (1 - Math.pow(deform.damping, deform.count + 1)) / (1 - deform.damping);
+    }
+    _getDeformIntegralAtVertex(buffers, vertIndex) {
+      const { vertDeformDamping, vertDeformStrength, vertDeformCount } = buffers;
+      const damping = vertDeformDamping[vertIndex];
+      const count = vertDeformCount[vertIndex];
+      const strength = vertDeformStrength[vertIndex];
+      return damping === 1 ? strength * (count + 1) : strength * (1 - Math.pow(damping, count + 1)) / (1 - damping);
+    }
+    _isFacePlanar(material, vx, vy, vz, faceNameIndex, materialPlanar, modelPlanar) {
+      let planar = materialPlanar;
+      let bounds = material.bounds;
+      if (!planar) {
+        planar = modelPlanar;
+        bounds = this.bounds;
+      }
+      if (!planar)
+        return false;
+      switch (faceNameIndex) {
+        case 0:
+          return planar.x || planar.nx && vx === bounds.minX;
+        case 1:
+          return planar.x || planar.px && vx === bounds.maxX;
+        case 2:
+          return planar.y || planar.ny && vy === bounds.minY;
+        case 3:
+          return planar.y || planar.py && vy === bounds.maxY;
+        case 4:
+          return planar.z || planar.nz && vz === bounds.minZ;
+        case 5:
+          return planar.z || planar.pz && vz === bounds.maxZ;
+        default:
+          return false;
+      }
+    }
+    _setIsVertexPlanar(material, vx, vy, vz, materialPlanar, modelPlanar, arrX, arrY, arrZ, vertIndex) {
+      let planar = materialPlanar;
+      let bounds = material.bounds;
+      if (!planar) {
+        planar = modelPlanar;
+        bounds = this.bounds;
+      }
+      if (planar) {
+        arrX.set(vertIndex, planar.x || planar.nx && vx < bounds.minX + 0.5 || planar.px && vx > bounds.maxX + 0.5 ? 1 : arrX.get(vertIndex) | 0);
+        arrY.set(vertIndex, planar.y || planar.ny && vy < bounds.minY + 0.5 || planar.py && vy > bounds.maxY + 0.5 ? 1 : arrY.get(vertIndex) | 0);
+        arrZ.set(vertIndex, planar.z || planar.nz && vz < bounds.minZ + 0.5 || planar.pz && vz > bounds.maxZ + 0.5 ? 1 : arrZ.get(vertIndex) | 0);
+      } else {
+        arrX.set(vertIndex, arrX.get(vertIndex) | 0);
+        arrY.set(vertIndex, arrY.get(vertIndex) | 0);
+        arrZ.set(vertIndex, arrZ.get(vertIndex) | 0);
+      }
+    }
+  };
+
+  // src/svox/modelreader.js
+  var ModelReader = class {
+    static readFromString(modelString) {
+      const modelData = this._parse(modelString);
+      this._validateModel(modelData);
+      const model = this._createModel(modelData);
+      return model;
+    }
+    static _parse(modelString) {
+      const regex = {
+        linecontinuation: /_\s*[\r\n]/gm,
+        modelparts: new RegExp(
+          /\s*(\/\/(.*?)\r?\n)/.source + "|" + /\s*(texture|light|model|material|voxels)\s+/.source + "|" + /\s*([^=,\r\n]+=\s*data:image.*?base64,.*$)\s*/.source + "|" + /\s*([^=,\r\n]+=[^\r\n=;,/]+)\s*/.source + "|" + /\s*([A-Za-z ()\d -]+)\s*/.source,
+          "gm"
+        )
+      };
+      const modelData = { lights: [], textures: [], materials: [] };
+      let parent = modelData;
+      let voxelString = null;
+      const lines = Array.from(modelString.replaceAll(regex.linecontinuation, " ").matchAll(regex.modelparts), (m) => m[0].trim());
+      lines.filter((l) => l).forEach(function(line) {
+        if (line.startsWith("//")) {
+        } else if (line === "texture") {
+          parent = { id: "<no-name>", cube: false };
+          modelData.textures.push(parent);
+        } else if (line === "light") {
+          parent = { color: "#FFF" };
+          modelData.lights.push(parent);
+        } else if (line === "model") {
+          parent = modelData;
+        } else if (line === "material") {
+          parent = {};
+          modelData.materials.push(parent);
+        } else if (line === "voxels") {
+          parent = modelData;
+          voxelString = "";
+        } else if (voxelString !== null) {
+          voxelString += line.replace(/\s/g, "");
+        } else {
+          const equalIndex = line.indexOf("=");
+          if (equalIndex === -1) {
+            throw new Error(`SyntaxError: Invalid definition '${line}'.`);
+          }
+          const name = line.substring(0, equalIndex).trim().toLowerCase();
+          const value = line.substring(equalIndex + 1).trim();
+          parent[name] = value;
+        }
+      }, this);
+      modelData.voxels = voxelString;
+      return modelData;
+    }
+    static _createModel(modelData) {
+      const model = new Model();
+      model.size = this._parseXYZInt("size", modelData.size, null, true);
+      model.scale = this._parseXYZFloat("scale", modelData.scale, "1", true);
+      model.rotation = this._parseXYZFloat("rotation", modelData.rotation, "0 0 0", false);
+      model.position = this._parseXYZFloat("position", modelData.position, "0 0 0", false);
+      model.simplify = modelData.simplify !== "false";
+      if (modelData.resize === BOUNDS) {
+        model.resize = BOUNDS;
+      } else if (modelData.resize === MODEL) {
+        model.resize = MODEL;
+      } else if (modelData.resize) {
+        model.resize = null;
+      } else if (modelData.autoresize === "true") {
+        model.resize = MODEL;
+      }
+      model.shape = modelData.shape;
+      model.wireframe = modelData.wireframe === "true" || false;
+      model.origin = modelData.origin || "x y z";
+      model.flatten = modelData.flatten;
+      model.clamp = modelData.clamp;
+      model.skip = modelData.skip;
+      model.tile = modelData.tile;
+      model.setAo(this._parseAo(modelData.ao));
+      model.aoSides = modelData.aosides;
+      model.aoSamples = parseInt(modelData.aosamples || 50, 10);
+      model.data = this._parseVertexData(modelData.data, "model");
+      model.shell = this._parseShell(modelData.shell);
+      if (modelData.lights.some((light) => light.size)) {
+        const lightMaterial = model.materials.createMaterial(
+          MATBASIC,
+          FLAT,
+          1,
+          0,
+          false,
+          false,
+          1,
+          0,
+          false,
+          1,
+          false,
+          FRONT,
+          "#FFF",
+          0,
+          false,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          -1,
+          -1,
+          0,
+          0,
+          0
+        );
+        lightMaterial.addColorHEX("#FFFFFF");
+      }
+      modelData.lights.forEach(function(lightData) {
+        this._createLight(model, lightData);
+      }, this);
+      modelData.textures.forEach(function(textureData) {
+        this._createTexture(model, textureData);
+      }, this);
+      modelData.materials.forEach(function(materialData) {
+        this._createMaterial(model, materialData);
+      }, this);
+      model.colors = {};
+      model.materials.forEach(function(material) {
+        material.colors.forEach(function(color) {
+          model.colors[color.id] = color;
+        });
+      });
+      this._resolveShellColors(model.shell, model);
+      model.materials.forEach(function(material) {
+        this._resolveShellColors(material.shell, model);
+      }, this);
+      this._createVoxels(model, modelData.voxels);
+      return model;
+    }
+    static _createLight(model, lightData) {
+      if (!lightData.color) {
+        lightData.color = "#FFF 1";
+      }
+      if (!lightData.color.startsWith("#")) {
+        lightData.color = "#FFF " + lightData.color;
+      }
+      lightData.strength = parseFloat(lightData.color.split(" ")[1] || 1);
+      lightData.color = Color.fromHex(lightData.color.split(" ")[0]);
+      lightData.direction = this._parseXYZFloat("direction", lightData.direction, null, false);
+      lightData.position = this._parseXYZFloat("position", lightData.position, null, false);
+      lightData.distance = parseFloat(lightData.distance || 0);
+      lightData.size = Math.max(0, parseFloat(lightData.size || 0));
+      lightData.detail = Math.min(3, Math.max(0, parseInt(lightData.detail || 1, 10)));
+      const light = new Light(
+        lightData.color,
+        lightData.strength,
+        lightData.direction,
+        lightData.position,
+        lightData.distance,
+        lightData.size,
+        lightData.detail
+      );
+      model.lights.push(light);
+    }
+    static _createTexture(model, textureData) {
+      textureData.cube = textureData.cube === "true" || false;
+      model.textures[textureData.id] = textureData;
+    }
+    static _createMaterial(model, materialData) {
+      let lighting = FLAT;
+      if (materialData.lighting === QUAD)
+        lighting = QUAD;
+      if (materialData.lighting === SMOOTH)
+        lighting = SMOOTH;
+      if (materialData.lighting === BOTH)
+        lighting = BOTH;
+      if (!materialData.emissive) {
+        if (materialData.emissivemap) {
+          materialData.emissive = "#FFF 1";
+        } else {
+          materialData.emissive = "#000 0";
+        }
+      }
+      if (!materialData.emissive.startsWith("#")) {
+        materialData.emissive = "#FFF " + materialData.emissive;
+      }
+      materialData.emissiveColor = materialData.emissive.split(" ")[0];
+      materialData.emissiveIntensity = materialData.emissive.split(" ")[1] || 1;
+      if (materialData.ao && !materialData.ao.startsWith("#")) {
+        materialData.ao = "#000 " + materialData.ao;
+      }
+      materialData.maptransform = materialData.maptransform || "";
+      let simplify = null;
+      if (model.simplify && materialData.simplify === "false") {
+        simplify = false;
+      }
+      if (!model.simplify && materialData.simplify === "true") {
+        simplify = true;
+      }
+      const material = model.materials.createMaterial(
+        materialData.type || MATSTANDARD,
+        lighting,
+        parseFloat(materialData.roughness || (materialData.roughnessmap ? 1 : 1)),
+        parseFloat(materialData.metalness || (materialData.metalnessmap ? 1 : 0)),
+        materialData.fade === "true" || false,
+        simplify,
+        parseFloat(materialData.opacity || 1),
+        parseFloat(materialData.alphatest || 0),
+        materialData.transparent === "true" || false,
+        parseFloat(materialData.refractionratio || 0.9),
+        materialData.wireframe === "true" || false,
+        materialData.side,
+        materialData.emissiveColor,
+        materialData.emissiveIntensity,
+        materialData.fog !== "false",
+        materialData.map ? model.textures[materialData.map] : null,
+        materialData.normalmap ? model.textures[materialData.normalmap] : null,
+        materialData.roughnessmap ? model.textures[materialData.roughnessmap] : null,
+        materialData.metalnessmap ? model.textures[materialData.metalnessmap] : null,
+        materialData.emissivemap ? model.textures[materialData.emissivemap] : null,
+        materialData.matcap ? model.textures[materialData.matcap] : null,
+        materialData.reflectionmap ? model.textures[materialData.reflectionmap] : null,
+        materialData.refractionmap ? model.textures[materialData.refractionmap] : null,
+        parseFloat(materialData.maptransform.split(" ")[0] || -1),
+        parseFloat(materialData.maptransform.split(" ")[1] || -1),
+        parseFloat(materialData.maptransform.split(" ")[2] || 0),
+        parseFloat(materialData.maptransform.split(" ")[3] || 0),
+        parseFloat(materialData.maptransform.split(" ")[4] || 0)
+      );
+      if (materialData.deform) {
+        material.setDeform(
+          parseFloat(materialData.deform.split(" ")[0]),
+          parseFloat(materialData.deform.split(" ")[1] || 1),
+          parseFloat(materialData.deform.split(" ")[2] || 1)
+        );
+      }
+      if (materialData.warp) {
+        material.setWarp(
+          parseFloat(materialData.warp.split(" ")[0]),
+          parseFloat(materialData.warp.split(" ")[1] || 1)
+        );
+      }
+      if (materialData.scatter) {
+        material.scatter = parseFloat(materialData.scatter);
+      }
+      material.flatten = materialData.flatten;
+      material.clamp = materialData.clamp;
+      material.skip = materialData.skip;
+      material.setAo(this._parseAo(materialData.ao));
+      material.shell = this._parseShell(materialData.shell);
+      material.lights = materialData.lights !== "false";
+      material.data = this._parseVertexData(materialData.data, "material");
+      this._compareVertexData(model.data, material.data);
+      const CLEANCOLORID = /\s*\(\s*(\d+)\s*\)\s*/g;
+      const CLEANDEFINITION = /([A-Z][a-z]*)\s*(\(\d+\))?[:]\s*(#[a-fA-F0-9]*)\s*/g;
+      materialData.colors = materialData.colors.replace(CLEANCOLORID, "($1)");
+      materialData.colors = materialData.colors.replace(CLEANDEFINITION, "$1$2:$3 ");
+      const colors = materialData.colors.split(" ").filter((x) => x);
+      colors.forEach(function(colorData) {
+        let colorId = colorData.split(":")[0];
+        let colorExId = null;
+        if (colorId.includes("(")) {
+          colorExId = Number(colorId.split("(")[1].replace(")", ""));
+          colorId = colorId.split("(")[0];
+        }
+        let color = colorData.split(":")[1];
+        if (!material.colors[colorId]) {
+          color = material.addColor(Color.fromHex(color));
+          if (!/^[A-Z][a-z]*$/.test(colorId)) {
+            throw new Error(`SyntaxError: Invalid color ID '${colorId}'`);
+          }
+          color.id = colorId;
+          color.exId = colorExId;
+        }
+      }, this);
+    }
+    static _createVoxels(model, voxels) {
+      const colors = model.colors;
+      let errorMaterial = null;
+      let chunks = [];
+      if (voxels.matchAll) {
+        chunks = voxels.matchAll(/[0-9]+|[A-Z][a-z]*|-+|[()]/g);
+      } else {
+        const regex = /[0-9]+|[A-Z][a-z]*|-+|[()]/g;
+        let chunk;
+        while ((chunk = regex.exec(voxels)) !== null) {
+          chunks.push(chunk);
+        }
+        chunks = chunks[Symbol.iterator]();
+      }
+      const rleArray = this._unpackRle(chunks);
+      const totalSize = model.size.x * model.size.y * model.size.z;
+      let voxelLength = 0;
+      const voxChunk = model.voxChunk = new Voxels([model.size.x, model.size.y, model.size.z]);
+      for (let i = 0; i < rleArray.length; i++) {
+        voxelLength += rleArray[i][1];
+      }
+      if (voxelLength !== totalSize) {
+        throw new Error(`SyntaxError: The specified size is ${model.size.x} x ${model.size.y} x ${model.size.z} (= ${totalSize} voxels) but the voxel matrix contains ${voxelLength} voxels.`);
+      }
+      const context = {
+        minx: 0,
+        miny: 0,
+        minz: 0,
+        maxx: model.size.x - 1,
+        maxy: model.size.y - 1,
+        maxz: model.size.z - 1,
+        x: 0,
+        y: 0,
+        z: 0
+      };
+      model.bounds = new BoundingBox();
+      let materialIndex = 0;
+      for (let i = 0; i < rleArray.length; i++) {
+        let color = null;
+        if (rleArray[i][0] !== "-") {
+          color = colors[rleArray[i][0]];
+          materialIndex = model.materials.materials.findIndex((m) => m.colors.includes(color));
+          if (!color) {
+            if (errorMaterial === null) {
+              errorMaterial = model.materials.createMaterial(MATSTANDARD, FLAT, 0.5, 0, false, 1, false);
+            }
+            color = Color.fromHex("#FF00FF");
+            color.id = rleArray[i][0];
+            errorMaterial.addColor(color);
+            colors[rleArray[i][0]] = color;
+          }
+        }
+        this._setVoxels(model, color, rleArray[i][1], context, voxChunk, materialIndex);
+      }
+    }
+    static _parseAo(oaData) {
+      let ao;
+      if (oaData) {
+        if (!oaData.startsWith("#")) {
+          oaData = "#000 " + oaData;
+        }
+        const color = Color.fromHex(oaData.split(" ")[0]);
+        const maxDistance = Math.abs(parseFloat(oaData.split(" ")[1] || 1));
+        const strength = parseFloat(oaData.split(" ")[2] || 1);
+        let angle = parseFloat(oaData.split(" ")[3] || 70);
+        angle = Math.max(0, Math.min(90, Math.round(angle)));
+        ao = { color, maxDistance, strength, angle };
+      }
+      return ao;
+    }
+    static _parseShell(shellData) {
+      let shell;
+      let error = false;
+      if (shellData) {
+        shell = [];
+        if (shellData !== "none") {
+          const parts = shellData.split(/\s+/);
+          if (parts.length < 2 || parts.length % 2 !== 0) {
+            error = true;
+          } else {
+            for (let s = 0; s < parts.length / 2; s++) {
+              const colorId = parts[s * 2 + 0];
+              const distance = parts[s * 2 + 1];
+              if (!/^[A-Z][a-z]*$/.test(colorId) || !/^([-+]?[0-9]*\.?[0-9]+)*$/.test(distance)) {
+                error = true;
+                break;
+              } else {
+                shell.push({ colorId: parts[s * 2], distance: parts[s * 2 + 1] });
+              }
+            }
+          }
+        }
+      }
+      if (error) {
+        throw new Error(`SyntaxError: shell '${shellData}' must be 'none' or one or more color ID's and distances, e.g. P 0.2 Q 0.4`);
+      } else if (shell) {
+        shell = shell.sort(function(a, b) {
+          return a.distance - b.distance;
+        });
+      }
+      return shell;
+    }
+    static _resolveShellColors(shell, model) {
+      if (!shell || shell.length === 0) {
+        return;
+      }
+      shell.forEach(function(sh) {
+        sh.color = model.colors[sh.colorId];
+        if (!sh.color) {
+          throw new Error(`SyntaxError: shell color ID '${sh.colorId}' is not a known color`);
+        }
+      }, this);
+    }
+    static _parseVertexData(vertexData, modelType) {
+      if (vertexData) {
+        const modelData = [];
+        const parts = vertexData.split(/\s+/);
+        let data = null;
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          if (isNaN(part)) {
+            data = { name: part, values: [] };
+            modelData.push(data);
+          } else if (!data) {
+            break;
+          } else {
+            data.values.push(parseFloat(part));
+          }
+        }
+        let error = modelData.length === 0;
+        for (let i = 0; i < modelData.length; i++) {
+          error = error || modelData[i].values.length === 0 || modelData[i].values.length >= 4;
+        }
+        if (error) {
+          throw new Error(`SyntaxError: The data property '${modelData.data}' of the ${modelType} should consist of one or more names, each followed by 1 to 4 float (default) values.`);
+        }
+        return modelData;
+      }
+    }
+    static _compareVertexData(modelData, materialData) {
+      let error = false;
+      try {
+        if ((modelData || materialData) && materialData) {
+          error = materialData && !modelData;
+          error = error || modelData.length !== materialData.length;
+          for (let i = 0; i < modelData.length; i++) {
+            error = error || modelData[i].name !== materialData[i].name;
+            error = error || modelData[i].values.length !== materialData[i].values.length;
+          }
+        }
+      } catch (ex) {
+        error = true;
+      }
+      if (error) {
+        throw new Error("SyntaxError: The data property of the material should consist of identical names and number of values as the model data property.");
+      }
+    }
+    static _parseXYZInt(name, value, defaultValue, allowUniform) {
+      const xyz = this._parseXYZFloat(name, value, defaultValue, allowUniform);
+      return {
+        x: Math.trunc(xyz.x),
+        y: Math.trunc(xyz.y),
+        z: Math.trunc(xyz.z)
+      };
+    }
+    static _parseXYZFloat(name, value, defaultValue, allowUniform) {
+      if (!value && defaultValue) {
+        value = defaultValue;
+      }
+      if (!value) {
+        return null;
+      }
+      let xyz = value.split(/[\s/]+/);
+      if (xyz.length === 1 && allowUniform) {
+        xyz.push(xyz[0]);
+        xyz.push(xyz[0]);
+      }
+      if (xyz.length !== 3) {
+        throw new Error(`SyntaxError: '${name}' must have three values.`);
+      }
+      xyz = {
+        x: parseFloat(xyz[0]),
+        y: parseFloat(xyz[1]),
+        z: parseFloat(xyz[2])
+      };
+      if (Number.isNaN(xyz.x) || Number.isNaN(xyz.y) || Number.isNaN(xyz.z)) {
+        throw new Error(`SyntaxError: Invalid value '${value}' for ${name}'.`);
+      }
+      return xyz;
+    }
+    static _unpackRle(chunks) {
+      const result = [];
+      let count = 1;
+      let chunk = chunks.next();
+      while (!chunk.done) {
+        const value = chunk.value[0];
+        if (value[0] >= "0" && value[0] <= "9") {
+          count = parseInt(value, 10);
+        } else if (value === "(") {
+          const sub = this._unpackRle(chunks);
+          for (let c = 0; c < count; c++) {
+            Array.prototype.push.apply(result, sub);
+          }
+          count = 1;
+        } else if (value === ")") {
+          return result;
+        } else if (value.length > 1 && value[0] >= "A" && value[0] <= "Z" && value[1] === value[0]) {
+          if (count > 1) {
+            result.push([value[0], count]);
+            result.push([value[0], value.length - 1]);
+          } else {
+            result.push([value[0], value.length]);
+          }
+          count = 1;
+        } else if (value.length > 1 && value[0] === "-" && value[1] === "-") {
+          if (count > 1) {
+            result.push(["-", count]);
+            result.push(["-", value.length - 1]);
+          } else {
+            result.push(["-", value.length]);
+          }
+          count = 1;
+        } else {
+          result.push([value, count]);
+          count = 1;
+        }
+        chunk = chunks.next();
+      }
+      return result;
+    }
+    static _setVoxels(model, color, count, context, voxChunk, materialIndex) {
+      const material = model.materials.materials[materialIndex];
+      while (count-- > 0) {
+        if (color) {
+          const r = Math.floor(color.r * 255);
+          const g = Math.floor(color.g * 255);
+          const b = Math.floor(color.b * 255);
+          const t = materialIndex;
+          const rgbt = voxColorForRGBT(r, g, b, t);
+          const vx = context.x - shiftForSize(model.size.x);
+          const vy = context.y - shiftForSize(model.size.y);
+          const vz = context.z - shiftForSize(model.size.z);
+          model.bounds.set(vx, vy, vz);
+          material.bounds.set(vx, vy, vz);
+          voxChunk.setColorAt(vx, vy, vz, rgbt);
+        }
+        context.x++;
+        if (context.x > context.maxx) {
+          context.x = context.minx;
+          context.y++;
+        }
+        if (context.y > context.maxy) {
+          context.y = context.miny;
+          context.z++;
+        }
+      }
+    }
+    static _validateModel(modelData) {
+      const mandatory = ["size", "materials", "textures", "lights", "voxels"];
+      const optional = [
+        "name",
+        "shape",
+        "scale",
+        "rotation",
+        "position",
+        "simplify",
+        "origin",
+        "autoresize",
+        "resize",
+        "flatten",
+        "clamp",
+        "skip",
+        "tile",
+        "ao",
+        "aosides",
+        "aosamples",
+        "shell",
+        "wireframe",
+        "data"
+      ];
+      this._validateProperties(modelData, mandatory, optional, "model");
+      modelData.lights.forEach(function(lightData) {
+        this._validateLight(lightData);
+      }, this);
+      modelData.textures.forEach(function(textureData) {
+        this._validateTexture(textureData);
+      }, this);
+      modelData.materials.forEach(function(materialData) {
+        this._validateMaterial(materialData);
+      }, this);
+    }
+    static _validateLight(lightData) {
+      const mandatory = ["color"];
+      const optional = ["direction", "position", "distance", "size", "detail"];
+      this._validateProperties(lightData, mandatory, optional, "light");
+      if (lightData.direction && lightData.position) {
+        throw new Error("SyntaxError: Light cannot have both a direction and a position.");
+      }
+      if (lightData.direction && lightData.distance) {
+        throw new Error("SyntaxError: Light cannot have both a direction and a distance.");
+      }
+      if (!lightData.position && (lightData.size || lightData.detail)) {
+        throw new Error("SyntaxError: Light with no position cannot have size or detail.");
+      }
+    }
+    static _validateTexture(textureData) {
+      const mandatory = ["id", "image"];
+      const optional = ["cube"];
+      this._validateProperties(textureData, mandatory, optional, "texture");
+    }
+    static _validateMaterial(materialData) {
+      const mandatory = ["colors"];
+      const optional = [
+        "type",
+        "lighting",
+        "fade",
+        "simplify",
+        "roughness",
+        "metalness",
+        "emissive",
+        "fog",
+        "opacity",
+        "alphatest",
+        "transparent",
+        "refractionratio",
+        "deform",
+        "warp",
+        "scatter",
+        "flatten",
+        "clamp",
+        "skip",
+        "ao",
+        "lights",
+        "wireframe",
+        "side",
+        "shell",
+        "map",
+        "normalmap",
+        "roughnessmap",
+        "metalnessmap",
+        "emissivemap",
+        "matcap",
+        "reflectionmap",
+        "refractionmap",
+        "maptransform",
+        "data"
+      ];
+      this._validateProperties(materialData, mandatory, optional, "material");
+    }
+    static _validateProperties(data, mandatory, optional, objectName) {
+      for (const propertyName of mandatory) {
+        if (!data[propertyName]) {
+          throw new Error("SyntaxError: " + objectName + ' is missing mandatory property "' + propertyName + '".');
+        }
+      }
+      for (const propertyName in data) {
+        if (!mandatory.includes(propertyName) && !optional.includes(propertyName)) {
+          throw new Error("SyntaxError: " + objectName + ' has unrecognized property "' + propertyName + '".');
+        }
+      }
+    }
+  };
+
+  // src/svox/modelwriter.js
+  var ModelWriter = class {
+    static writeToString(model, compressed, repeat) {
+      repeat = Math.round(repeat || 1);
+      model.prepareForWrite();
+      const colors = [];
+      const colorIds = {};
+      model.materials.forEach(function(material) {
+        material.colors.forEach(function(color) {
+          colors.push(color);
+          colorIds[color.id] = color.id;
+        });
+      });
+      colors.sort(function(a, b) {
+        return b.count - a.count;
+      });
+      let maxIdLength = 0;
+      let index = 0;
+      for (let c = 0; c < colors.length; c++) {
+        if (!colors[c].id) {
+          let colorId;
+          do {
+            colorId = this._colorIdForIndex(index++);
+          } while (colorIds[colorId]);
+          colorIds[colorId] = colorId;
+          colors[c].id = colorId;
+        }
+        maxIdLength = Math.max(colors[c].id.length, maxIdLength);
+      }
+      const voxelWidth = compressed || maxIdLength === 1 || maxIdLength > 3 ? 1 : maxIdLength;
+      let result = this._serializeTextures(model);
+      result += this._serializeLights(model);
+      result += "model\r\n";
+      const size = model.voxels.bounds.size;
+      if (size.y === size.x && size.z === size.x) {
+        result += `size = ${size.x * repeat}\r
+`;
+      } else {
+        result += `size = ${size.x * repeat} ${size.y * repeat} ${size.z * repeat}\r
+`;
+      }
+      if (model.shape !== "box") {
+        result += `shape = ${model.shape}\r
+`;
+      }
+      if (model.scale.x !== 1 || model.scale.y !== 1 || model.scale.z !== 1 || repeat !== 1) {
+        if (model.scale.y === model.scale.x && model.scale.z === model.scale.x) {
+          result += `scale = ${model.scale.x / repeat}\r
+`;
+        } else {
+          result += `scale = ${model.scale.x / repeat} ${model.scale.y / repeat} ${model.scale.z / repeat}\r
+`;
+        }
+      }
+      if (model.resize) {
+        result += `resize = ${model.resize}\r
+`;
+      }
+      if (model.rotation.x !== 0 || model.rotation.y !== 0 || model.rotation.z !== 0) {
+        result += `rotation = ${model.rotation.x} ${model.rotation.y} ${model.rotation.z}\r
+`;
+      }
+      if (model.position.x !== 0 || model.position.y !== 0 || model.position.z !== 0) {
+        result += `position = ${model.position.x} ${model.position.y} ${model.position.z}\r
+`;
+      }
+      if (model.origin)
+        result += `origin = ${model.origin}\r
+`;
+      if (model.flatten)
+        result += `flatten = ${model.flatten}\r
+`;
+      if (model.clamp)
+        result += `clamp = ${model.clamp}\r
+`;
+      if (model.skip)
+        result += `skip = ${model.skip}\r
+`;
+      if (model.tile)
+        result += `tile = ${model.tile}\r
+`;
+      if (model.ao)
+        result += `ao =${model.ao.color.toString() !== "#000" ? " " + model.ao.color : ""} ${model.ao.maxDistance} ${model.ao.strength}${model.ao.angle !== 70 ? " " + model.ao.angle : ""}\r
+`;
+      if (model.asSides)
+        result += `aosides = ${model.aoSides}\r
+`;
+      if (model.asSamples)
+        result += `aosamples = ${model.aoSamples}\r
+`;
+      if (model.wireframe)
+        result += "wireframe = true\r\n";
+      if (!model.simplify)
+        result += "simplify = false\r\n";
+      if (model.data)
+        result += `data = ${this._serializeVertexData(model.data)}\r
+`;
+      if (model.shell)
+        result += `shell = ${this._getShell(model.shell)}\r
+`;
+      result += this._serializeMaterials(model);
+      if (!compressed || repeat !== 1) {
+        result += this._serializeVoxels(model, repeat, voxelWidth);
+      } else {
+        result += this._serializeVoxelsRLE(model, 100);
+      }
+      return result;
+    }
+    static _serializeVertexData(data) {
+      let result = null;
+      if (data && data.length > 0) {
+        result = "";
+        for (let d = 0; d < data.length; d++) {
+          result += data[d].name + " ";
+          for (let v = 0; v < data[d].values.length; v++) {
+            result += data[d].values[v] + " ";
+          }
+        }
+      }
+      return result;
+    }
+    static _serializeTextures(model) {
+      let result = "";
+      let newLine = "";
+      Object.getOwnPropertyNames(model.textures).forEach(function(textureName) {
+        const texture = model.textures[textureName];
+        const settings = [];
+        settings.push(`id = ${texture.id}`);
+        if (texture.cube) {
+          settings.push("cube = true");
+        }
+        settings.push(`image = ${texture.image}`);
+        result += `texture ${settings.join(", ")}\r
+`;
+        newLine = "\r\n";
+      });
+      result += newLine;
+      return result;
+    }
+    static _serializeLights(model) {
+      let result = "";
+      let newLine = "";
+      model.lights.forEach(function(light) {
+        const settings = [];
+        let colorAndStrength = `${light.color}`;
+        if (light.strength !== 1) {
+          colorAndStrength += ` ${light.strength}`;
+        }
+        settings.push(`color = ${colorAndStrength}`);
+        if (light.direction)
+          settings.push(`direction = ${light.direction.x} ${light.direction.y} ${light.direction.z}`);
+        if (light.position)
+          settings.push(`position = ${light.position.x} ${light.position.y} ${light.position.z}`);
+        if (light.distance)
+          settings.push(`distance = ${light.distance}`);
+        if (light.size) {
+          settings.push(`size = ${light.size}`);
+          if (light.detail !== 1)
+            settings.push(`detail = ${light.detail}`);
+        }
+        result += `light ${settings.join(", ")}\r
+`;
+        newLine = "\r\n";
+      });
+      result += newLine;
+      return result;
+    }
+    static _serializeMaterials(model) {
+      let result = "";
+      model.materials.forEach(function(material) {
+        if (material.colors.length === 0) {
+          return;
+        }
+        const settings = [];
+        if (material.type !== MATSTANDARD)
+          settings.push(`type = ${material.type}`);
+        if (material.lighting !== FLAT)
+          settings.push(`lighting = ${material.lighting}`);
+        if (material.wireframe)
+          settings.push("wireframe = true");
+        if (material.roughness !== 1)
+          settings.push(`roughness = ${material.roughness}`);
+        if (material.metalness !== 0)
+          settings.push(`metalness = ${material.metalness}`);
+        if (material.fade)
+          settings.push("fade = true");
+        if (material.simplify !== null && material.simplify !== model.simplify)
+          settings.push(`simplify = ${material.simplify}`);
+        if (material.opacity !== 1)
+          settings.push(`opacity = ${material.opacity}`);
+        if (material.transparent)
+          settings.push("transparent = true");
+        if (material.refractionRatio !== 0.9)
+          settings.push(`refractionRatio = ${material.refractionRatio}`);
+        if (material.emissive)
+          settings.push(`emissive = ${material.emissive.color} ${material.emissive.intensity}`);
+        if (!material.fog)
+          settings.push("fog = false");
+        if (material.side !== FRONT)
+          settings.push(`side = ${material.side}`);
+        if (material.deform)
+          settings.push(`deform = ${material.deform.count} ${material.deform.strength}${material.deform.damping !== 1 ? " " + material.deform.damping : ""}`);
+        if (material.warp)
+          settings.push(`warp = ${material.warp.amplitude} ${material.warp.frequency}`);
+        if (material.scatter)
+          settings.push(`scatter = ${material.scatter}`);
+        if (material.ao)
+          settings.push(`ao =${material.ao.color !== "#000" ? " " + material.ao.color : ""} ${material.ao.maxDistance} ${material.ao.strength}${material.ao.angle !== 70 ? " " + material.ao.angle : ""}`);
+        if (model.lights.length > 0 && !material.lights)
+          settings.push("lights = false");
+        if (material.flatten)
+          settings.push(`flatten = ${material.flatten}`);
+        if (material.clamp)
+          settings.push(`clamp = ${material.clamp}`);
+        if (material.skip)
+          settings.push(`skip = ${material.skip}`);
+        if (material.map)
+          settings.push(`map = ${material.map.id}`);
+        if (material.normalMap)
+          settings.push(`normalmap = ${material.normalMap.id}`);
+        if (material.roughnessMap)
+          settings.push(`roughnessmap = ${material.roughnessMap.id}`);
+        if (material.metalnessMap)
+          settings.push(`metalnessmap = ${material.metalnessMap.id}`);
+        if (material.emissiveMap)
+          settings.push(`emissivemap = ${material.emissiveMap.id}`);
+        if (material.matcap)
+          settings.push(`matcap = ${material.matcap.id}`);
+        if (material.reflectionMap)
+          settings.push(`reflectionmap = ${material.reflectionMap.id}`);
+        if (material.refractionMap)
+          settings.push(`refractionmap = ${material.refractionMap.id}`);
+        if (material.mapTransform.uscale !== -1 || material.mapTransform.vscale !== -1) {
+          let transform = "maptransform =";
+          transform += ` ${material.mapTransform.uscale} ${material.mapTransform.vscale}`;
+          if (material.mapTransform.uoffset !== 0 || material.mapTransform.voffset !== 0 || material.mapTransform.rotation !== 0) {
+            transform += ` ${material.mapTransform.uoffset} ${material.mapTransform.voffset}`;
+            if (material.mapTransform.rotation !== 0) {
+              transform += ` ${material.mapTransform.rotation}`;
+            }
+          }
+          settings.push(transform);
+        }
+        if (material.data)
+          settings.push(`data = ${this._serializeVertexData(material.data)}`);
+        if (material.shell)
+          settings.push(`shell = ${this._getShell(material.shell)}`);
+        result += "material " + settings.join(", ") + "\r\n";
+        result += "  colors =";
+        material.colors.forEach(function(color) {
+          result += ` ${color.id}${color.exId == null ? "" : "(" + color.exId + ")"}:${color}`;
+        });
+        result += "\r\n";
+      }, this);
+      return result;
+    }
+    static _colorIdForIndex(index) {
+      let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      let id = "";
+      do {
+        const mod = index % 26;
+        id = chars[mod] + id.toLowerCase();
+        index = (index - mod) / 26;
+        if (index < 26) {
+          chars = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        }
+      } while (index > 0);
+      return id;
+    }
+    static _getShell(shell) {
+      if (shell.length === 0) {
+        return "none";
+      }
+      let result = "";
+      for (let sh = 0; sh < shell.length; sh++) {
+        result += `${shell[sh].colorId} ${shell[sh].distance} `;
+      }
+      return result.trim();
+    }
+    static _serializeVoxels(model, repeat, voxelWidth) {
+      const emptyVoxel = "-" + " ".repeat(Math.max(voxelWidth - 1));
+      const gutter = " ".repeat(voxelWidth);
+      let result = "voxels\r\n";
+      const voxels = model.voxels;
+      for (let z = voxels.minZ; z <= voxels.maxZ; z++) {
+        for (let zr = 0; zr < repeat; zr++) {
+          for (let y = voxels.minY; y <= voxels.maxY; y++) {
+            for (let yr = 0; yr < repeat; yr++) {
+              for (let x = voxels.minX; x <= voxels.maxX; x++) {
+                const voxel = voxels.getVoxel(x, y, z);
+                for (let xr = 0; xr < repeat; xr++) {
+                  if (voxel) {
+                    result += voxel.color.id;
+                    let l = voxel.color.id.length;
+                    while (l++ < voxelWidth) {
+                      result += " ";
+                    }
+                  } else {
+                    result += emptyVoxel;
+                  }
+                }
+              }
+              result += gutter;
+            }
+          }
+          result += "\r\n";
+        }
+      }
+      return result;
+    }
+    static _serializeVoxelsRLE(model, compressionWindow) {
+      const queue = [];
+      let count = 0;
+      let lastColor;
+      model.voxels.forEachInBoundary(function(voxel) {
+        const color = voxel ? voxel.color : null;
+        if (color === lastColor) {
+          count++;
+        } else {
+          this._addRleChunk(queue, lastColor, count, compressionWindow);
+          lastColor = color;
+          count = 1;
+        }
+      }, this);
+      this._addRleChunk(queue, lastColor, count, compressionWindow);
+      let result = "";
+      for (const item of queue) {
+        result += this._rleToString(item);
+      }
+      return "voxels\r\n" + result + "\r\n";
+    }
+    static _addRleChunk(queue, color, count, compressionWindow) {
+      if (count === 0) {
+        return;
+      }
+      let chunk = count > 1 ? count.toString() : "";
+      chunk += color ? color.id : "-";
+      queue.push([chunk, 1, chunk]);
+      for (let k = Math.max(0, queue.length - compressionWindow * 2); k <= queue.length - 2; k++) {
+        const item = queue[k][0];
+        for (let j = 1; j < compressionWindow; j++) {
+          if (k + 2 * j > queue.length) {
+            break;
+          }
+          let repeating = true;
+          for (let i = 0; i <= j - 1; i++) {
+            repeating = queue[k + i][2] === queue[k + i + j][2];
+            if (!repeating)
+              break;
+          }
+          if (repeating) {
+            const arr = queue.splice(k, j);
+            queue.splice(k, j - 1);
+            queue[k] = [arr, 2, null];
+            queue[k][2] = JSON.stringify(queue[k]);
+            k = queue.length;
+            break;
+          }
+        }
+        if (Array.isArray(item) && queue.length > k + item.length) {
+          const array = item;
+          let repeating = true;
+          for (let i = 0; i < array.length; i++) {
+            repeating = array[i][2] === queue[k + 1 + i][2];
+            if (!repeating)
+              break;
+          }
+          if (repeating) {
+            queue.splice(k + 1, array.length);
+            queue[k][1]++;
+            queue[k][2] = null;
+            queue[k][2] = JSON.stringify(queue[k]);
+            k = queue.length;
+          }
+        }
+      }
+    }
+    static _rleToString(chunk) {
+      let result = chunk[1] === 1 ? "" : chunk[1].toString();
+      const value = chunk[0];
+      if (Array.isArray(value)) {
+        result += "(";
+        for (const sub of value) {
+          result += this._rleToString(sub);
+        }
+        result += ")";
+      } else {
+        result += value;
+      }
+      return result;
+    }
+  };
+
+  // src/svox/buffers.js
+  var Buffers = class {
+    constructor(maxVerts) {
+      const maxVertBits = Math.floor(maxVerts / 8);
+      const maxFaces = maxVerts / 4;
+      const maxFaceBits = Math.floor(maxFaces / 8);
+      const maxFaceVerts = maxFaces * 4;
+      this.tmpVertIndexLookup = /* @__PURE__ */ new Map();
+      this.vertX = new Float32Array(maxVerts);
+      this.vertY = new Float32Array(maxVerts);
+      this.vertZ = new Float32Array(maxVerts);
+      this.vertTmpX = new Float32Array(maxVerts);
+      this.vertTmpY = new Float32Array(maxVerts);
+      this.vertTmpZ = new Float32Array(maxVerts);
+      this.vertHasTmp = Bits.create(new Uint8Array(maxVertBits).buffer, 1, 0);
+      this.vertColorR = new Float32Array(maxVerts * 6);
+      this.vertColorG = new Float32Array(maxVerts * 6);
+      this.vertColorB = new Float32Array(maxVerts * 6);
+      this.vertColorCount = new Uint8Array(maxVerts);
+      this.vertSmoothNormalX = new Float32Array(maxVerts);
+      this.vertSmoothNormalY = new Float32Array(maxVerts);
+      this.vertSmoothNormalZ = new Float32Array(maxVerts);
+      this.vertBothNormalX = new Float32Array(maxVerts);
+      this.vertBothNormalY = new Float32Array(maxVerts);
+      this.vertBothNormalZ = new Float32Array(maxVerts);
+      this.vertFlattenedX = Bits.create(new Uint8Array(maxVertBits).buffer, 1, 0);
+      this.vertFlattenedY = Bits.create(new Uint8Array(maxVertBits).buffer, 1, 0);
+      this.vertFlattenedZ = Bits.create(new Uint8Array(maxVertBits).buffer, 1, 0);
+      this.vertClampedX = Bits.create(new Uint8Array(maxVertBits).buffer, 1, 0);
+      this.vertClampedY = Bits.create(new Uint8Array(maxVertBits).buffer, 1, 0);
+      this.vertClampedZ = Bits.create(new Uint8Array(maxVertBits).buffer, 1, 0);
+      this.vertFullyClamped = Bits.create(new Uint8Array(maxVertBits).buffer, 1, 0);
+      this.vertDeformCount = new Uint8Array(maxVerts);
+      this.vertDeformDamping = new Float32Array(maxVerts);
+      this.vertDeformStrength = new Float32Array(maxVerts);
+      this.vertWarpAmplitude = new Float32Array(maxVerts);
+      this.vertWarpFrequency = new Float32Array(maxVerts);
+      this.vertScatter = new Float32Array(maxVerts);
+      this.vertRing = new Float32Array(maxVerts);
+      this.vertNrOfClampedLinks = new Uint8Array(maxVerts);
+      this.vertLinkCounts = new Uint8Array(maxVerts);
+      this.vertLinkIndices = new Uint32Array(maxVerts * 6);
+      this.faceFlattened = Bits.create(new Uint8Array(maxFaceBits).buffer, 1, 0);
+      this.faceClamped = Bits.create(new Uint8Array(maxFaceBits).buffer, 1, 0);
+      this.faceSmooth = Bits.create(new Uint8Array(maxFaceBits).buffer, 1, 0);
+      this.faceEquidistant = Bits.create(new Uint8Array(maxFaceBits).buffer, 1, 0);
+      this.faceCulled = Bits.create(new Uint8Array(maxFaceBits).buffer, 1, 0);
+      this.faceNameIndices = new Uint8Array(maxFaces);
+      this.faceMaterials = new Uint8Array(maxFaces);
+      this.faceVertIndices = new Uint32Array(maxFaceVerts);
+      this.faceVertNormalX = new Float32Array(maxFaceVerts);
+      this.faceVertNormalY = new Float32Array(maxFaceVerts);
+      this.faceVertNormalZ = new Float32Array(maxFaceVerts);
+      this.faceVertFlatNormalX = new Float32Array(maxFaceVerts);
+      this.faceVertFlatNormalY = new Float32Array(maxFaceVerts);
+      this.faceVertFlatNormalZ = new Float32Array(maxFaceVerts);
+      this.faceVertSmoothNormalX = new Float32Array(maxFaceVerts);
+      this.faceVertSmoothNormalY = new Float32Array(maxFaceVerts);
+      this.faceVertSmoothNormalZ = new Float32Array(maxFaceVerts);
+      this.faceVertBothNormalX = new Float32Array(maxFaceVerts);
+      this.faceVertBothNormalY = new Float32Array(maxFaceVerts);
+      this.faceVertBothNormalZ = new Float32Array(maxFaceVerts);
+      this.faceVertColorR = new Float32Array(maxFaceVerts);
+      this.faceVertColorG = new Float32Array(maxFaceVerts);
+      this.faceVertColorB = new Float32Array(maxFaceVerts);
+      this.faceVertLightR = new Float32Array(maxFaceVerts);
+      this.faceVertLightG = new Float32Array(maxFaceVerts);
+      this.faceVertLightB = new Float32Array(maxFaceVerts);
+      this.faceVertAO = new Float32Array(maxFaceVerts);
+      this.faceVertUs = new Float32Array(maxFaceVerts);
+      this.faceVertVs = new Float32Array(maxFaceVerts);
+      this.tmpVoxelXZYFaceIndices = Array(maxFaces).fill(0);
+      this.tmpVoxelXYZFaceIndices = Array(maxFaces).fill(0);
+      this.tmpVoxelYZXFaceIndices = Array(maxFaces).fill(0);
+      this.voxelXZYFaceIndices = null;
+      this.voxelXYZFaceIndices = null;
+      this.voxelYZXFaceIndices = null;
+    }
+    clear() {
+      this.tmpVertIndexLookup.clear();
+      this.vertX.fill(0);
+      this.vertY.fill(0);
+      this.vertZ.fill(0);
+      this.vertTmpX.fill(0);
+      this.vertTmpY.fill(0);
+      this.vertTmpZ.fill(0);
+      this.vertHasTmp.clear();
+      this.vertColorR.fill(0);
+      this.vertColorG.fill(0);
+      this.vertColorB.fill(0);
+      this.vertColorCount.fill(0);
+      this.vertSmoothNormalX.fill(0);
+      this.vertSmoothNormalY.fill(0);
+      this.vertSmoothNormalZ.fill(0);
+      this.vertBothNormalX.fill(0);
+      this.vertBothNormalY.fill(0);
+      this.vertBothNormalZ.fill(0);
+      this.vertFlattenedX.clear();
+      this.vertFlattenedY.clear();
+      this.vertFlattenedZ.clear();
+      this.vertClampedX.clear();
+      this.vertClampedY.clear();
+      this.vertClampedZ.clear();
+      this.vertFullyClamped.clear();
+      this.vertDeformCount.fill(0);
+      this.vertDeformDamping.fill(0);
+      this.vertDeformStrength.fill(0);
+      this.vertWarpAmplitude.fill(0);
+      this.vertWarpFrequency.fill(0);
+      this.vertScatter.fill(0);
+      this.vertRing.fill(0);
+      this.vertNrOfClampedLinks.fill(0);
+      this.vertLinkCounts.fill(0);
+      this.vertLinkIndices.fill(0);
+      this.faceFlattened.clear();
+      this.faceClamped.clear();
+      this.faceSmooth.clear();
+      this.faceEquidistant.clear();
+      this.faceCulled.clear();
+      this.faceNameIndices.fill(0);
+      this.faceMaterials.fill(0);
+      this.faceVertIndices.fill(0);
+      this.faceVertNormalX.fill(0);
+      this.faceVertNormalY.fill(0);
+      this.faceVertNormalZ.fill(0);
+      this.faceVertFlatNormalX.fill(0);
+      this.faceVertFlatNormalY.fill(0);
+      this.faceVertFlatNormalZ.fill(0);
+      this.faceVertSmoothNormalX.fill(0);
+      this.faceVertSmoothNormalY.fill(0);
+      this.faceVertSmoothNormalZ.fill(0);
+      this.faceVertBothNormalX.fill(0);
+      this.faceVertBothNormalY.fill(0);
+      this.faceVertBothNormalZ.fill(0);
+      this.faceVertColorR.fill(0);
+      this.faceVertColorG.fill(0);
+      this.faceVertColorB.fill(0);
+      this.faceVertLightR.fill(0);
+      this.faceVertLightG.fill(0);
+      this.faceVertLightB.fill(0);
+      this.faceVertAO.fill(0);
+      this.faceVertUs.fill(0);
+      this.faceVertVs.fill(0);
+      this.tmpVoxelXZYFaceIndices.length = 0;
+      this.tmpVoxelXYZFaceIndices.length = 0;
+      this.tmpVoxelYZXFaceIndices.length = 0;
+      this.voxelXZYFaceIndices = null;
+      this.voxelXYZFaceIndices = null;
+      this.voxelYZXFaceIndices = null;
+    }
+  };
+
+  // inline-worker:__inline-worker
+  function inlineWorker(scriptText) {
+    let blob = new Blob([scriptText], { type: "text/javascript" });
+    let url = URL.createObjectURL(blob);
+    let worker = new Worker(url);
+    URL.revokeObjectURL(url);
+    return worker;
+  }
+
+  // src/svox/svox.worker.js
+  function Worker2() {
+    return inlineWorker('var Ss=Object.defineProperty;var Os=(S,t,s)=>t in S?Ss(S,t,{enumerable:!0,configurable:!0,writable:!0,value:s}):S[t]=s;var us=(S,t,s)=>(Os(S,typeof t!="symbol"?t+"":t,s),s);var J=class{static parse(t){if(!t)return;if(t=" "+(t||"").toLowerCase(),t!==" "&&!/^(?!$)(\\s+(?:none|-x|x|\\+x|-y|y|\\+y|-z|z|\\+z|\\s))+\\s*$/.test(t))throw new Error(`SyntaxError: Planar expression \'${t}\' is only allowed to be \'none\' or contain -x x +x -y y +y -z z +z.`);let s=t.includes("none");return{nx:!s&&t.includes("-x"),x:!s&&t.includes(" x"),px:!s&&t.includes("+x"),ny:!s&&t.includes("-y"),y:!s&&t.includes(" y"),py:!s&&t.includes("+y"),nz:!s&&t.includes("-z"),z:!s&&t.includes(" z"),pz:!s&&t.includes("+z")}}static toString(t){return t?((t.nx?" -x":"")+(t.x?" x":"")+(t.px?" +x":"")+(t.ny?" -y":"")+(t.y?" y":"")+(t.py?" +y":"")+(t.nz?" -z":"")+(t.z?" z":"")+(t.pz?" +z":"")).trim():void 0}static combine(t,s,e){return!t&&!s?e:t?!s||t===s?t:{nx:t.nx||s.nx,x:t.x||s.x,px:t.px||s.px,ny:t.ny||s.ny,y:t.y||s.y,py:t.py||s.py,nz:t.nz||s.nz,z:t.z||s.z,pz:t.pz||s.pz}:s}};var le="standard",Le="basic",ps="lambert",xs="phong",ds="matcap",gs="toon",ke="normal",xe="bounds",Gt="model",Ue="flat",de="quad",ee="smooth",se="both",Nt="front",fe="back",Ht="double",vs=["nx","px","ny","py","nz","pz"],Fs=[[[0,0,0],[0,1,0],[0,1,1],[0,0,1]],[[1,0,1],[1,1,1],[1,1,0],[1,0,0]],[[0,0,0],[0,0,1],[1,0,1],[1,0,0]],[[0,1,1],[0,1,0],[1,1,0],[1,1,1]],[[1,0,0],[1,1,0],[0,1,0],[0,0,0]],[[0,0,1],[0,1,1],[1,1,1],[1,0,1]]],Vs=[[-1,0,0],[1,0,0],[0,-1,0],[0,1,0],[0,0,-1],[0,0,1]],As=[{u:"z",v:"y",order:[0,1,2,3],ud:1,vd:1,uo:0,vo:0},{u:"z",v:"y",order:[3,2,1,0],ud:-1,vd:1,uo:.75,vo:0},{u:"x",v:"z",order:[0,1,2,3],ud:1,vd:1,uo:.75,vo:.5},{u:"x",v:"z",order:[1,0,3,2],ud:1,vd:-1,uo:.25,vo:1},{u:"x",v:"y",order:[3,2,1,0],ud:-1,vd:1,uo:1,vo:0},{u:"x",v:"y",order:[0,1,2,3],ud:1,vd:1,uo:.25,vo:0}],ys=[[[0,0,1],[0,1,0]],[[0,0,1],[0,1,0]],[[1,0,0],[0,0,1]],[[1,0,0],[0,0,1]],[[1,0,0],[0,1,0]],[[1,0,0],[0,1,0]]];var Je=(S,t,s)=>Math.min(Math.max(S,t),s),rt=class{static fromHex(t){let s=new rt;return s._set(t),s.id="",s.exId=null,s.count=0,s}static fromRgb(t,s,e){t=Math.round(Je(t,0,1)*255),s=Math.round(Je(s,0,1)*255),e=Math.round(Je(e,0,1)*255);let r="#"+(t<16?"0":"")+t.toString(16)+(s<16?"0":"")+s.toString(16)+(e<16?"0":"")+e.toString(16);return rt.fromHex(r)}clone(){let t=new rt;return t._color=this._color,t.r=this.r,t.g=this.g,t.b=this.b,t._material=this._material,t}multiply(t){return t instanceof rt?rt.fromRgb(this.r*t.r,this.g*t.g,this.b*t.b):rt.fromRgb(this.r*t,this.g*t,this.b*t)}normalize(){let t=Math.sqrt(this.r*this.r+this.g*this.g+this.b*this.b);return this.multiply(1/t)}add(...t){let s=this.r+t.reduce((o,n)=>o+n.r,0),e=this.g+t.reduce((o,n)=>o+n.g,0),r=this.b+t.reduce((o,n)=>o+n.b,0);return rt.fromRgb(s,e,r)}_setMaterial(t){if(this._material!==void 0)throw new Error("A Color can only be added once.");this._material=t,this.count=0}get material(){return this._material}_set(t){let s=t;if((typeof s=="string"||s instanceof String)&&(s=s.trim().toUpperCase(),s.match(/^#([0-9a-fA-F]{3}|#?[0-9a-fA-F]{6})$/))){s=s.replace("#",""),this._color="#"+s,s.length===3&&(s=s[0]+s[0]+s[1]+s[1]+s[2]+s[2]);let e=parseInt(s,16);this.r=(e>>16&255)/255,this.g=(e>>8&255)/255,this.b=(e&255)/255;return}throw new Error(`SyntaxError: Color ${t} is not a hexadecimal color of the form #000 or #000000.`)}toString(){return this._color}};var ge=class{constructor(t,s,e,r,o,n,i,a,c,f,l,h,m,u,v,p,A,F,g,V,x,_,N,d,M){switch(t=t||le,t){case le:case Le:case ps:case xs:case gs:case ds:case ke:break;default:throw new Error("SyntaxError: Unknown material type: "+t)}if(this.type=t,(m&&m.cube||u&&u.cube||v&&v.cube||p&&p.cube||A&&A.cube)&&!(x===-1&&_===-1))throw new Error("SyntaxError: Cube textures can not be combined with maptransform");if(g&&V)throw new Error("SyntaxError: One material can have a reflectionmap or a refractionmap, but not both");this.index=0,this.roughness=typeof s=="number"?s:1,this.metalness=typeof e=="number"?e:0,this.opacity=typeof r=="number"?r:1,this.alphaTest=typeof o=="number"?o:0,this.transparent=!!n,this.refractionRatio=typeof i=="number"?i:.9,this.wireframe=!!a,this.side=c||Nt,[Nt,fe,Ht].includes(this.side)||(this.side=Nt),this.setEmissive(f,l),this.fog=typeof h=="boolean"?h:!0,this.map=m,this.normalMap=u,this.roughnessMap=v,this.metalnessMap=p,this.emissiveMap=A,this.matcap=F,this.reflectionMap=g,this.refractionMap=V,this.mapTransform={uscale:x||-1,vscale:_||-1,uoffset:N||0,voffset:d||0,rotation:M||0},this.aoActive=!1,this._colors=[]}get baseId(){return this._baseId===void 0&&(this._baseId=`${this.type}|${this.roughness}|${this.metalness}|${this.opacity}|${this.alphaTest}|${this.transparent?1:0}|${this.refractionRatio}|${this.wireframe?1:0}|${this.side}|`+(this.emissive?`${this.emissive.color}|${this.emissive.intensity}|`:"||")+`${this.fog?1:0}|`+(this.map?`${this.map.id}|`:"|")+(this.normalMap?`${this.normalMap.id}|`:"|")+(this.roughnessMap?`${this.roughnessMap.id}|`:"|")+(this.metalnessMap?`${this.metalnessMap.id}|`:"|")+(this.emissiveMap?`${this.emissiveMap.id}|`:"|")+(this.matcap?`${this.matcap.id}|`:"|")+(this.reflectionMap?`${this.reflectionMap.id}|`:"|")+(this.refractionMap?`${this.refractionMap.id}|`:"|")+`${this.mapTransform.uscale}|${this.mapTransform.vscale}|${this.mapTransform.uoffset}|${this.mapTransform.voffset}|${this.mapTransform.rotation}`),this._baseId}get isTransparent(){return this.transparent||this.opacity<1}setEmissive(t,s){t===void 0||t==="#000"||t==="#000000"||!s?this._emissive=void 0:this._emissive={color:rt.fromHex(t),intensity:s}}get emissive(){return this._emissive}get colors(){return this._colors}get colorCount(){return this._colors.length}get colorUsageCount(){return this._colors.reduce((t,s)=>t+s.count,0)}};var re=class{get size(){return this.minX>this.maxX?{x:0,y:0,z:0}:{x:this.maxX-this.minX+1,y:this.maxY-this.minY+1,z:this.maxZ-this.minZ+1}}constructor(){this.reset()}reset(){this.minX=Number.POSITIVE_INFINITY,this.minY=Number.POSITIVE_INFINITY,this.minZ=Number.POSITIVE_INFINITY,this.maxX=Number.NEGATIVE_INFINITY,this.maxY=Number.NEGATIVE_INFINITY,this.maxZ=Number.NEGATIVE_INFINITY}set(t,s,e){this.minX=Math.min(this.minX,t),this.minY=Math.min(this.minY,s),this.minZ=Math.min(this.minZ,e),this.maxX=Math.max(this.maxX,t),this.maxY=Math.max(this.maxY,s),this.maxZ=Math.max(this.maxZ,e)}};var ve=class{constructor(t,s,e,r,o){this._baseMaterial=t,this.lighting=s,this.fade=!!e,this.simplify=r!==!1,this._deform=void 0,this._warp=void 0,this._scatter=void 0,this._flatten=J.parse(""),this._clamp=J.parse(""),this._skip=J.parse(""),this._ao=void 0,this.lights=!0,this._side=o,this._colors=[],this.bounds=new re}get baseId(){return this._baseMaterial.baseId}get index(){return this._baseMaterial.index}get colors(){return this._colors}get colorCount(){return this._baseMaterial.colorCount}get type(){return this._baseMaterial.type}get roughness(){return this._baseMaterial.roughness}get metalness(){return this._baseMaterial.metalness}get opacity(){return this._baseMaterial.opacity}get alphaTest(){return this._baseMaterial.alphaTest}get transparent(){return this._baseMaterial.transparent}get isTransparent(){return this._baseMaterial.isTransparent}get refractionRatio(){return this._baseMaterial.refractionRatio}get emissive(){return this._baseMaterial.emissive}get side(){return this._side}get fog(){return this._baseMaterial.fog}get map(){return this._baseMaterial.map}get normalMap(){return this._baseMaterial.normalMap}get roughnessMap(){return this._baseMaterial.roughnessMap}get metalnessMap(){return this._baseMaterial.metalnessMap}get emissiveMap(){return this._baseMaterial.emissiveMap}get matcap(){return this._baseMaterial.matcap}get reflectionMap(){return this._baseMaterial.reflectionMap}get refractionMap(){return this._baseMaterial.refractionMap}get mapTransform(){return this._baseMaterial.mapTransform}setDeform(t,s,e){t=Math.max(t==null?1:t,0),s=s==null?1:s,e=e==null?1:e,t>0&&s!==0?this._deform={count:t,strength:s,damping:e}:this._deform={count:0,strength:0,damping:0}}get deform(){return this._deform}setWarp(t,s){t=t===void 0?1:Math.abs(t),s=s===void 0?1:Math.abs(s),t>.001&&s>.001?this._warp={amplitude:t,frequency:s}:this._warp=void 0}get warp(){return this._warp}set scatter(t){t===0&&(t=void 0),this._scatter=Math.abs(t)}get scatter(){return this._scatter}set flatten(t){this._flatten=J.parse(t)}get flatten(){return J.toString(this._flatten)}set clamp(t){this._clamp=J.parse(t)}get clamp(){return J.toString(this._clamp)}set skip(t){this._skip=J.parse(t)}get skip(){return J.toString(this._skip)}setAo(t){this._ao=t}get ao(){return this._ao}set aoSides(t){this._aoSides=J.parse(t)}get aoSides(){return J.toString(this._aoSides)}addColorHEX(t){return this.addColor(rt.fromHex(t))}addColorRGB(t,s,e){return this.addColor(rt.fromRgb(t,s,e))}addColor(t){if(!(t instanceof rt))throw new Error("addColor requires a Color object, e.g. material.addColor(Color.fromHex(\'#FFFFFF\'))");return t._setMaterial(this),this._colors.push(t),this._baseMaterial._colors.push(t),t}};var Fe=class{constructor(){this.baseMaterials=[],this.materials=[]}createMaterial(t,s,e,r,o,n,i,a,c,f,l,h,m,u,v,p,A,F,g,V,x,_,N,d,M,z,C,y){h=h||Nt,[Nt,fe,Ht].includes(h)||(h=Nt);let O=h===Ht?Ht:Nt,E=new ge(t,e,r,i,a,c,f,l,O,m,u,v,p,A,F,g,V,x,_,N,d,M,z,C,y),Z=E.baseId,B=this.baseMaterials.find(X=>X.baseId===Z);B?E=B:this.baseMaterials.push(E);let Y=new ve(E,s,o,n,h);return this.materials.push(Y),Y}clearMaterials(){this.materials.length=0}forEach(t,s,e){e?this.baseMaterials.foreach(t,s):this.materials.forEach(t,s)}find(t){return this.materials.find(t)}findColorByExId(t){let s=null;return this.forEach(function(e){s||(s=e.colors.find(r=>r.exId===t))},this),s}getMaterialListIndex(t){return this.materials.indexOf(t)}};function Ve(S,t,s,e){let r=s*S;for(let o=0;o<s;){let n=r&7,i=r>>3,a=s-o,c=8-n,f=a<c?a:c,l=~(255<<f),h=t&l;t>>=f;let m=~(l<<n);e[i]=e[i]&m|h<<n,r+=f,o+=f}}var je=class{constructor(t){this.view=t}get(t){return this.view[t>>3]>>(t&7)&1}set(t,s){return Ve(t,s,1,this.view)}clear(){this.view.fill(0)}},De=class{constructor(t){this.view=t}get(t){return this.view[t>>2]>>((t&3)<<1)&3}set(t,s){return Ve(t,s,2,this.view)}clear(){this.view.fill(0)}},ts=class{constructor(t){this.view=t}get(t){return this.view[t>>1]>>((t&1)<<2)&15}set(t,s){return Ve(t,s,4,this.view)}clear(){this.view.fill(0)}},es=class{constructor(t){this.view=t}get(t){return this.view[t]>>>0}set(t,s){return Ve(t,s,8,this.view)}clear(){this.view.fill(0)}},ss=class{constructor(t,s){this.view=t,this.bits=s}get(t){let{view:s,bits:e}=this,r=t*e,o=0;for(let n=0;n<e;){let i=r&7,a=r>>3,c=e-n,f=8-i,l=c<f?c:f,h=s[a],m=~(255<<l);o|=(h>>i&m)<<n,r+=l,n+=l}return o>>>0}set(t,s){Ve(t,s,this.bits,this.view)}clear(){this.view.fill(0)}},lt=class{static create(t,s,e,r=null){let o=r?new Uint8Array(t,e,r):new Uint8Array(t,e);switch(s){case 1:return new je(o);case 2:return new De(o);case 4:return new ts(o);case 8:return new es(o);default:return new ss(o)}}};var Es=0,Ms=0,rs=128,Ae=8,Ys=0,Zs=255,_s=Zs<<24>>>0,os={NONE:0,PAINT:1,KEEP:2},yt=1,oe=new Map,pt=S=>Math.floor(S%2===0?S/2-1:S/2),mt=S=>{let[t,s,e]=S,r=pt(t),o=pt(s),n=pt(e),i=t-r-1,a=s-o-1,c=e-n-1,f=-r,l=-o,h=-n;return[f,i,l,a,h,c]},ye=1,Cs=ye*4;function ns(S,t,s=null){let e=2**t-yt,r=Cs*e,o=S[0]*S[1]*S[2]*t,n=Math.floor(o/8)+1,i=Ae+r+n;s==null&&(typeof Buffer!="undefined"?s=Buffer.alloc(i).buffer:s=new ArrayBuffer(i));let a=new Uint8Array(s,0,Ae),c=r/Cs,f=new Uint32Array(s,Ae,c),l=lt.create(s,t,Ae+r);return a[0]=Es,[a[1],a[2],a[3]]=S,a[4]=t,[s,f,l]}var Vt=class{constructor(t=null,s=null,e=null,r=8,o=0,n=null,i=0,a=null){us(this,"createInverse",(t,s)=>{oe.clear();let e=t.size,[r,o,n,i,a,c]=mt(e),{size:f}=this,l=new Vt(f),[h,m,u,v,p,A]=mt(f);for(let F=h;F<=m;F+=1)for(let g=u;g<=v;g+=1)for(let V=p;V<=A;V+=1){if(this.getPaletteIndexAt(F,g,V)===0)continue;let _=F+s[0],N=g+s[1],d=V+s[2];if(_>o||_<r||N>i||N<n||d>c||d<a||!t.hasVoxelAt(_,N,d))l.setColorAt(F,g,V,_s);else{let M=t.getColorAt(_,N,d);l.setColorAt(F,g,V,M)}}return l});if(s&&e)this.size=[t[0],t[1],t[2]],this.bitsPerIndex=r,n=n||s.length,a=a||e.length,this.palette=new Uint32Array(s,o||0,n/4),this.indices=lt.create(e,r,i,a),this.xShift=pt(t[0]),this.yShift=pt(t[1]),this.zShift=pt(t[2]),this._rebuildRefCounts();else if(t){let[c,f,l]=ns(t,1);this.palette=f,this.indices=l,this._refCounts=new Array(this.palette.length).fill(0),this._recomputeSizeFieldsForBuffer(c)}}_recomputeSizeFieldsForBuffer(t){let s=new Uint8Array(t,0,Ae);this.size=[0,0,0],[,this.size[0],this.size[1],this.size[2],this.bitsPerIndex]=s,this.xShift=pt(this.size[0]),this.yShift=pt(this.size[1]),this.zShift=pt(this.size[2])}getPaletteIndexAt(t,s,e){let{indices:r}=this,o=this._getOffset(t,s,e);return r.get(o)}getPaletteIndexAtOffset(t){let{indices:s}=this;return s.get(t)}getColorAt(t,s,e){let r=this.getPaletteIndexAt(t,s,e);return this.colorForPaletteIndex(r)}hasVoxelAt(t,s,e){return this.getPaletteIndexAt(t,s,e)!==Ms}removeVoxelAt(t,s,e){return this.setPaletteIndexAt(t,s,e,Ms)}getTotalNonEmptyVoxels(){let t=0;for(let s=0;s<this._refCounts.length;s+=1)t+=this._refCounts[s];return t}getPaletteColor(t){return this.palette[(t-yt)*ye]}setPaletteColor(t,s){this.palette[(t-yt)*ye]=s}paletteHasReferences(t){return this._refCounts[t-yt]!==0}resetPaletteRefcountToOne(t){this._refCounts[t-yt]=1}incrementPaletteRefcount(t){this._refCounts[t-yt]+=1}decrementPaletteRefcount(t){this._refCounts[t-yt]-=1}static isNonEmptyPaletteIndex(t){return t!==0}setPaletteIndexAt(t,s,e,r){let o=this._getOffset(t,s,e);this.setPaletteIndexAtOffset(o,r)}setPaletteIndexAtOffset(t,s){let{indices:e}=this,r=this.getPaletteIndexAtOffset(t);Vt.isNonEmptyPaletteIndex(r)&&this.decrementPaletteRefcount(r),Vt.isNonEmptyPaletteIndex(s)&&this.incrementPaletteRefcount(s),e.set(t,s)}setEmptyAt(t,s,e){this.setPaletteIndexAt(t,s,e,0)}clear(){this.indices.clear(),this._refCounts.fill(0)}setColorAt(t,s,e,r){let o=this._getOffset(t,s,e);return this.setColorAtOffset(o,r)}setColorAtOffset(t,s){let{palette:e,indices:r}=this,o=this.getPaletteIndexAtOffset(t),n=Vt.isNonEmptyPaletteIndex(o);n&&this.decrementPaletteRefcount(o);for(let a=0;a<e.length;a+=1){let c=a+yt;if(this.getPaletteColor(c)===s)return this.incrementPaletteRefcount(c),r.set(t,c),c}if(n&&!this.paletteHasReferences(o))return this.setPaletteColor(o,s),this.resetPaletteRefcountToOne(o),o;let i=this._getFreePaletteIndex();return this.setPaletteColor(i,s),this.resetPaletteRefcountToOne(i),this.indices.set(t,i),i}colorForPaletteIndex(t){return this.palette[(t-yt)*ye]}filterByChunk(t,s,e,r,o){if(o===os.NONE)return;let n=t.size,[i,a,c,f,l,h]=mt(n),{size:m}=this,[u,v,p,A,F,g]=mt(m);for(let V=u;V<=v;V+=1)for(let x=p;x<=A;x+=1)for(let _=F;_<=g;_+=1){if(this.getPaletteIndexAt(V,x,_)===0)continue;let d=V+s,M=x+e,z=_+r,y=!(d>a||d<i||M>f||M<c||z>h||z<l)&&t.hasVoxelAt(d,M,z);(o===os.PAINT&&!y||o===os.KEEP&&y)&&this.setEmptyAt(V,x,_)}}_getFreePaletteIndex(){let{palette:t,size:s,indices:e,bitsPerIndex:r}=this;for(let c=0;c<t.length;c+=1){let f=c+yt;if(!this.paletteHasReferences(f))return f}let o=r*2,[n,i,a]=ns(s,o);for(let c=0;c<t.length*ye;c+=1)i[c]=t[c];for(;this._refCounts.length<i.length;)this._refCounts.push(0);for(let c=0,f=s[0]*s[1]*s[2];c<f;c+=1){let l=e.get(c);a.set(c,l)}return this.palette=i,this.indices=a,this._recomputeSizeFieldsForBuffer(n),this._getFreePaletteIndex()}resizeToFit(t,s,e){let{size:r}=this,o=Math.max(1,r[0],Math.abs(t)*2+1),n=Math.max(1,r[1],Math.abs(s)*2+1),i=Math.max(1,r[2],Math.abs(e)*2+1);this.resizeTo([o,n,i])}resizeTo(t){if(this.size[0]>=t[0]&&this.size[1]>=t[1]&&this.size[2]>=t[2])return;let s=new Vt(t),[e,r,o,n,i,a]=mt(this.size);for(let m=e;m<=r;m+=1)for(let u=o;u<=n;u+=1)for(let v=i;v<=a;v+=1)this.getPaletteIndexAt(m,u,v)!==0&&s.setColorAt(m,u,v,this.getColorAt(m,u,v));let{buffer:c}=s.palette;[this.size[0],this.size[1],this.size[2]]=t;let{bitsPerIndex:f}=s;this.bitsPerIndex=f;let[,l,h]=ns(t,f,c);this.palette=l,this.indices=h,this._refCounts=s._refCounts,this._recomputeSizeFieldsForBuffer(c)}static fromJSON(t){if(typeof t=="string")return Vt.deserialize(t);let{size:s,palette:e,indices:r}=t,o=new Vt(s);for(let n=0;n<e.length+yt;n+=1)for(let i=0;i<r.length;i+=1){let a=r[i];if(a===n)if(a>=yt){let c=e[a-yt];o.setColorAtOffset(i,c)}else a===n&&o.setPaletteIndexAtOffset(i,a)}return o}toJSON(t,s){if(!s)return this.serialize();let e=[],r=[];for(let o=0;o<this.palette.length;o+=1){let n=o+yt,i=this.getPaletteColor(n);i>0&&e.push(i)}for(let o=0,n=this.size[0]*this.size[1]*this.size[2];o<n;o+=1)r.push(this.indices.get(o));return{size:[...this.size],palette:e,indices:r}}clone(){return new Vt(this.size,this.palette.buffer.slice(0),this.indices.view.buffer.slice(0),this.bitsPerIndex,this.palette.byteOffset,this.palette.byteLength,this.indices.view.byteOffset,this.indices.view.byteLength)}_getOffset(t,s,e){let{size:r,xShift:o,yShift:n,zShift:i}=this;return(t+o)*r[1]*r[2]+(s+n)*r[2]+(e+i)}_rebuildRefCounts(){this._refCounts=new Array(this.palette.length).fill(0);for(let t=0,s=this.size[0]*this.size[1]*this.size[2];t<s;t+=1){let e=this.getPaletteIndexAtOffset(t);Vt.isNonEmptyPaletteIndex(e)&&this.incrementPaletteRefcount(e)}}applyToChunk(t,s=0,e=0,r=0){oe.clear();let o=t.size,[n,i,a,c,f,l]=mt(o),{size:h}=this,[m,u,v,p,A,F]=mt(h);for(let g=m;g<=u;g+=1)for(let V=v;V<=p;V+=1)for(let x=A;x<=F;x+=1){let _=this.getPaletteIndexAt(g,V,x);if(_!==0){let N=g+s,d=V+e,M=x+r,z=o[0],C=o[1],y=o[2];if(N>i&&(z=N*2),N<n&&(z=Math.max(z,-N*2+1)),d>c&&(C=d*2),d<a&&(C=Math.max(C,-d*2+1)),M>l&&(y=M*2),M<f&&(y=Math.max(y,-M*2+1)),z>rs||C>rs||y>rs)continue;(o[0]<z||o[1]<C||o[2]<y)&&(t.resizeTo([z,C,y]),o=t.size,[n,i,a,c,f,l]=mt(o),oe.clear());let O=oe.get(_);if(O===void 0){let E=this.getColorAt(g,V,x);if(E===_s)t.setEmptyAt(N,d,M);else{let Z=t.setColorAt(N,d,M,E);oe.set(_,Z)}}else t.getPaletteIndexAt(N,d,M)!==O&&t.setPaletteIndexAt(N,d,M,O)}}}mergeWith(t,s,e,r=!1){oe.clear();let o=oe,n=e[0]-s[0],i=e[1]-s[1],a=e[2]-s[2],c=t.size,[f,l,h,m,u,v]=mt(c),{size:p}=this,[A,F,g,V,x,_]=mt(p);for(let N=A;N<=F;N+=1)for(let d=g;d<=V;d+=1)for(let M=x;M<=_;M+=1){let z=this.getPaletteIndexAt(N,d,M);if(z===0)continue;let C=N+n,y=d+i,O=M+a;if(!!(!(C>l||C<f||y>m||y<h||O>v||O<u)&&t.hasVoxelAt(C,y,O)))if(o.has(z))this.setPaletteIndexAt(N,d,M,o.get(z));else{(r||t.getColorAt(C,y,O)>this.getColorAt(N,d,M))&&this.removeVoxelAt(N,d,M);let B=this.getPaletteIndexAt(N,d,M);o.set(z,B)}}}};function Is(S,t,s,e=Ys){return(S|t<<8|s<<16|e<<24)>>>0}function Ns(){let S=[];for(let r=0;r<256;r++)S[r]=Math.floor(Math.random()*256),S[r+256]=S[r];function t(r){return r*r*r*(r*(r*6-15)+10)}function s(r,o,n){return o+r*(n-o)}function e(r,o,n,i){let a=r&15,c=a<8?o:n,f=a<4?n:a===12||a===14?o:i;return((a&1)===0?c:-c)+((a&2)===0?f:-f)}return{noise:function(r,o,n){let i=Math.floor(r),a=Math.floor(o),c=Math.floor(n),f=i&255,l=a&255,h=c&255;r-=i,o-=a,n-=c;let m=r-1,u=o-1,v=n-1,p=t(r),A=t(o),F=t(n),g=S[f]+l,V=S[g]+h,x=S[g+1]+h,_=S[f+1]+l,N=S[_]+h,d=S[_+1]+h;return s(F,s(A,s(p,e(S[V],r,o,n),e(S[N],m,o,n)),s(p,e(S[x],r,u,n),e(S[d],m,u,n))),s(A,s(p,e(S[V+1],r,o,v),e(S[N+1],m,o,n-1)),s(p,e(S[x+1],r,u,v),e(S[d+1],m,u,v))))}}}var Jt=class{static changeShape(t,s,e){let{faceEquidistant:r}=s;switch(e){case"sphere":this._circularDeform(t,s,1,1,1);break;case"cylinder-x":this._circularDeform(t,s,0,1,1);break;case"cylinder-y":this._circularDeform(t,s,1,0,1);break;case"cylinder-z":this._circularDeform(t,s,1,1,0);break;default:for(let o=0,n=t.faceCount;o<n;o++)r.set(o,0);break}}static _circularDeform(t,s,e,r,o){let[n,i,a,c,f,l]=mt(t.voxChunk.size),h=(n+i)/2+.5,m=(a+c)/2+.5,u=(f+l)/2+.5,{vertX:v,vertY:p,vertZ:A,vertRing:F}=s;for(let g=0,V=t.vertCount;g<V;g++){let x=v[g],_=p[g],N=A[g],d=x-h,M=_-m,z=N-u,C=Math.max(Math.abs(d*e),Math.abs(M*r),Math.abs(z*o)),y=Math.sqrt(d*d*e+M*M*r+z*z*o);if(y===0)continue;let O=C/y;v[g]=d*(1-e+e*O)+h,p[g]=M*(1-r+r*O)+m,A[g]=z*(1-o+o*O)+u,F[g]=C}this._markEquidistantFaces(t,s)}static _markEquidistantFaces(t,s){let{faceVertIndices:e,vertRing:r,faceEquidistant:o}=s;for(let n=0,i=t.faceCount;n<i;n++){let a=n*4,c=a+1,f=a+2,l=a+3;o.set(n,r[e[a]]===r[e[c]]&&r[e[a]]===r[e[f]]&&r[e[a]]===r[e[l]]?1:0)}}static maximumDeformCount(t){let s=0;return t.materials.forEach(function(e){e.deform&&(s=Math.max(s,e.deform.count))}),s}static deform(t,s,e){let{vertLinkIndices:r,vertLinkCounts:o,vertDeformCount:n,vertDeformDamping:i,vertDeformStrength:a,vertFlattenedX:c,vertFlattenedY:f,vertFlattenedZ:l,vertClampedX:h,vertClampedY:m,vertClampedZ:u,vertX:v,vertY:p,vertZ:A,vertTmpX:F,vertTmpY:g,vertTmpZ:V,vertHasTmp:x}=s;for(let _=0;_<e;_++){let N=!1;for(let d=0,M=t.vertCount;d<M;d++){if(n[d]<=_)continue;let C=o[d];if(C===0)continue;N=!0;let y=v[d],O=p[d],E=A[d],Z=i[d],B=a[d],Y=1-(h.get(d)|c.get(d)),X=1-(m.get(d)|f.get(d)),R=1-(u.get(d)|l.get(d)),U=0,L=0,q=0;for(let I=0;I<C;I++){let P=r[d*6+I];U+=v[P],L+=p[P],q+=A[P]}let b=Math.pow(Z,_)*B,$=U/C-y,w=L/C-O,G=q/C-E;F[d]=y+Y*$*b,g[d]=O+X*w*b,V[d]=E+R*G*b,x.set(d,Y|X|R)}if(N){for(let d=0,M=t.vertCount;d<M;d++)x.get(d)!==0&&(v[d]=F[d],p[d]=g[d],A[d]=V[d]);x.clear()}}}static warpAndScatter(t,s){let e=Ns().noise,{nx:r,px:o,ny:n,py:i,nz:a,pz:c}=t._tile,[f,l,h,m,u,v]=mt(t.voxChunk.size),{vertX:p,vertY:A,vertZ:F,vertWarpAmplitude:g,vertWarpFrequency:V,vertScatter:x,vertFlattenedX:_,vertFlattenedY:N,vertFlattenedZ:d,vertClampedX:M,vertClampedY:z,vertClampedZ:C}=s;f+=.1,h+=.1,u+=.1,l+=.9,m+=.9,v+=.9;for(let y=0,O=t.vertCount;y<O;y++){let E=p[y],Z=A[y],B=F[y];if(r&&E<f||o&&E>l||n&&Z<h||i&&Z>m||a&&B<u||c&&B>v)continue;let Y=g[y],X=V[y],R=x[y],U=Y>0,L=R>0;if(U||L){let q=0,b=0,$=0;U&&(q=e((E+.19)*X,Z*X,B*X)*Y,b=e((Z+.17)*X,B*X,E*X)*Y,$=e((B+.13)*X,E*X,Z*X)*Y),L&&(q+=(Math.random()*2-1)*R,b+=(Math.random()*2-1)*R,$+=(Math.random()*2-1)*R);let w=1-(M.get(y)|_.get(y)),G=1-(z.get(y)|N.get(y)),I=1-(C.get(y)|d.get(y));p[y]=E+w*q,A[y]=Z+G*b,F[y]=B+I*$}}}};var he=class{static linkVertices(t,s,e){let{faceClamped:r,vertNrOfClampedLinks:o,faceVertIndices:n,vertLinkIndices:i,vertLinkCounts:a}=s;if(r.get(e)===1)for(let f=0;f<4;f++){let l=n[e*4+f],h=!1;for(let m=0,u=a[l];m<u;m++)if(i[l*6+m]===l){h=!0;break}h||(i[l*6+a[l]]=l,a[l]++,o[l]++)}else for(let f=0;f<4;f++){let l=n[e*4+f],h=n[e*4+(f+1)%4],m=!1;for(let v=0,p=a[l];v<p;v++)if(i[l*6+v]===h){m=!0;break}m||(i[l*6+a[l]]=h,a[l]++);let u=!1;for(let v=0,p=a[h];v<p;v++)if(i[h*6+v]===l){u=!0;break}u||(i[h*6+a[h]]=l,a[h]++)}}static fixClampedLinks(t,s){let{faceVertIndices:e,vertNrOfClampedLinks:r,vertFullyClamped:o,vertLinkCounts:n,vertLinkIndices:i}=s;for(let a=0,c=t.vertCount;a<c;a++){let f=r[a],l=n[a];f===l&&(o.set(a,1),n[a]=0)}for(let a=0,c=t.faceCount;a<c;a++)for(let f=0;f<4;f++){let l=e[a*4+f],h=e[a*4+(f+1)%4];if(o.get(l)===1){let m=!1;for(let u=0,v=n[l];u<v;u++)if(i[l*6+u]===h){m=!0;break}m||(i[l*6+n[l]]=h,n[l]++)}if(o.get(h)===1){let m=!1;for(let u=0,v=n[h];u<v;u++)if(i[h*6+u]===l){m=!0;break}m||(i[h*6+n[h]]=l,n[h]++)}}}};var Me=class{static calculateNormals(t,s){let e=t.tile,{faceNameIndices:r,faceEquidistant:o,faceSmooth:n,faceFlattened:i,faceClamped:a,vertX:c,vertY:f,vertZ:l,faceVertFlatNormalX:h,faceVertFlatNormalY:m,faceVertFlatNormalZ:u,faceVertSmoothNormalX:v,faceVertSmoothNormalY:p,faceVertSmoothNormalZ:A,faceVertBothNormalX:F,faceVertBothNormalY:g,faceVertBothNormalZ:V,faceVertNormalX:x,faceVertNormalY:_,faceVertNormalZ:N,faceMaterials:d,faceVertIndices:M,vertSmoothNormalX:z,vertSmoothNormalY:C,vertSmoothNormalZ:y,vertBothNormalX:O,vertBothNormalY:E,vertBothNormalZ:Z}=s,[B,Y,X,R,U,L]=mt(t.voxChunk.size);for(let b=0,$=t.faceCount;b<$;b++){let w=b*4;for(let G=0;G<4;G++){let I=M[w+G];z[I]=0,C[I]=0,y[I]=0,O[I]=0,E[I]=0,Z[I]=0}}for(let b=0,$=t.faceCount;b<$;b++){let w=r[b],G=o.get(b),I=i.get(b),P=a.get(b),K=G|1-(I|P);n.set(b,K);let H=M[b*4],j=M[b*4+1],tt=M[b*4+2],T=M[b*4+3],ot=(c[H]+c[j]+c[tt]+c[T])/4,nt=(f[H]+f[j]+f[tt]+f[T])/4,dt=(l[H]+l[j]+l[tt]+l[T])/4;for(let ft=0;ft<4;ft++){let et=M[b*4+ft],xt=M[b*4+(ft+3)%4],ut=c[et],wt=c[xt],gt=f[et],zt=f[xt],Yt=l[et],Kt=l[xt],Pt=z[et],jt=C[et],Dt=y[et],Rt=O[et],Lt=E[et],te=Z[et],Zt=wt-ut,Tt=zt-gt,vt=Kt-Yt,at=ot-ut,it=nt-gt,ct=dt-Yt,Ft=Math.sqrt(Zt*Zt+Tt*Tt+vt*vt),Bt=Math.sqrt(at*at+it*it+ct*ct);Ft=Ft===0?1:Ft,Bt=Bt===0?1:Bt;let kt=1/Ft;Zt*=kt,Tt*=kt,vt*=kt;let Ut=1/Bt;at*=Ut,it*=Ut,ct*=Ut;let At=Tt*ct-vt*it,Xt=vt*at-Zt*ct,bt=Zt*it-Tt*at,ne=B+.1,ae=Y+.9,_t=X+.1,St=R+.9,Ct=U+.1,Ot=L+.9;e&&((e.nx&&w===0||e.px&&w===1)&&(gt<_t||gt>St||Yt<Ct||Yt>Ot)&&(Xt=0,bt=0),(e.ny&&w===2||e.py&&w===3)&&(ut<ne||ut>ae||Yt<Ct||Yt>Ot)&&(At=0,bt=0),(e.nz&&w===4||e.pz&&w===5)&&(ut<ne||ut>ae||gt<_t||gt>St)&&(At=0,Xt=0));let It=Math.sqrt(At*At+Xt*Xt+bt*bt);It=It===0?1:It;let k=1/It;At*=k,Xt*=k,bt*=k,h[b*4+ft]=At,m[b*4+ft]=Xt,u[b*4+ft]=bt;let Q=Zt*at+Tt*it+vt*ct,W=Math.acos(Q);Pt+=At*W,jt+=Xt*W,Dt+=bt*W,Rt+=K*(At*W),Lt+=K*(Xt*W),te+=K*(bt*W),z[et]=Pt,C[et]=jt,y[et]=Dt,O[et]=Rt,E[et]=Lt,Z[et]=te}}for(let b=0,$=t.vertCount;b<$;b++){let w=z[b],G=C[b],I=y[b],P=O[b],K=E[b],H=Z[b],j=Math.sqrt(w*w+G*G+I*I),tt=Math.sqrt(P*P+K*K+H*H);j!==0&&(z[b]=w/j,C[b]=G/j,y[b]=I/j),tt!==0&&(O[b]=P/tt,E[b]=K/tt,Z[b]=H/tt)}let q=t.materials.materials;for(let b=0,$=t.faceCount;b<$;b++){let w=n.get(b)===1,G=q[d[b]];for(let I=0;I<4;I++){let P=b*4+I,K=M[b*4+I];switch(v[P]=z[K],p[P]=C[K],A[P]=y[K],F[P]=!w||O[K]===0?h[P]:O[K],g[P]=!w||E[K]===0?m[P]:E[K],V[P]=!w||Z[K]===0?u[P]:Z[K],G.lighting){case ee:x[P]=v[P],_[P]=p[P],N[P]=A[P];break;case se:x[P]=F[P],_[P]=g[P],N[P]=V[P];break;default:x[P]=h[P],_[P]=m[P],N[P]=u[P];break}}}}};var D=class{constructor(){let t=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];this.m=new Float32Array(t)}transformPoint(t){let s=this.m,e=s[12]*t.x+s[13]*t.y+s[14]*t.z+s[15],r=(s[0]*t.x+s[1]*t.y+s[2]*t.z+s[3])/e,o=(s[4]*t.x+s[5]*t.y+s[6]*t.z+s[7])/e,n=(s[8]*t.x+s[9]*t.y+s[10]*t.z+s[11])/e;t.x=r,t.y=o,t.z=n}transformPointInline(t,s,e,r){let o=t[r],n=s[r],i=e[r],a=this.m,c=a[12]*o+a[13]*n+a[14]*i+a[15],f=(a[0]*o+a[1]*n+a[2]*i+a[3])/c,l=(a[4]*o+a[5]*n+a[6]*i+a[7])/c,h=(a[8]*o+a[9]*n+a[10]*i+a[11])/c;t[r]=f,s[r]=l,e[r]=h}transformVector(t){let s=this.m,e=s[0]*t.x+s[1]*t.y+s[2]*t.z,r=s[4]*t.x+s[5]*t.y+s[6]*t.z,o=s[8]*t.x+s[9]*t.y+s[10]*t.z;t.x=e,t.y=r,t.z=o}transformVectorInline(t,s,e,r){let o=t[r],n=s[r],i=e[r],a=this.m,c=a[0]*o+a[1]*n+a[2]*i,f=a[4]*o+a[5]*n+a[6]*i,l=a[8]*o+a[9]*n+a[10]*i;t[r]=c,s[r]=f,e[r]=l}static identity(t){t=t||new D;let s=t.m;return s[0]=s[5]=s[10]=s[15]=1,s[1]=s[2]=s[3]=s[4]=s[6]=s[7]=s[8]=s[9]=s[11]=s[12]=s[13]=s[14]=0,t}static multiply(t,s,e){e=e||new D;let r=t.m,o=s.m,n=e.m;return n[0]=r[0]*o[0]+r[1]*o[4]+r[2]*o[8]+r[3]*o[12],n[1]=r[0]*o[1]+r[1]*o[5]+r[2]*o[9]+r[3]*o[13],n[2]=r[0]*o[2]+r[1]*o[6]+r[2]*o[10]+r[3]*o[14],n[3]=r[0]*o[3]+r[1]*o[7]+r[2]*o[11]+r[3]*o[15],n[4]=r[4]*o[0]+r[5]*o[4]+r[6]*o[8]+r[7]*o[12],n[5]=r[4]*o[1]+r[5]*o[5]+r[6]*o[9]+r[7]*o[13],n[6]=r[4]*o[2]+r[5]*o[6]+r[6]*o[10]+r[7]*o[14],n[7]=r[4]*o[3]+r[5]*o[7]+r[6]*o[11]+r[7]*o[15],n[8]=r[8]*o[0]+r[9]*o[4]+r[10]*o[8]+r[11]*o[12],n[9]=r[8]*o[1]+r[9]*o[5]+r[10]*o[9]+r[11]*o[13],n[10]=r[8]*o[2]+r[9]*o[6]+r[10]*o[10]+r[11]*o[14],n[11]=r[8]*o[3]+r[9]*o[7]+r[10]*o[11]+r[11]*o[15],n[12]=r[12]*o[0]+r[13]*o[4]+r[14]*o[8]+r[15]*o[12],n[13]=r[12]*o[1]+r[13]*o[5]+r[14]*o[9]+r[15]*o[13],n[14]=r[12]*o[2]+r[13]*o[6]+r[14]*o[10]+r[15]*o[14],n[15]=r[12]*o[3]+r[13]*o[7]+r[14]*o[11]+r[15]*o[15],e}static transpose(t,s){s=s||new D;let e=t.m,r=s.m;return r[0]=e[0],r[1]=e[4],r[2]=e[8],r[3]=e[12],r[4]=e[1],r[5]=e[5],r[6]=e[9],r[7]=e[13],r[8]=e[2],r[9]=e[6],r[10]=e[10],r[11]=e[14],r[12]=e[3],r[13]=e[7],r[14]=e[11],r[15]=e[15],s}static inverse(t,s){s=s||new D;let e=t.m,r=s.m;r[0]=e[5]*e[10]*e[15]-e[5]*e[14]*e[11]-e[6]*e[9]*e[15]+e[6]*e[13]*e[11]+e[7]*e[9]*e[14]-e[7]*e[13]*e[10],r[1]=-e[1]*e[10]*e[15]+e[1]*e[14]*e[11]+e[2]*e[9]*e[15]-e[2]*e[13]*e[11]-e[3]*e[9]*e[14]+e[3]*e[13]*e[10],r[2]=e[1]*e[6]*e[15]-e[1]*e[14]*e[7]-e[2]*e[5]*e[15]+e[2]*e[13]*e[7]+e[3]*e[5]*e[14]-e[3]*e[13]*e[6],r[3]=-e[1]*e[6]*e[11]+e[1]*e[10]*e[7]+e[2]*e[5]*e[11]-e[2]*e[9]*e[7]-e[3]*e[5]*e[10]+e[3]*e[9]*e[6],r[4]=-e[4]*e[10]*e[15]+e[4]*e[14]*e[11]+e[6]*e[8]*e[15]-e[6]*e[12]*e[11]-e[7]*e[8]*e[14]+e[7]*e[12]*e[10],r[5]=e[0]*e[10]*e[15]-e[0]*e[14]*e[11]-e[2]*e[8]*e[15]+e[2]*e[12]*e[11]+e[3]*e[8]*e[14]-e[3]*e[12]*e[10],r[6]=-e[0]*e[6]*e[15]+e[0]*e[14]*e[7]+e[2]*e[4]*e[15]-e[2]*e[12]*e[7]-e[3]*e[4]*e[14]+e[3]*e[12]*e[6],r[7]=e[0]*e[6]*e[11]-e[0]*e[10]*e[7]-e[2]*e[4]*e[11]+e[2]*e[8]*e[7]+e[3]*e[4]*e[10]-e[3]*e[8]*e[6],r[8]=e[4]*e[9]*e[15]-e[4]*e[13]*e[11]-e[5]*e[8]*e[15]+e[5]*e[12]*e[11]+e[7]*e[8]*e[13]-e[7]*e[12]*e[9],r[9]=-e[0]*e[9]*e[15]+e[0]*e[13]*e[11]+e[1]*e[8]*e[15]-e[1]*e[12]*e[11]-e[3]*e[8]*e[13]+e[3]*e[12]*e[9],r[10]=e[0]*e[5]*e[15]-e[0]*e[13]*e[7]-e[1]*e[4]*e[15]+e[1]*e[12]*e[7]+e[3]*e[4]*e[13]-e[3]*e[12]*e[5],r[11]=-e[0]*e[5]*e[11]+e[0]*e[9]*e[7]+e[1]*e[4]*e[11]-e[1]*e[8]*e[7]-e[3]*e[4]*e[9]+e[3]*e[8]*e[5],r[12]=-e[4]*e[9]*e[14]+e[4]*e[13]*e[10]+e[5]*e[8]*e[14]-e[5]*e[12]*e[10]-e[6]*e[8]*e[13]+e[6]*e[12]*e[9],r[13]=e[0]*e[9]*e[14]-e[0]*e[13]*e[10]-e[1]*e[8]*e[14]+e[1]*e[12]*e[10]+e[2]*e[8]*e[13]-e[2]*e[12]*e[9],r[14]=-e[0]*e[5]*e[14]+e[0]*e[13]*e[6]+e[1]*e[4]*e[14]-e[1]*e[12]*e[6]-e[2]*e[4]*e[13]+e[2]*e[12]*e[5],r[15]=e[0]*e[5]*e[10]-e[0]*e[9]*e[6]-e[1]*e[4]*e[10]+e[1]*e[8]*e[6]+e[2]*e[4]*e[9]-e[2]*e[8]*e[5];let o=e[0]*r[0]+e[1]*r[4]+e[2]*r[8]+e[3]*r[12];for(let n=0;n<16;n++)r[n]/=o;return s}static scale(t,s,e,r){r=r||new D;let o=r.m;return o[0]=t,o[1]=0,o[2]=0,o[3]=0,o[4]=0,o[5]=s,o[6]=0,o[7]=0,o[8]=0,o[9]=0,o[10]=e,o[11]=0,o[12]=0,o[13]=0,o[14]=0,o[15]=1,r}static translate(t,s,e,r){r=r||new D;let o=r.m;return o[0]=1,o[1]=0,o[2]=0,o[3]=t,o[4]=0,o[5]=1,o[6]=0,o[7]=s,o[8]=0,o[9]=0,o[10]=1,o[11]=e,o[12]=0,o[13]=0,o[14]=0,o[15]=1,r}static rotate(t,s,e,r,o){if(!t||!s&&!e&&!r)return D.identity(o);o=o||new D;let n=o.m,i=Math.sqrt(s*s+e*e+r*r);t*=Math.PI/180,s/=i,e/=i,r/=i;let a=Math.cos(t),c=Math.sin(t),f=1-a;return n[0]=s*s*f+a,n[1]=s*e*f-r*c,n[2]=s*r*f+e*c,n[3]=0,n[4]=e*s*f+r*c,n[5]=e*e*f+a,n[6]=e*r*f-s*c,n[7]=0,n[8]=r*s*f-e*c,n[9]=r*e*f+s*c,n[10]=r*r*f+a,n[11]=0,n[12]=0,n[13]=0,n[14]=0,n[15]=1,o}static lookAtORIGINAL(t,s,e,r,o,n,i,a,c,f){f=f||new D;let l=f.m,h=t-r,m=s-o,u=e-n,v=Math.sqrt(h*h+m*m+u*u);h/=v,m/=v,u/=v;let p=a*u-c*m,A=c*h-i*u,F=i*m-a*h;v=Math.sqrt(p*p+A*A+F*F),p/=v,A/=v,F/=v;let g=m*F-u*A,V=u*p-h*F,x=h*A-m*p;return v=Math.sqrt(g*g+V*V+x*x),g/=v,V/=v,x/=v,l[0]=p,l[1]=A,l[2]=F,l[3]=-(p*t+A*s+F*e),l[4]=g,l[5]=V,l[6]=x,l[7]=-(g*t+V*s+x*e),l[8]=h,l[9]=m,l[10]=u,l[11]=-(h*t+m*s+u*e),l[12]=0,l[13]=0,l[14]=0,l[15]=1,f}static lookAtTRYOUT(t,s,e,r){r=r||new D;let o=r.m,n=Math.sqrt(t*t+e*e);return o[0]=e/n,o[1]=0,o[2]=-t/n,o[3]=0,o[4]=t*s/n,o[5]=-n,o[6]=e*s/n,o[7]=0,o[8]=t,o[9]=s,o[10]=e,o[11]=0,o[12]=0,o[13]=0,o[14]=0,o[15]=1,r}static lookAt(t,s,e,r){r=r||new D;let o=r.m,n=Math.sqrt(t*t+e*e),i=n?t/n:1,a=n?e/n:0;return o[0]=t,o[1]=-a,o[2]=-e*i,o[3]=0,o[4]=s,o[5]=0,o[6]=n,o[7]=0,o[8]=e,o[9]=i,o[10]=-e*a,o[11]=0,o[12]=0,o[13]=0,o[14]=0,o[15]=1,r}};var me=[null,null,null,null],_e=[null,null,null,null],Ce=[null,null,null,null],Ie=class{static transformVertices(t,s){let{vertX:e,vertY:r,vertZ:o,faceVertNormalX:n,faceVertFlatNormalX:i,faceVertNormalY:a,faceVertFlatNormalY:c,faceVertNormalZ:f,faceVertFlatNormalZ:l,faceVertSmoothNormalX:h,faceVertSmoothNormalY:m,faceVertSmoothNormalZ:u,faceVertBothNormalX:v,faceVertBothNormalY:p,faceVertBothNormalZ:A}=s,F=t.determineBoundsOffsetAndRescale(t.resize,s),g=new D;g=D.multiply(g,D.translate(t.position.x,t.position.y,t.position.z)),g=D.multiply(g,D.rotate(t.rotation.z,0,0,1)),g=D.multiply(g,D.rotate(t.rotation.y,0,1,0)),g=D.multiply(g,D.rotate(t.rotation.x,1,0,0)),g=D.multiply(g,D.scale(t.scale.x,t.scale.y,t.scale.z)),g=D.multiply(g,D.scale(F.rescale,F.rescale,F.rescale)),g=D.multiply(g,D.translate(F.offset.x,F.offset.y,F.offset.z));let V=D.inverse(g);V=D.transpose(V);for(let x=0,_=t.vertCount;x<_;x++)g.transformPointInline(e,r,o,x);me[0]=n,_e[0]=a,Ce[0]=f,me[1]=i,_e[1]=c,Ce[1]=l,me[2]=h,_e[2]=m,Ce[2]=u,me[3]=v,_e[3]=p,Ce[3]=A;for(let x=0,_=t.faceCount;x<_;x++){let N=x*4;for(let d=0;d<4;d++)for(let M=0,z=me.length;M<z;M++){let C=me[M],y=_e[M],O=Ce[M],E=N+d;V.transformVectorInline(C,y,O,E);let Z=C[E],B=y[E],Y=O[E],X=Math.sqrt(Z*Z+B*B+Y*Y);if(X>0){let R=1/X;C[E]=Z*R,y[E]=B*R,O[E]=Y*R}}}}};var Ne=class{static calculateLights(t,s){let e=t.lights;if(e.length===0)return;for(let p of e)if(p.direction&&!p.normalizedDirection){let A=Math.sqrt(p.direction.x*p.direction.x+p.direction.y*p.direction.y+p.direction.z*p.direction.z);if(p.normalizedDirection={x:p.direction.x,y:p.direction.y,z:p.direction.z},A>0){let F=1/A;p.normalizedDirection.x*=F}}let r=t.materials.materials,{faceMaterials:o,faceVertNormalX:n,faceVertNormalY:i,faceVertNormalZ:a,faceVertIndices:c,vertX:f,vertY:l,vertZ:h,faceVertLightR:m,faceVertLightG:u,faceVertLightB:v}=s;for(let p=0,A=t.faceCount;p<A;p++){let F=r[o[p]],g=p*4;if(F.lights)for(let V=0;V<4;V++){let x=g+V,_=c[x],N=f[_],d=l[_],M=h[_],z=n[x],C=i[x],y=a[x];m[x]=0,u[x]=0,v[x]=0;for(let O of e){let{color:E,strength:Z,distance:B,normalizedDirection:Y,position:X}=O,R=Z,U=0;if(X){let L=X.x-N,q=X.y-d,b=X.z-M;U=Math.sqrt(L*L+q*q+b*b);let $=1/U;R=Z*Math.max(z*L*$+C*q*$+y*b*$,0)}else Y&&(R=Z*Math.max(z*Y.x+C*Y.y+y*Y.z,0));X&&B&&(R=R*(1-Math.min(U/B,1))),m[x]+=E.r*R,u[x]+=E.g*R,v[x]+=E.b*R}}else for(let V=0;V<4;V++){let x=g+V;m[x]=1,u[x]=1,v[x]=1}}}};var ws=[],as=new Map,is=()=>ws.pop()||{minx:Number.MAX_VALUE,miny:Number.MAX_VALUE,minz:Number.MAX_VALUE,maxx:-Number.MAX_VALUE,maxy:-Number.MAX_VALUE,maxz:-Number.MAX_VALUE,partitions:Array(8).fill(null),triangles:[]},zs=S=>{for(let t of S.partitions)t&&zs(t);S.minx=Number.MAX_VALUE,S.miny=Number.MAX_VALUE,S.minz=Number.MAX_VALUE,S.maxx=-Number.MAX_VALUE,S.maxy=-Number.MAX_VALUE,S.maxz=-Number.MAX_VALUE,S.partitions.fill(null),S.triangles.length=0,ws.push(S)},we=class{static calculateAmbientOcclusion(t,s){if(!(t.ao||t.materials.find(function(_){return _.ao})))return;let{faceMaterials:r,faceVertIndices:o,faceVertAO:n,vertX:i,vertY:a,vertZ:c,faceVertNormalX:f,faceVertNormalY:l,faceVertNormalZ:h}=s,{faceCount:m}=t,u=t.materials.materials,v=this._getAllFaceTriangles(t,s),p=this._trianglesToOctree(v,t,s);t._aoSides&&(p=this._aoSidesToOctree(t,s,p));let A=t.aoSamples,F=this._generateFibonacciSamples(A);as.clear();let g=t.scale.x,V=t.scale.y,x=t.scale.z;for(let _=0;_<m;_++){let N=u[r[_]],d=N.ao||t.ao,M=_*4;if(n[M]=0,n[M+1]=0,n[M+2]=0,n[M+3]=0,!d||d.maxDistance===0||d.strength===0||d.angle<1||N.opacity===0)continue;let z=d.maxDistance*Math.max(g,V,x),C=d.strength,y=Math.cos(d.angle/180*Math.PI);for(let O=0;O<4;O++){let E=M+O,Z=o[E],B=i[Z],Y=a[Z],X=c[Z],R=f[E],U=l[E],L=h[E],q=B*16384+Y*128+X,b=R*1e7+U*1e5+L*1e3,$=q*1e9+b,w=as.get($);if(w!==void 0){n[E]=w;continue}let G=o[M+(O+2)%4],I=i[G],P=a[G],K=c[G],H=B*.99999+I*1e-5+R*1e-5,j=Y*.99999+P*1e-5+U*1e-5,tt=X*.99999+K*1e-5+L*1e-5,T=0,ot=0;for(let[dt,ft,et]of F){if(dt*R+ft*U+et*L<=y)continue;let ut=H+dt*z,wt=j+ft*z,gt=tt+et*z,zt=this._distanceToOctree(t,s,p,H,j,tt,dt,ft,et,z,ut,wt,gt);zt?zt=zt/z:zt=1,T+=zt,ot++}let nt=0;ot!==0&&(T=Math.max(Math.min(T/ot,1),0),nt=1-Math.pow(T,C)),n[E]=nt,as.set($,nt)}}zs(p)}static _getAllFaceTriangles(t,s){let{faceMaterials:e}=s,{faceCount:r}=t,o=[],n=t.materials.materials;for(let i=0;i<r;i++){if(n[e[i]].opacity<.75)continue;let c=i*2;o.push(c),o.push(c+1)}return o}static _trianglesToOctree(t,s,e){let{faceVertIndices:r,vertX:o,vertY:n,vertZ:i}=e,a=t.length;if(a<=32){let c=is();c.triangles=t;for(let f=0;f<a;f++){let l=t[f],m=(l>>1)*4,u,v,p;(l&1)===0?(u=r[m+2],v=r[m+1],p=r[m+0]):(u=r[m+0],v=r[m+3],p=r[m+2]);let A=o[u],F=n[u],g=i[u],V=o[v],x=n[v],_=i[v],N=o[p],d=n[p],M=i[p];c.minx=Math.min(c.minx,A,V,N),c.miny=Math.min(c.miny,F,x,d),c.minz=Math.min(c.minz,g,_,M),c.maxx=Math.max(c.maxx,A,V,N),c.maxy=Math.max(c.maxy,F,x,d),c.maxz=Math.max(c.maxz,g,_,M)}return c}else{let c=0,f=0,l=0;for(let v=0;v<a;v++){let p=t[v],F=(p>>1)*4,g,V,x;(p&1)===0?(g=r[F+2],V=r[F+1],x=r[F+0]):(g=r[F+0],V=r[F+3],x=r[F+2]);let _=o[g],N=n[g],d=i[g],M=o[V],z=n[V],C=i[V],y=o[x],O=n[x],E=i[x];c+=_+M+y,f+=N+z+O,l+=d+C+E}let h=1/a;c*=h,f*=h,l*=h;let m=Array(8).fill(null);for(let v=0;v<a;v++){let p=t[v],F=(p>>1)*4,g,V,x;(p&1)===0?(g=r[F+2],V=r[F+1],x=r[F+0]):(g=r[F+0],V=r[F+3],x=r[F+2]);let _=o[g],N=n[g],d=i[g],M=o[V],z=n[V],C=i[V],y=o[x],O=n[x],E=i[x],Z=_+M+y<c?0:1,B=N+z+O<f?0:1,Y=d+C+E<l?0:1,X=Z+B*2+Y*4;m[X]===null?m[X]=[p]:m[X].push(p)}let u=is();for(let v=0;v<8;v++){if(m[v]===null)continue;let p=this._trianglesToOctree(m[v],s,e);u.partitions[v]=p,u.minx=Math.min(u.minx,p.minx),u.miny=Math.min(u.miny,p.miny),u.minz=Math.min(u.minz,p.minz),u.maxx=Math.max(u.maxx,p.maxx),u.maxy=Math.max(u.maxy,p.maxy),u.maxz=Math.max(u.maxz,p.maxz)}return u}}static _distanceToOctree(t,s,e,r,o,n,i,a,c,f,l,h,m){if(this._hitsBox(r,o,n,l,h,m,e)===!1)return null;if(e.triangles.length>0)return this._distanceToModel(t,s,e.triangles,r,o,n,i,a,c,f);let u=f,v=e.partitions;for(let p=0;p<8;p++){let A=v[p];if(A===null)continue;let F=this._distanceToOctree(t,s,A,r,o,n,i,a,c,f,l,h,m);F&&(u=Math.min(u,F))}return u}static _aoSidesToOctree(t,s,e){let r=t.determineBoundsOffsetAndRescale(Gt,s).bounds,{vertCount:o,faceCount:n}=t,{faceVertIndices:i,faceCulled:a,vertX:c,vertY:f,vertZ:l}=s,h=(u,v,p,A,F,g,V,x,_)=>{let N=n*4;c[o]=u,f[o]=v,l[o]=p,c[o+1]=A,f[o+1]=F,l[o+1]=g,c[o+2]=V,f[o+2]=x,l[o+2]=_,i[N]=o+2,i[N+1]=o+1,i[N+2]=o+0,a.set(n,1);let d=n*2;return n++,o+=3,d},m=[];if(t._aoSides.nx&&m.push(h(r.minX-.05,1e6,-1e6,r.minX-.05,1e6,1e6,r.minX-.05,-1e7,0)),t._aoSides.px&&m.push(h(r.maxX+.05,1e6,1e6,r.maxX+.05,1e6,-1e6,r.maxX+.05,-1e7,0)),t._aoSides.ny&&m.push(h(1e6,r.minY-.05,-1e6,-1e6,r.minY-.05,-1e6,0,r.minY-.05,1e7)),t._aoSides.py&&m.push(h(-1e6,r.maxY+.05,-1e6,1e6,r.maxY+.05,-1e6,0,r.maxY+.05,1e7)),t._aoSides.nz&&m.push(h(1e6,1e6,r.minZ-.05,-1e6,1e6,r.minZ-.05,0,-1e7,r.minZ-.05)),t._aoSides.pz&&m.push(h(-1e6,1e6,r.maxZ+.05,1e6,1e6,r.maxZ+.05,0,-1e7,r.maxZ+.05)),m.length>0){let u=this._trianglesToOctree(m,t,s),v=is();v.partitions=[v,u]}return e}static _hitsBox(t,s,e,r,o,n,i){let a=i.minx;if(t<a&&r<a)return!1;let c=i.maxx;if(t>c&&r>c)return!1;let f=i.miny;if(s<f&&o<f)return!1;let l=i.maxy;if(s>l&&o>l)return!1;let h=i.minz;if(e<h&&n<h)return!1;let m=i.maxz;if(e>m&&n>m)return!1;let u=t-(a+c)*.5,v=(c-a)*.5,p=(r-t)*.5,A=Math.abs(p);if(Math.abs(u)>v+A)return!1;let F=(l-f)*.5,g=(o-s)*.5,V=Math.abs(g),x=s-(f+l)*.5;if(Math.abs(x)>F+V)return!1;let _=(m-h)*.5,N=(n-e)*.5,d=Math.abs(N),M=e-(h+m)*.5;return!(Math.abs(M)>_+d||Math.abs(g*M-N*x)>F*d+_*V+Number.EPSILON||Math.abs(N*u-p*M)>_*A+v*d+Number.EPSILON||Math.abs(p*x-g*u)>v*V+F*A+Number.EPSILON)}static _distanceToModel(t,s,e,r,o,n,i,a,c,f){let l=null,{faceVertIndices:h}=s;for(let m=0;m<e.length;m++){let u=e[m],p=(u>>1)*4,A,F,g;(u&1)===0?(A=h[p+2],F=h[p+1],g=h[p+0]):(A=h[p+0],F=h[p+3],g=h[p+2]);let V=this._triangleDistance(t,s,A,F,g,r,o,n,i,a,c);V&&(l?l=Math.min(l,V):V<f&&(l=V))}return l}static _triangleDistance(t,s,e,r,o,n,i,a,c,f,l){let{vertX:h,vertY:m,vertZ:u}=s,v=h[e],p=m[e],A=u[e],F=h[r],g=m[r],V=u[r],x=h[o],_=m[o],N=u[o],d=F-v,M=g-p,z=V-A,C=x-v,y=_-p,O=N-A,E=f*O-l*y,Z=l*C-c*O,B=c*y-f*C,Y=d*E+M*Z+z*B;if(Y<Number.EPSILON)return null;let X=1/Y,R=n-v,U=i-p,L=a-A,q=X*(R*E+U*Z+L*B);if(q<0||q>1)return null;let b=U*z-L*M,$=L*d-R*z,w=R*M-U*d,G=X*(c*b+f*$+l*w);if(G<0||q+G>1)return null;let I=X*(C*b+y*$+O*w);return I<=Number.EPSILON?null:I}static _generateFibonacciSamples(t){let s=[],e=(Math.sqrt(5)+1)/2,r=(2-e)*(2*Math.PI);for(let o=1;o<=t;++o){let n=Math.asin(-1+2*o/(t+1)),i=r*o,a=Math.cos(i)*Math.cos(n),c=Math.sin(n),f=Math.sin(i)*Math.cos(n);s.push([a,c,f])}return s}static _generateOctahedronSamples(t){let s=[],e=Math.PI/2/t;for(let r=0;r<=t;r++){let o=r*e,n=Math.cos(o),i=Math.sin(o),a=Math.max(1,r*4),c=Math.PI*2/a;for(let f=0;f<a;f++){let l=f*c,h=i*Math.sin(l),m=i*Math.cos(l);s.push({x:h,y:n,z:m}),r<t&&s.push({x:h,y:-n,z:m})}a+=4}return s}};var ze=class{static assignUVs(t,s){let{faceMaterials:e,faceNameIndices:r,faceVertUs:o,faceVertVs:n}=s,i=[],a=[],c=[],f=t.materials.materials;for(let l=0;l<f.length;l++){let h=f[l],m=0,u=1,v=1;if(h.map||h.normalMap||h.roughnessMap||h.metalnessMap||h.emissiveMap){let p=t.voxChunk.size[0],A=t.voxChunk.size[1],F=t.voxChunk.size[2];h.mapTransform.uscale===-1&&(u=1/Math.max(p,A,F)),h.mapTransform.vscale===-1&&(v=1/Math.max(p,A,F)),(h.map&&h.map.cube||h.normalMap&&h.normalMap.cube||h.roughnessMap&&h.roughnessMap.cube||h.metalnessMap&&h.metalnessMap.cube||h.emissiveMap&&h.emissiveMap.cube)&&(m=1,u=u/4,v=v/2)}i.push(m),a.push(u),c.push(v)}for(let l=0,h=t.faceCount;l<h;l++){let m=e[l],u=i[m],v=a[m],p=c[m],A=As[r[l]],F=l*4,g=o[F+A.order[0]],V=n[F+A.order[0]],x=o[F+A.order[1]],_=n[F+A.order[1]],N=o[F+A.order[2]],d=n[F+A.order[2]],M=o[F+A.order[3]],z=n[F+A.order[3]],C=F+A.order[0],y=F+A.order[1],O=F+A.order[2],E=F+A.order[3],Z=u*A.uo,B=u*A.vo,Y=A.ud*v,X=A.vd*p;o[C]=Z+(g+1e-4)*Y,n[C]=B+(V+1e-4)*X,o[y]=Z+(x+1e-4)*Y,n[y]=B+(_+.9999)*X,o[O]=Z+(N+.9999)*Y,n[O]=B+(d+.9999)*X,o[E]=Z+(M+.9999)*Y,n[E]=B+(z+1e-4)*X}}};var Xe=class{static combineColors(t,s){let{vertColorR:e,vertColorG:r,vertColorB:o,vertColorCount:n,faceVertColorR:i,faceVertColorG:a,faceVertColorB:c,faceVertLightR:f,faceVertLightG:l,faceVertLightB:h,faceVertIndices:m,faceMaterials:u,faceVertAO:v}=s,p=t.materials.materials,A=!!t.materials.find(x=>x.colors.length>1&&x.fade),F=Array(p.length).fill(!1);for(let x=0,_=p.length;x<_;x++)A&&p[x].colors.length>1&&p[x].fade&&(F[x]=!0);for(let x=0,_=t.faceCount;x<_;x++)if(F[u[x]])for(let d=0;d<4;d++){let M=0,z=0,C=0,y=0,O=x*4+d,E=m[O],Z=n[E];for(let Y=0;Y<Z;Y++){let X=E*6+Y;M+=e[X],z+=r[X],C+=o[X],y++}let B=1/y;i[O]=M*B,a[O]=z*B,c[O]=C*B}let g=t.ao||t.materials.find(function(x){return x.ao}),V=t.lights.length>0;if(g&&V)for(let x=0,_=t.faceCount;x<_;x++){let d=p[u[x]].ao||t.ao,M=d?d.color:null;for(let z=0;z<4;z++){let C=x*4+z,y=i[C],O=a[C],E=c[C],Z=M?M.r:y,B=M?M.g:O,Y=M?M.b:E,X=1-v[C];i[C]=y*f[C]*X+Z*(1-X),a[C]=O*l[C]*X+B*(1-X),c[C]=E*h[C]*X+Y*(1-X)}}else if(V&&!g)for(let x=0,_=t.faceCount;x<_;x++)for(let N=0;N<4;N++){let d=x*4+N;i[d]=i[d]*f[d],a[d]=a[d]*l[d],c[d]=c[d]*h[d]}else if(!V&&g)for(let x=0,_=t.faceCount;x<_;x++){let d=p[u[x]].ao||t.ao;if(!d)continue;let M=d.color;for(let z=0;z<4;z++){let C=x*4+z,y=i[C],O=a[C],E=c[C],Z=M?M.r:y,B=M?M.g:O,Y=M?M.b:E,X=1-v[C];i[C]=X*y+Z*(1-X),a[C]=X*O+B*(1-X),c[C]=X*E+Y*(1-X)}}}};var qe={filled:!1,lastVoxelAxis1:0,lastVoxelAxis2:0,maxVoxelAxis3:0,lastFaceIndex:0},$e={filled:!1,lastVoxelAxis1:0,lastVoxelAxis2:0,maxVoxelAxis3:0,lastFaceIndex:0},Ge={filled:!1,lastVoxelAxis1:0,lastVoxelAxis2:0,maxVoxelAxis3:0,lastFaceIndex:0},He={filled:!1,lastVoxelAxis1:0,lastVoxelAxis2:0,maxVoxelAxis3:0,lastFaceIndex:0},be=class{static simplify(t,s){if(!t.simplify)return;let e=function(){qe.filled=!1,$e.filled=!1,Ge.filled=!1,He.filled=!1},r=t.materials.materials,{faceCulled:o,faceNameIndices:n,vertX:i,vertY:a,vertZ:c,voxelXZYFaceIndices:f,voxelXYZFaceIndices:l,voxelYZXFaceIndices:h}=s;for(let m=f.length-t.faceCount,u=f.length;m<u;m++){let v=f[m],p=v&(1<<28)-1;if(o.get(p))continue;let A=v/(1<<28),F=A>>16&255,g=A>>8&255,V=A&255;switch(n[p]){case 0:this._mergeFaces(r,t,s,qe,p,F,g,V,i,c,a,0,1,2,3);break;case 1:this._mergeFaces(r,t,s,$e,p,F,g,V,i,c,a,0,1,2,3);break;case 4:this._mergeFaces(r,t,s,Ge,p,F,g,V,i,c,a,0,1,2,3);break;case 5:this._mergeFaces(r,t,s,He,p,F,g,V,i,c,a,0,1,2,3);break}}e();for(let m=l.length-t.faceCount,u=l.length;m<u;m++){let v=l[m],p=v&(1<<28)-1;if(o.get(p))continue;let A=v/(1<<28),F=A>>16&255,g=A>>8&255,V=A&255;switch(n[p]){case 0:this._mergeFaces(r,t,s,qe,p,F,g,V,i,a,c,1,2,3,0);break;case 1:this._mergeFaces(r,t,s,$e,p,F,g,V,i,a,c,3,0,1,2);break;case 2:this._mergeFaces(r,t,s,Ge,p,F,g,V,i,a,c,0,1,2,3);break;case 3:this._mergeFaces(r,t,s,He,p,F,g,V,i,a,c,2,3,0,1);break}}e();for(let m=h.length-t.faceCount,u=h.length;m<u;m++){let v=h[m],p=v&(1<<28)-1;if(o.get(p))continue;let A=v/(1<<28),F=A>>16&255,g=A>>8&255,V=A&255;switch(n[p]){case 2:this._mergeFaces(r,t,s,qe,p,F,g,V,a,c,i,1,2,3,0);break;case 3:this._mergeFaces(r,t,s,$e,p,F,g,V,a,c,i,1,2,3,0);break;case 4:this._mergeFaces(r,t,s,Ge,p,F,g,V,a,c,i,3,0,1,2);break;case 5:this._mergeFaces(r,t,s,He,p,F,g,V,a,c,i,1,2,3,0);break}}e()}static _mergeFaces(t,s,e,r,o,n,i,a,c,f,l,h,m,u,v){let{faceCulled:p,faceMaterials:A,vertX:F,vertY:g,vertZ:V,faceVertIndices:x,faceVertNormalX:_,faceVertNormalY:N,faceVertNormalZ:d,faceVertColorR:M,faceVertColorG:z,faceVertColorB:C,faceVertUs:y,faceVertVs:O,faceVertFlatNormalX:E,faceVertFlatNormalY:Z,faceVertFlatNormalZ:B,faceVertSmoothNormalX:Y,faceVertSmoothNormalY:X,faceVertSmoothNormalZ:R,faceVertBothNormalX:U,faceVertBothNormalY:L,faceVertBothNormalZ:q}=e,b=A[o],$=t[b];if(r.filled&&r.lastVoxelAxis1===n&&r.lastVoxelAxis2===i&&($.simplify===!0||$.simplify===null&&s.simplify===!0)&&p.get(o)===0){if(r.maxVoxelAxis3!==a-1){r.filled=!0,r.lastVoxelAxis1=n,r.lastVoxelAxis2=i,r.maxVoxelAxis3=a,r.lastFaceIndex=o;return}let w=o*4,G=r.lastFaceIndex,I=G*4;if(A[G]!==b)return;let P=_[w],K=N[w],H=d[w],j=_[w+1],tt=N[w+1],T=d[w+1],ot=_[w+2],nt=N[w+2],dt=d[w+2],ft=_[w+3],et=N[w+3],xt=d[w+3],ut=_[I],wt=N[I],gt=d[I],zt=_[I+1],Yt=N[I+1],Kt=d[I+1],Pt=_[I+2],jt=N[I+2],Dt=d[I+2],Rt=_[I+3],Lt=N[I+3],te=d[I+3];if(!(this._normalEquals(P,K,H,ut,wt,gt)&&this._normalEquals(j,tt,T,zt,Yt,Kt)&&this._normalEquals(ot,nt,dt,Pt,jt,Dt)&&this._normalEquals(ft,et,xt,Rt,Lt,te)))return;let Tt=M[w],vt=z[w],at=C[w],it=M[w+1],ct=z[w+1],Ft=C[w+1],Bt=M[w+2],kt=z[w+2],Ut=C[w+2],At=M[w+3],Xt=z[w+3],bt=C[w+3],ne=M[I],ae=z[I],_t=C[I],St=M[I+1],Ct=z[I+1],Ot=C[I+1],It=M[I+2],k=z[I+2],Q=C[I+2],W=M[I+3],st=z[I+3],ht=C[I+3];if(!(Tt===ne&&vt===ae&&at===_t&&it===St&&ct===Ct&&Ft===Ot&&Bt===It&&kt===k&&Ut===Q&&At===W&&Xt===st&&bt===ht))return;let pe=x[w+h],$t=x[w+m],Qt=x[w+u],Ze=x[w+v],Te=F[pe],ie=g[pe],ls=V[pe],Be=F[$t],Pe=g[$t],Re=V[$t],ce=x[I+h],We=x[I+m],Ke=x[I+u],Qe=x[I+v],fs=F[ce],hs=g[ce],ms=V[ce],Xs=Math.sqrt((Be-Te)*(Be-Te)+(Pe-ie)*(Pe-ie)+(Re-ls)*(Re-ls)),bs=Math.sqrt((Be-fs)*(Be-fs)+(Pe-hs)*(Pe-hs)+(Re-ms)*(Re-ms)),Et=Xs/bs;return Math.abs(c[We]-(1-Et)*c[$t]-Et*c[ce])<=1e-4&&Math.abs(f[We]-(1-Et)*f[$t]-Et*f[ce])<=1e-4&&Math.abs(l[We]-(1-Et)*l[$t]-Et*l[ce])<=1e-4&&Math.abs(c[Ke]-(1-Et)*c[Qt]-Et*c[Qe])<=1e-4&&Math.abs(f[Ke]-(1-Et)*f[Qt]-Et*f[Qe])<=1e-4&&Math.abs(l[Ke]-(1-Et)*l[Qt]-Et*l[Qe])<=1e-4?(x[I+m]=$t,x[I+u]=Qt,y[I+m]=y[w+m],O[I+m]=O[w+m],y[I+u]=y[w+u],O[I+u]=O[w+u],E[I+m]=E[w+m],Z[I+m]=Z[w+m],B[I+m]=B[w+m],E[I+u]=E[w+u],Z[I+u]=Z[w+u],B[I+u]=B[w+u],Y[I+m]=Y[w+m],X[I+m]=X[w+m],R[I+m]=R[w+m],Y[I+u]=Y[w+u],X[I+u]=X[w+u],R[I+u]=R[w+u],U[I+m]=U[w+m],L[I+m]=L[w+m],q[I+m]=q[w+m],U[I+u]=U[w+u],L[I+u]=L[w+u],q[I+u]=q[w+u],r.maxVoxelAxis3=a,p.set(o,1),s.nonCulledFaceCount--,!0):void 0}return r.filled=!0,r.lastVoxelAxis1=n,r.lastVoxelAxis2=i,r.maxVoxelAxis3=a,r.lastFaceIndex=o,!1}static _normalEquals(t,s,e,r,o,n){return Math.abs(t-r)<.01&&Math.abs(s-o)<.01&&Math.abs(e-n)<.01}};var Se=class{static alignFaceDiagonals(t,s){let e=.1*Math.min(t.scale.x,t.scale.y,t.scale.z);e*=e;let{faceCulled:r,faceVertIndices:o,vertX:n,vertY:i,vertZ:a,faceVertFlatNormalX:c,faceVertFlatNormalY:f,faceVertFlatNormalZ:l,faceVertSmoothNormalX:h,faceVertSmoothNormalY:m,faceVertSmoothNormalZ:u,faceVertBothNormalX:v,faceVertBothNormalY:p,faceVertBothNormalZ:A,faceVertUs:F,faceVertVs:g,faceVertColorR:V,faceVertColorG:x,faceVertColorB:_,faceVertNormalX:N,faceVertNormalY:d,faceVertNormalZ:M}=s;for(let z=0,C=t.faceCount;z<C;z++){if(r.get(z)===1)continue;let y=z*4,O=o[y],E=o[y+1],Z=o[y+2],B=o[y+3],Y=n[O],X=i[O],R=a[O],U=n[E],L=i[E],q=a[E],b=n[Z],$=i[Z],w=a[Z],G=n[B],I=i[B],P=a[B],K=(Y+b)/2,H=(X+$)/2,j=(R+w)/2,tt=(U-K)*(U-K)+(L-H)*(L-H)+(q-j)*(q-j),T=(G-K)*(G-K)+(I-H)*(I-H)+(P-j)*(P-j),ot=(U+G)/2,nt=(L+I)/2,dt=(q+P)/2,ft=(Y-ot)*(Y-ot)+(X-nt)*(X-nt)+(R-dt)*(R-dt),et=(b-ot)*(b-ot)+($-nt)*($-nt)+(w-dt)*(w-dt);if(tt<e||T<e)this._shiftFaceVertsAtOffset(y,o),this._shiftFaceVertsAtOffset(y,N),this._shiftFaceVertsAtOffset(y,d),this._shiftFaceVertsAtOffset(y,M),this._shiftFaceVertsAtOffset(y,c),this._shiftFaceVertsAtOffset(y,f),this._shiftFaceVertsAtOffset(y,l),this._shiftFaceVertsAtOffset(y,h),this._shiftFaceVertsAtOffset(y,m),this._shiftFaceVertsAtOffset(y,u),this._shiftFaceVertsAtOffset(y,v),this._shiftFaceVertsAtOffset(y,p),this._shiftFaceVertsAtOffset(y,A),this._shiftFaceVertsAtOffset(y,F),this._shiftFaceVertsAtOffset(y,g),this._shiftFaceVertsAtOffset(y,V),this._shiftFaceVertsAtOffset(y,x),this._shiftFaceVertsAtOffset(y,_);else if(!(ft<e||et<e)){let xt=this._getVertexSumInline(Y,X,R);for(;this._getVertexSumInline(U,L,q)<xt||this._getVertexSumInline(b,$,w)<xt||this._getVertexSumInline(G,I,P)<xt;){this._shiftFaceVertsAtOffset(y,o),this._shiftFaceVertsAtOffset(y,N),this._shiftFaceVertsAtOffset(y,d),this._shiftFaceVertsAtOffset(y,M),this._shiftFaceVertsAtOffset(y,c),this._shiftFaceVertsAtOffset(y,f),this._shiftFaceVertsAtOffset(y,l),this._shiftFaceVertsAtOffset(y,h),this._shiftFaceVertsAtOffset(y,m),this._shiftFaceVertsAtOffset(y,u),this._shiftFaceVertsAtOffset(y,v),this._shiftFaceVertsAtOffset(y,p),this._shiftFaceVertsAtOffset(y,A),this._shiftFaceVertsAtOffset(y,F),this._shiftFaceVertsAtOffset(y,g),this._shiftFaceVertsAtOffset(y,V),this._shiftFaceVertsAtOffset(y,x),this._shiftFaceVertsAtOffset(y,_);let ut=Y,wt=X,gt=R;Y=U,X=L,R=q,U=b,L=$,q=w,b=G,$=I,w=P,G=ut,I=wt,P=gt,xt=this._getVertexSumInline(Y,X,R)}}}}static _getVertexSumInline(t,s,e){return Math.abs(t)+Math.abs(s)+Math.abs(e)}static _shiftFaceVertsAtOffset(t,s){let e=s[t];s[t]=s[t+1],s[t+1]=s[t+2],s[t+2]=s[t+3],s[t+3]=e}};var cs=(S,t)=>S-t,Oe=class{set origin(t){this._origin=J.parse(t)}get origin(){return J.toString(this._origin)}set flatten(t){this._flatten=J.parse(t)}get flatten(){return J.toString(this._flatten)}set clamp(t){this._clamp=J.parse(t)}get clamp(){return J.toString(this._clamp)}set skip(t){this._skip=J.parse(t)}get skip(){return J.toString(this._skip)}set tile(t){this._tile=J.parse(t||" "),this._tile.x&&(this._tile=J.combine(this._tile,{nx:!0,px:!0})),this._tile.y&&(this._tile=J.combine(this._tile,{ny:!0,py:!0})),this._tile.z&&(this._tile=J.combine(this._tile,{nz:!0,pz:!0})),this._tile.x=!1,this._tile.y=!1,this._tile.z=!1}get tile(){return J.toString(this._tile)}set shape(t){if(this._shape=(t||"box").trim(),!["box","sphere","cylinder-x","cylinder-y","cylinder-z"].includes(this._shape))throw new Error(`SyntaxError Unrecognized shape ${this._shape}. Allowed are box, sphere, cylinder-x, cylinder-y and cylinder-z`)}get shape(){return this._shape}setAo(t){this._ao=t}get ao(){return this._ao}set aoSides(t){this._aoSides=J.parse(t)}get aoSides(){return J.toString(this._aoSides)}set aoSamples(t){this._aoSamples=Math.round(t)}get aoSamples(){return this._aoSamples}constructor(){this.name="main",this.lights=[],this.textures={},this.materials=new Fe,this.voxChunk=null,this.scale={x:1,y:1,z:1},this.rotation={x:0,y:0,z:0},this.position={x:0,y:0,z:0},this.resize=!1,this._origin=J.parse("x y z"),this._flatten=J.parse(""),this._clamp=J.parse(""),this._skip=J.parse(""),this._tile=J.parse(""),this._ao=void 0,this._aoSamples=50,this._aoSides=J.parse(""),this.shape="box",this.wireframe=!1,this.simplify=!0,this.triCount=0,this.octCount=0,this.octMissCount=0,this.faceCount=0,this.vertCount=0,this.nonCulledFaceCount=0}prepareForWrite(){this.lights.some(t=>t.size)&&(this.materials.materials[0].colors[0].count=1)}prepareForRender(t){let{tmpVertIndexLookup:s,tmpVoxelXZYFaceIndices:e,tmpVoxelXYZFaceIndices:r,tmpVoxelYZXFaceIndices:o}=t,{voxChunk:n}=this;this.prepareForWrite();let i=Jt.maximumDeformCount(this);this.faceCount=0,this.vertCount=0;let a=i>0,[c,f,l,h,m,u]=mt(n.size),v=this.materials.materials,p=pt(n.size[0]),A=pt(n.size[1]),F=pt(n.size[2]);for(let g=c;g<=f;g++)for(let V=l;V<=h;V++)for(let x=m;x<=u;x++){let _=n.getPaletteIndexAt(g,V,x);if(_===0)continue;let N=g+p,d=V+A,M=x+F,z=N<<16,C=M<<8,y=(z|C|d)*(1<<28),O=(z|d<<8|M)*(1<<28),E=(d<<16|C|N)*(1<<28);for(let Z=0,B=vs.length;Z<B;Z++){let Y=Vs[Z],X,R=g+Y[0],U=V+Y[1],L=x+Y[2];if(R<c||R>f||U<l||U>h||L<m||L>u?X=0:X=n.getPaletteIndexAt(R,U,L),this._createFace(n,t,v,g,V,x,p,A,F,_,X,Z,a,s)){let b=this.faceCount-1;e[b]=y+b,r[b]=O+b,o[b]=E+b}}}this.nonCulledFaceCount=this.faceCount,s.clear(),t.voxelXZYFaceIndices=e.slice(0,this.faceCount),t.voxelXYZFaceIndices=r.slice(0,this.faceCount),t.voxelYZXFaceIndices=o.slice(0,this.faceCount),t.voxelXZYFaceIndices.sort(cs),t.voxelXYZFaceIndices.sort(cs),t.voxelYZXFaceIndices.sort(cs),he.fixClampedLinks(this,t),Jt.changeShape(this,t,this._shape),Jt.deform(this,t,i),Jt.warpAndScatter(this,t),Me.calculateNormals(this,t),Ie.transformVertices(this,t),Ne.calculateLights(this,t),we.calculateAmbientOcclusion(this,t),Xe.combineColors(this,t),ze.assignUVs(this,t),be.simplify(this,t),Se.alignFaceDiagonals(this,t)}determineBoundsOffsetAndRescale(t,s){let e={bounds:null,offset:null,rescale:1},r,o,n,i,a,c,{vertX:f,vertY:l,vertZ:h}=s;if(t===xe||t===Gt){r=Number.POSITIVE_INFINITY,o=Number.POSITIVE_INFINITY,n=Number.POSITIVE_INFINITY,i=Number.NEGATIVE_INFINITY,a=Number.NEGATIVE_INFINITY,c=Number.NEGATIVE_INFINITY;for(let p=0,A=this.vertCount;p<A;p++){let F=f[p],g=l[p],V=h[p];F<r&&(r=F),g<o&&(o=g),V<n&&(n=V),F>i&&(i=F),g>a&&(a=g),V>c&&(c=V)}if(t===Gt){let[p,A,F,g,V,x]=mt(this.voxChunk.size),_=(A-p+1)/(A-p),N=(g-F+1)/(g-F),d=(x-V+1)/(x-V);e.rescale=Math.min(_,N,d)}}t||(r=this.bounds.minX,i=this.bounds.maxX+1,o=this.bounds.minY,a=this.bounds.maxY+1,n=this.bounds.minZ,c=this.bounds.maxZ+1);let m=-(r+i)/2,u=-(o+a)/2,v=-(n+c)/2;return this._origin.nx&&(m=-r),this._origin.px&&(m=-i),this._origin.ny&&(u=-o),this._origin.py&&(u=-a),this._origin.nz&&(v=-n),this._origin.pz&&(v=-c),e.bounds={minX:r,minY:o,minZ:n,maxX:i,maxY:a,maxZ:c},e.offset={x:m,y:u,z:v},e}_createFace(t,s,e,r,o,n,i,a,c,f,l,h,m,u){let v=t.colorForPaletteIndex(f),p=(v&4278190080)>>24,A=e[p];if(A.opacity===0)return!1;if(l!==0){let H=(t.colorForPaletteIndex(l)&4278190080)>>24;if(!e[H].isTransparent&&!A.wireframe)return!1;if(!(!A.isTransparent&&!A.wireframe)){if(!(A.isTransparent&&!A.wireframe&&l!==0&&e[(t.colorForPaletteIndex(l)&4278190080)>>24].wireframe))return!1}}let F=this._isFacePlanar(A,r,o,n,h,A._flatten,this._flatten),g=this._isFacePlanar(A,r,o,n,h,A._clamp,this._clamp);if(this._isFacePlanar(A,r,o,n,h,A._skip,this._skip))return!1;let{faceVertIndices:x,faceVertColorR:_,faceVertColorG:N,faceVertColorB:d,faceFlattened:M,faceClamped:z,faceSmooth:C,faceCulled:y,faceMaterials:O,faceNameIndices:E,faceVertUs:Z,faceVertVs:B}=s,{faceCount:Y}=this,X=Y*4,R=(v&255)/255,U=((v&65280)>>8)/255,L=((v&16711680)>>16)/255;x[X]=this._createVertex(s,A,r,o,n,R,U,L,i,a,c,h,0,F,g,u),x[X+1]=this._createVertex(s,A,r,o,n,R,U,L,i,a,c,h,1,F,g,u),x[X+2]=this._createVertex(s,A,r,o,n,R,U,L,i,a,c,h,2,F,g,u),x[X+3]=this._createVertex(s,A,r,o,n,R,U,L,i,a,c,h,3,F,g,u);for(let H=0;H<4;H++)_[X+H]=R,N[X+H]=U,d[X+H]=L;M.set(Y,F?1:0),z.set(Y,g?1:0),C.set(Y,0),y.set(Y,0),O[Y]=p,E[Y]=h;let q=ys[h],b=q[0],$=q[1],w=r+i,G=o+a,I=n+c,P=w*b[0]+G*b[1]+I*b[2],K=w*$[0]+G*$[1]+I*$[2];for(let H=0;H<4;H++)Z[X+H]=P,B[X+H]=K;return m&&he.linkVertices(this,s,Y),this.faceCount++,!0}_createVertex(t,s,e,r,o,n,i,a,c,f,l,h,m,u,v,p){let A=Fs[h][m],F=e+A[0],g=r+A[1],V=o+A[2],x=F+c<<20|g+f<<10|V+l,{_clamp:_,_flatten:N}=this,{vertDeformCount:d,vertDeformDamping:M,vertDeformStrength:z,vertWarpAmplitude:C,vertWarpFrequency:y,vertScatter:O,vertX:E,vertY:Z,vertZ:B,vertLinkCounts:Y,vertFullyClamped:X,vertRing:R,vertClampedX:U,vertClampedY:L,vertClampedZ:q,vertColorR:b,vertColorG:$,vertColorB:w,vertColorCount:G,vertFlattenedX:I,vertFlattenedY:P,vertFlattenedZ:K}=t,{deform:H,warp:j,scatter:tt}=s,T;if(p.has(x)?(T=p.get(x),H?d[T]!==0&&this._getDeformIntegral(s.deform)<this._getDeformIntegralAtVertex(t,T)&&(z[T]=H.strength,M[T]=H.damping,d[T]=H.count):(d[T]=0,M[T]=0,z[T]=0),j?C[T]!==0&&(j.amplitude<C[T]||j.amplitude===C[T]&&j.frequency>y[T])&&(C[T]=j.amplitude,y[T]=j.frequency):(C[T]=0,y[T]=0),tt?O[T]!==0&&Math.abs(tt)<Math.abs(O[T])&&(O[T]=tt):O[T]=0):(T=this.vertCount,p.set(x,T),E[T]=F,Z[T]=g,B[T]=V,H?(M[T]=H.damping,d[T]=H.count,z[T]=H.strength,Y[T]=0,X.set(T,0)):d[T]=0,j?(C[T]=j.amplitude,y[T]=j.frequency):C[T]=0,tt?O[T]=tt:O[T]=0,G[T]=0,R[T]=0,U.set(T,0),L.set(T,0),q.set(T,0),I.set(T,0),P.set(T,0),K.set(T,0)),this._setIsVertexPlanar(s,F,g,V,s._flatten,N,I,P,K,T),this._setIsVertexPlanar(s,F,g,V,s._clamp,_,U,L,q,T),s.fade){let ot=G[T],nt=T*6;b[nt+ot]=n,$[nt+ot]=i,w[nt+ot]=a,G[T]++}return this.vertCount++,T}_getDeformIntegral(t){return t.damping===1?t.strength*(t.count+1):t.strength*(1-Math.pow(t.damping,t.count+1))/(1-t.damping)}_getDeformIntegralAtVertex(t,s){let{vertDeformDamping:e,vertDeformStrength:r,vertDeformCount:o}=t,n=e[s],i=o[s],a=r[s];return n===1?a*(i+1):a*(1-Math.pow(n,i+1))/(1-n)}_isFacePlanar(t,s,e,r,o,n,i){let a=n,c=t.bounds;if(a||(a=i,c=this.bounds),!a)return!1;switch(o){case 0:return a.x||a.nx&&s===c.minX;case 1:return a.x||a.px&&s===c.maxX;case 2:return a.y||a.ny&&e===c.minY;case 3:return a.y||a.py&&e===c.maxY;case 4:return a.z||a.nz&&r===c.minZ;case 5:return a.z||a.pz&&r===c.maxZ;default:return!1}}_setIsVertexPlanar(t,s,e,r,o,n,i,a,c,f){let l=o,h=t.bounds;l||(l=n,h=this.bounds),l?(i.set(f,l.x||l.nx&&s<h.minX+.5||l.px&&s>h.maxX+.5?1:i.get(f)|0),a.set(f,l.y||l.ny&&e<h.minY+.5||l.py&&e>h.maxY+.5?1:a.get(f)|0),c.set(f,l.z||l.nz&&r<h.minZ+.5||l.pz&&r>h.maxZ+.5?1:c.get(f)|0)):(i.set(f,i.get(f)|0),a.set(f,a.get(f)|0),c.set(f,c.get(f)|0))}};var Ee=class{constructor(t,s,e,r,o,n,i){this.color=t,this.strength=s,this.direction=e,this.position=r,this.distance=o,this.size=n,this.detail=i}};var ue=class{static readFromString(t){let s=this._parse(t);return this._validateModel(s),this._createModel(s)}static _parse(t){let s={linecontinuation:/_\\s*[\\r\\n]/gm,modelparts:new RegExp(/\\s*(\\/\\/(.*?)\\r?\\n)/.source+"|"+/\\s*(texture|light|model|material|voxels)\\s+/.source+"|"+/\\s*([^=,\\r\\n]+=\\s*data:image.*?base64,.*$)\\s*/.source+"|"+/\\s*([^=,\\r\\n]+=[^\\r\\n=;,/]+)\\s*/.source+"|"+/\\s*([A-Za-z ()\\d -]+)\\s*/.source,"gm")},e={lights:[],textures:[],materials:[]},r=e,o=null;return Array.from(t.replaceAll(s.linecontinuation," ").matchAll(s.modelparts),i=>i[0].trim()).filter(i=>i).forEach(function(i){if(!i.startsWith("//"))if(i==="texture")r={id:"<no-name>",cube:!1},e.textures.push(r);else if(i==="light")r={color:"#FFF"},e.lights.push(r);else if(i==="model")r=e;else if(i==="material")r={},e.materials.push(r);else if(i==="voxels")r=e,o="";else if(o!==null)o+=i.replace(/\\s/g,"");else{let a=i.indexOf("=");if(a===-1)throw new Error(`SyntaxError: Invalid definition \'${i}\'.`);let c=i.substring(0,a).trim().toLowerCase(),f=i.substring(a+1).trim();r[c]=f}},this),e.voxels=o,e}static _createModel(t){let s=new Oe;return s.size=this._parseXYZInt("size",t.size,null,!0),s.scale=this._parseXYZFloat("scale",t.scale,"1",!0),s.rotation=this._parseXYZFloat("rotation",t.rotation,"0 0 0",!1),s.position=this._parseXYZFloat("position",t.position,"0 0 0",!1),s.simplify=t.simplify!=="false",t.resize===xe?s.resize=xe:t.resize===Gt?s.resize=Gt:t.resize?s.resize=null:t.autoresize==="true"&&(s.resize=Gt),s.shape=t.shape,s.wireframe=t.wireframe==="true"||!1,s.origin=t.origin||"x y z",s.flatten=t.flatten,s.clamp=t.clamp,s.skip=t.skip,s.tile=t.tile,s.setAo(this._parseAo(t.ao)),s.aoSides=t.aosides,s.aoSamples=parseInt(t.aosamples||50,10),s.data=this._parseVertexData(t.data,"model"),s.shell=this._parseShell(t.shell),t.lights.some(e=>e.size)&&s.materials.createMaterial(Le,Ue,1,0,!1,!1,1,0,!1,1,!1,Nt,"#FFF",0,!1,null,null,null,null,null,null,null,null,-1,-1,0,0,0).addColorHEX("#FFFFFF"),t.lights.forEach(function(e){this._createLight(s,e)},this),t.textures.forEach(function(e){this._createTexture(s,e)},this),t.materials.forEach(function(e){this._createMaterial(s,e)},this),s.colors={},s.materials.forEach(function(e){e.colors.forEach(function(r){s.colors[r.id]=r})}),this._resolveShellColors(s.shell,s),s.materials.forEach(function(e){this._resolveShellColors(e.shell,s)},this),this._createVoxels(s,t.voxels),s}static _createLight(t,s){s.color||(s.color="#FFF 1"),s.color.startsWith("#")||(s.color="#FFF "+s.color),s.strength=parseFloat(s.color.split(" ")[1]||1),s.color=rt.fromHex(s.color.split(" ")[0]),s.direction=this._parseXYZFloat("direction",s.direction,null,!1),s.position=this._parseXYZFloat("position",s.position,null,!1),s.distance=parseFloat(s.distance||0),s.size=Math.max(0,parseFloat(s.size||0)),s.detail=Math.min(3,Math.max(0,parseInt(s.detail||1,10)));let e=new Ee(s.color,s.strength,s.direction,s.position,s.distance,s.size,s.detail);t.lights.push(e)}static _createTexture(t,s){s.cube=s.cube==="true"||!1,t.textures[s.id]=s}static _createMaterial(t,s){let e=Ue;s.lighting===de&&(e=de),s.lighting===ee&&(e=ee),s.lighting===se&&(e=se),s.emissive||(s.emissivemap?s.emissive="#FFF 1":s.emissive="#000 0"),s.emissive.startsWith("#")||(s.emissive="#FFF "+s.emissive),s.emissiveColor=s.emissive.split(" ")[0],s.emissiveIntensity=s.emissive.split(" ")[1]||1,s.ao&&!s.ao.startsWith("#")&&(s.ao="#000 "+s.ao),s.maptransform=s.maptransform||"";let r=null;t.simplify&&s.simplify==="false"&&(r=!1),!t.simplify&&s.simplify==="true"&&(r=!0);let o=t.materials.createMaterial(s.type||le,e,parseFloat(s.roughness||(s.roughnessmap,1)),parseFloat(s.metalness||(s.metalnessmap?1:0)),s.fade==="true"||!1,r,parseFloat(s.opacity||1),parseFloat(s.alphatest||0),s.transparent==="true"||!1,parseFloat(s.refractionratio||.9),s.wireframe==="true"||!1,s.side,s.emissiveColor,s.emissiveIntensity,s.fog!=="false",s.map?t.textures[s.map]:null,s.normalmap?t.textures[s.normalmap]:null,s.roughnessmap?t.textures[s.roughnessmap]:null,s.metalnessmap?t.textures[s.metalnessmap]:null,s.emissivemap?t.textures[s.emissivemap]:null,s.matcap?t.textures[s.matcap]:null,s.reflectionmap?t.textures[s.reflectionmap]:null,s.refractionmap?t.textures[s.refractionmap]:null,parseFloat(s.maptransform.split(" ")[0]||-1),parseFloat(s.maptransform.split(" ")[1]||-1),parseFloat(s.maptransform.split(" ")[2]||0),parseFloat(s.maptransform.split(" ")[3]||0),parseFloat(s.maptransform.split(" ")[4]||0));s.deform&&o.setDeform(parseFloat(s.deform.split(" ")[0]),parseFloat(s.deform.split(" ")[1]||1),parseFloat(s.deform.split(" ")[2]||1)),s.warp&&o.setWarp(parseFloat(s.warp.split(" ")[0]),parseFloat(s.warp.split(" ")[1]||1)),s.scatter&&(o.scatter=parseFloat(s.scatter)),o.flatten=s.flatten,o.clamp=s.clamp,o.skip=s.skip,o.setAo(this._parseAo(s.ao)),o.shell=this._parseShell(s.shell),o.lights=s.lights!=="false",o.data=this._parseVertexData(s.data,"material"),this._compareVertexData(t.data,o.data);let n=/\\s*\\(\\s*(\\d+)\\s*\\)\\s*/g,i=/([A-Z][a-z]*)\\s*(\\(\\d+\\))?[:]\\s*(#[a-fA-F0-9]*)\\s*/g;s.colors=s.colors.replace(n,"($1)"),s.colors=s.colors.replace(i,"$1$2:$3 "),s.colors.split(" ").filter(c=>c).forEach(function(c){let f=c.split(":")[0],l=null;f.includes("(")&&(l=Number(f.split("(")[1].replace(")","")),f=f.split("(")[0]);let h=c.split(":")[1];if(!o.colors[f]){if(h=o.addColor(rt.fromHex(h)),!/^[A-Z][a-z]*$/.test(f))throw new Error(`SyntaxError: Invalid color ID \'${f}\'`);h.id=f,h.exId=l}},this)}static _createVoxels(t,s){let e=t.colors,r=null,o=[];if(s.matchAll)o=s.matchAll(/[0-9]+|[A-Z][a-z]*|-+|[()]/g);else{let h=/[0-9]+|[A-Z][a-z]*|-+|[()]/g,m;for(;(m=h.exec(s))!==null;)o.push(m);o=o[Symbol.iterator]()}let n=this._unpackRle(o),i=t.size.x*t.size.y*t.size.z,a=0,c=t.voxChunk=new Vt([t.size.x,t.size.y,t.size.z]);for(let h=0;h<n.length;h++)a+=n[h][1];if(a!==i)throw new Error(`SyntaxError: The specified size is ${t.size.x} x ${t.size.y} x ${t.size.z} (= ${i} voxels) but the voxel matrix contains ${a} voxels.`);let f={minx:0,miny:0,minz:0,maxx:t.size.x-1,maxy:t.size.y-1,maxz:t.size.z-1,x:0,y:0,z:0};t.bounds=new re;let l=0;for(let h=0;h<n.length;h++){let m=null;n[h][0]!=="-"&&(m=e[n[h][0]],l=t.materials.materials.findIndex(u=>u.colors.includes(m)),m||(r===null&&(r=t.materials.createMaterial(le,Ue,.5,0,!1,1,!1)),m=rt.fromHex("#FF00FF"),m.id=n[h][0],r.addColor(m),e[n[h][0]]=m)),this._setVoxels(t,m,n[h][1],f,c,l)}}static _parseAo(t){let s;if(t){t.startsWith("#")||(t="#000 "+t);let e=rt.fromHex(t.split(" ")[0]),r=Math.abs(parseFloat(t.split(" ")[1]||1)),o=parseFloat(t.split(" ")[2]||1),n=parseFloat(t.split(" ")[3]||70);n=Math.max(0,Math.min(90,Math.round(n))),s={color:e,maxDistance:r,strength:o,angle:n}}return s}static _parseShell(t){let s,e=!1;if(t&&(s=[],t!=="none")){let r=t.split(/\\s+/);if(r.length<2||r.length%2!==0)e=!0;else for(let o=0;o<r.length/2;o++){let n=r[o*2+0],i=r[o*2+1];if(!/^[A-Z][a-z]*$/.test(n)||!/^([-+]?[0-9]*\\.?[0-9]+)*$/.test(i)){e=!0;break}else s.push({colorId:r[o*2],distance:r[o*2+1]})}}if(e)throw new Error(`SyntaxError: shell \'${t}\' must be \'none\' or one or more color ID\'s and distances, e.g. P 0.2 Q 0.4`);return s&&(s=s.sort(function(r,o){return r.distance-o.distance})),s}static _resolveShellColors(t,s){!t||t.length===0||t.forEach(function(e){if(e.color=s.colors[e.colorId],!e.color)throw new Error(`SyntaxError: shell color ID \'${e.colorId}\' is not a known color`)},this)}static _parseVertexData(t,s){if(t){let e=[],r=t.split(/\\s+/),o=null;for(let i=0;i<r.length;i++){let a=r[i];if(isNaN(a))o={name:a,values:[]},e.push(o);else if(o)o.values.push(parseFloat(a));else break}let n=e.length===0;for(let i=0;i<e.length;i++)n=n||e[i].values.length===0||e[i].values.length>=4;if(n)throw new Error(`SyntaxError: The data property \'${e.data}\' of the ${s} should consist of one or more names, each followed by 1 to 4 float (default) values.`);return e}}static _compareVertexData(t,s){let e=!1;try{if((t||s)&&s){e=s&&!t,e=e||t.length!==s.length;for(let r=0;r<t.length;r++)e=e||t[r].name!==s[r].name,e=e||t[r].values.length!==s[r].values.length}}catch(r){e=!0}if(e)throw new Error("SyntaxError: The data property of the material should consist of identical names and number of values as the model data property.")}static _parseXYZInt(t,s,e,r){let o=this._parseXYZFloat(t,s,e,r);return{x:Math.trunc(o.x),y:Math.trunc(o.y),z:Math.trunc(o.z)}}static _parseXYZFloat(t,s,e,r){if(!s&&e&&(s=e),!s)return null;let o=s.split(/[\\s/]+/);if(o.length===1&&r&&(o.push(o[0]),o.push(o[0])),o.length!==3)throw new Error(`SyntaxError: \'${t}\' must have three values.`);if(o={x:parseFloat(o[0]),y:parseFloat(o[1]),z:parseFloat(o[2])},Number.isNaN(o.x)||Number.isNaN(o.y)||Number.isNaN(o.z))throw new Error(`SyntaxError: Invalid value \'${s}\' for ${t}\'.`);return o}static _unpackRle(t){let s=[],e=1,r=t.next();for(;!r.done;){let o=r.value[0];if(o[0]>="0"&&o[0]<="9")e=parseInt(o,10);else if(o==="("){let n=this._unpackRle(t);for(let i=0;i<e;i++)Array.prototype.push.apply(s,n);e=1}else{if(o===")")return s;o.length>1&&o[0]>="A"&&o[0]<="Z"&&o[1]===o[0]?(e>1?(s.push([o[0],e]),s.push([o[0],o.length-1])):s.push([o[0],o.length]),e=1):o.length>1&&o[0]==="-"&&o[1]==="-"?(e>1?(s.push(["-",e]),s.push(["-",o.length-1])):s.push(["-",o.length]),e=1):(s.push([o,e]),e=1)}r=t.next()}return s}static _setVoxels(t,s,e,r,o,n){let i=t.materials.materials[n];for(;e-- >0;){if(s){let a=Math.floor(s.r*255),c=Math.floor(s.g*255),f=Math.floor(s.b*255),h=Is(a,c,f,n),m=r.x-pt(t.size.x),u=r.y-pt(t.size.y),v=r.z-pt(t.size.z);t.bounds.set(m,u,v),i.bounds.set(m,u,v),o.setColorAt(m,u,v,h)}r.x++,r.x>r.maxx&&(r.x=r.minx,r.y++),r.y>r.maxy&&(r.y=r.miny,r.z++)}}static _validateModel(t){let s=["size","materials","textures","lights","voxels"],e=["name","shape","scale","rotation","position","simplify","origin","autoresize","resize","flatten","clamp","skip","tile","ao","aosides","aosamples","shell","wireframe","data"];this._validateProperties(t,s,e,"model"),t.lights.forEach(function(r){this._validateLight(r)},this),t.textures.forEach(function(r){this._validateTexture(r)},this),t.materials.forEach(function(r){this._validateMaterial(r)},this)}static _validateLight(t){let s=["color"],e=["direction","position","distance","size","detail"];if(this._validateProperties(t,s,e,"light"),t.direction&&t.position)throw new Error("SyntaxError: Light cannot have both a direction and a position.");if(t.direction&&t.distance)throw new Error("SyntaxError: Light cannot have both a direction and a distance.");if(!t.position&&(t.size||t.detail))throw new Error("SyntaxError: Light with no position cannot have size or detail.")}static _validateTexture(t){let s=["id","image"],e=["cube"];this._validateProperties(t,s,e,"texture")}static _validateMaterial(t){let s=["colors"],e=["type","lighting","fade","simplify","roughness","metalness","emissive","fog","opacity","alphatest","transparent","refractionratio","deform","warp","scatter","flatten","clamp","skip","ao","lights","wireframe","side","shell","map","normalmap","roughnessmap","metalnessmap","emissivemap","matcap","reflectionmap","refractionmap","maptransform","data"];this._validateProperties(t,s,e,"material")}static _validateProperties(t,s,e,r){for(let o of s)if(!t[o])throw new Error("SyntaxError: "+r+\' is missing mandatory property "\'+o+\'".\');for(let o in t)if(!s.includes(o)&&!e.includes(o))throw new Error("SyntaxError: "+r+\' has unrecognized property "\'+o+\'".\')}};var Mt=new Map,Wt=class{static generate(t,s){t.prepareForRender(s);let{nonCulledFaceCount:e}=t,r={materials:[],groups:[],indices:Array(e*6),indicesIndex:0,maxIndex:-1,positions:new Float32Array(e*4*3),normals:new Float32Array(e*4*3),colors:new Float32Array(e*4*3),uvs:new Float32Array(e*4*2),data:null};return t.materials.baseMaterials.forEach(function(o){o.index=r.materials.length,r.materials.push(Wt._generateMaterial(o,t))},this),Mt.clear(),Wt._generateAll(t,r,s),r}static _generateMaterial(t,s){let e={type:t.type,roughness:t.roughness,metalness:t.metalness,opacity:t.opacity,alphaTest:t.alphaTest,transparent:t.isTransparent,refractionRatio:t.refractionRatio,wireframe:t.wireframe||s.wireframe,fog:t.fog,vertexColors:!0,side:t.side===Ht?Ht:Nt};return t.type!==ke&&(e.color="#FFF"),t.emissive&&(e.emissive=t.emissive.color.toString(),e.emissiveIntensity=t.emissive.intensity),t.map&&(e.map={image:t.map.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.normalMap&&(e.normalMap={image:t.normalMap.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.roughnessMap&&(e.roughnessMap={image:t.roughnessMap.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.metalnessMap&&(e.metalnessMap={image:t.metalnessMap.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.emissiveMap&&(e.emissiveMap={image:t.emissiveMap.image,uscale:t.mapTransform.uscale===-1?1:t.mapTransform.uscale,vscale:t.mapTransform.vscale===-1?1:t.mapTransform.vscale,uoffset:t.mapTransform.uoffset,voffset:t.mapTransform.voffset,rotation:t.mapTransform.rotation}),t.matcap&&(e.matcap={image:t.matcap.image}),t.reflectionMap&&(e.reflectionMap={image:t.reflectionMap.image}),t.refractionMap&&(e.refractionMap={image:t.refractionMap.image}),e}static _generateAll(t,s,e){let r=t.materials.materials,{faceMaterials:o,faceCulled:n}=e;t.materials.baseMaterials.forEach(function(i){let a=s.indicesIndex;for(let f=0,l=t.faceCount;f<l;f++)r[o[f]]._baseMaterial===i&&n.get(f)===0&&Wt._generateFace(t,e,f,s);let c=s.indicesIndex;s.groups.push({start:a,count:c-a,materialIndex:i.index})},this),console.log(Mt),s.indices.length=s.indicesIndex,s.positions=new Float32Array(s.positions,0,s.indicesIndex*3),s.normals=new Float32Array(s.normals,0,s.indicesIndex*3),s.colors=new Float32Array(s.colors,0,s.indicesIndex*3),s.uvs=new Float32Array(s.uvs,0,s.indicesIndex*2)}static _generateFace(t,s,e,r){let{faceVertIndices:o,faceVertNormalX:n,faceVertNormalY:i,faceVertNormalZ:a,vertX:c,vertY:f,vertZ:l,faceVertColorR:h,faceVertColorG:m,faceVertColorB:u,faceVertUs:v,faceVertVs:p,faceMaterials:A,faceSmooth:F}=s,V=t.materials.materials[A[e]],x=o[e*4],_=o[e*4+1],N=o[e*4+2],d=o[e*4+3],M=c[x],z=f[x],C=l[x],y=c[_],O=f[_],E=l[_],Z=c[N],B=f[N],Y=l[N],X=c[d],R=f[d],U=l[d],L=n[e*4],q=i[e*4],b=a[e*4],$=n[e*4+1],w=i[e*4+1],G=a[e*4+1],I=n[e*4+2],P=i[e*4+2],K=a[e*4+2],H=n[e*4+3],j=i[e*4+3],tt=a[e*4+3],T=h[e*4],ot=m[e*4],nt=u[e*4],dt=h[e*4+1],ft=m[e*4+1],et=u[e*4+1],xt=h[e*4+2],ut=m[e*4+2],wt=u[e*4+2],gt=h[e*4+3],zt=m[e*4+3],Yt=u[e*4+3],Kt=v[e*4],Pt=p[e*4],jt=v[e*4+1],Dt=p[e*4+1],Rt=v[e*4+2],Lt=p[e*4+2],te=v[e*4+3],Zt=p[e*4+3];if(V.side===fe){let k,Q,W;k=M,Q=z,W=C,M=Z,z=B,C=Y,Z=k,B=Q,Y=W,k=L,Q=q,W=b,L=I,q=P,b=K,I=k,P=Q,K=W,k=T,Q=ot,W=nt,T=xt,ot=ut,nt=wt,xt=k,ut=Q,wt=W,k=Kt,Q=Pt,Kt=Rt,Pt=Lt,Rt=k,Lt=Q}let Tt=F.get(e)===1;if(!(V.lighting===ee||V.lighting===se&&Tt)){let k=I+$+L,Q=P+w+q,W=K+G+b,st=L+H+I,ht=q+j+P,qt=b+tt+K,pe=Math.sqrt(k*k+Q*Q+W*W),$t=Math.sqrt(st*st+ht*ht+qt*qt),Qt=1/pe,Ze=1/$t;if(k*=Qt,Q*=Qt,W*=Qt,st*=Ze,ht*=Ze,qt*=Ze,V.lighting===de){let Te=Math.sqrt(k*k+Q*Q+W*W)+Math.sqrt(st*st+ht*ht+qt*qt),ie=1/Te;k=st=(k+st)*ie,Q=ht=(Q+ht)*ie,W=qt=(W+qt)*ie}L=k,q=Q,b=W,$=k,w=Q,G=W,I=k,P=Q,K=W,H=st,j=ht,tt=qt}let vt=r.indices,at=r.positions,it=r.normals,ct=r.colors,Ft=r.uvs,Bt=M*3+z*13+C*23+L*37+q*41+b*59+T*61+ot*83+nt*89+Kt*98+Pt*103,kt=y*3+O*13+E*23+$*37+w*41+G*59+dt*61+ft*83+et*89+jt*98+Dt*103,Ut=Z*3+B*13+Y*23+I*37+P*41+K*59+xt*61+ut*83+wt*89+Rt*98+Lt*103,At=X*3+R*13+U*23+H*37+j*41+tt*59+gt*61+zt*83+Yt*89+te*98+Zt*103,Xt=Mt.has(Bt),bt=Mt.has(kt),ne=Mt.has(Ut),ae=Mt.has(At),_t,St,Ct,Ot;if(Xt)_t=Mt.get(Bt);else{_t=r.maxIndex+1;let k=_t*3,Q=k+1,W=k+2,st=_t*2,ht=st+1;r.maxIndex=_t,at[k]=M,at[Q]=z,at[W]=C,it[k]=L,it[Q]=q,it[W]=b,ct[k]=T,ct[Q]=ot,ct[W]=nt,Ft[st]=Kt,Ft[ht]=Pt,Mt.set(Bt,_t)}if(bt)St=Mt.get(kt);else{St=r.maxIndex+1;let k=St*3,Q=k+1,W=k+2,st=St*2,ht=st+1;r.maxIndex=St,at[k]=y,at[Q]=O,at[W]=E,it[k]=$,it[Q]=w,it[W]=G,ct[k]=dt,ct[Q]=ft,ct[W]=et,Ft[st]=jt,Ft[ht]=Dt,Mt.set(kt,St)}if(ne)Ct=Mt.get(Ut);else{Ct=r.maxIndex+1;let k=Ct*3,Q=k+1,W=k+2,st=Ct*2,ht=st+1;r.maxIndex=Ct,at[k]=Z,at[Q]=B,at[W]=Y,it[k]=I,it[Q]=P,it[W]=K,ct[k]=xt,ct[Q]=ut,ct[W]=wt,Ft[st]=Rt,Ft[ht]=Lt,Mt.set(Ut,Ct)}if(ae)Ot=Mt.get(At);else{Ot=r.maxIndex+1;let k=Ot*3,Q=k+1,W=k+2,st=Ot*2,ht=st+1;r.maxIndex=Ot,at[k]=X,at[Q]=R,at[W]=U,it[k]=H,it[Q]=j,it[W]=tt,ct[k]=gt,ct[Q]=zt,ct[W]=Yt,Ft[st]=te,Ft[ht]=Zt,Mt.set(At,Ot)}let It=r.indicesIndex;vt[It]=Ct,vt[It+1]=St,vt[It+2]=_t,vt[It+3]=_t,vt[It+4]=Ot,vt[It+5]=Ct,r.indicesIndex+=6}};var Ye=class{constructor(t){let s=Math.floor(t/8),e=t/4,r=Math.floor(e/8),o=e*4;this.tmpVertIndexLookup=new Map,this.vertX=new Float32Array(t),this.vertY=new Float32Array(t),this.vertZ=new Float32Array(t),this.vertTmpX=new Float32Array(t),this.vertTmpY=new Float32Array(t),this.vertTmpZ=new Float32Array(t),this.vertHasTmp=lt.create(new Uint8Array(s).buffer,1,0),this.vertColorR=new Float32Array(t*6),this.vertColorG=new Float32Array(t*6),this.vertColorB=new Float32Array(t*6),this.vertColorCount=new Uint8Array(t),this.vertSmoothNormalX=new Float32Array(t),this.vertSmoothNormalY=new Float32Array(t),this.vertSmoothNormalZ=new Float32Array(t),this.vertBothNormalX=new Float32Array(t),this.vertBothNormalY=new Float32Array(t),this.vertBothNormalZ=new Float32Array(t),this.vertFlattenedX=lt.create(new Uint8Array(s).buffer,1,0),this.vertFlattenedY=lt.create(new Uint8Array(s).buffer,1,0),this.vertFlattenedZ=lt.create(new Uint8Array(s).buffer,1,0),this.vertClampedX=lt.create(new Uint8Array(s).buffer,1,0),this.vertClampedY=lt.create(new Uint8Array(s).buffer,1,0),this.vertClampedZ=lt.create(new Uint8Array(s).buffer,1,0),this.vertFullyClamped=lt.create(new Uint8Array(s).buffer,1,0),this.vertDeformCount=new Uint8Array(t),this.vertDeformDamping=new Float32Array(t),this.vertDeformStrength=new Float32Array(t),this.vertWarpAmplitude=new Float32Array(t),this.vertWarpFrequency=new Float32Array(t),this.vertScatter=new Float32Array(t),this.vertRing=new Float32Array(t),this.vertNrOfClampedLinks=new Uint8Array(t),this.vertLinkCounts=new Uint8Array(t),this.vertLinkIndices=new Uint32Array(t*6),this.faceFlattened=lt.create(new Uint8Array(r).buffer,1,0),this.faceClamped=lt.create(new Uint8Array(r).buffer,1,0),this.faceSmooth=lt.create(new Uint8Array(r).buffer,1,0),this.faceEquidistant=lt.create(new Uint8Array(r).buffer,1,0),this.faceCulled=lt.create(new Uint8Array(r).buffer,1,0),this.faceNameIndices=new Uint8Array(e),this.faceMaterials=new Uint8Array(e),this.faceVertIndices=new Uint32Array(o),this.faceVertNormalX=new Float32Array(o),this.faceVertNormalY=new Float32Array(o),this.faceVertNormalZ=new Float32Array(o),this.faceVertFlatNormalX=new Float32Array(o),this.faceVertFlatNormalY=new Float32Array(o),this.faceVertFlatNormalZ=new Float32Array(o),this.faceVertSmoothNormalX=new Float32Array(o),this.faceVertSmoothNormalY=new Float32Array(o),this.faceVertSmoothNormalZ=new Float32Array(o),this.faceVertBothNormalX=new Float32Array(o),this.faceVertBothNormalY=new Float32Array(o),this.faceVertBothNormalZ=new Float32Array(o),this.faceVertColorR=new Float32Array(o),this.faceVertColorG=new Float32Array(o),this.faceVertColorB=new Float32Array(o),this.faceVertLightR=new Float32Array(o),this.faceVertLightG=new Float32Array(o),this.faceVertLightB=new Float32Array(o),this.faceVertAO=new Float32Array(o),this.faceVertUs=new Float32Array(o),this.faceVertVs=new Float32Array(o),this.tmpVoxelXZYFaceIndices=Array(e).fill(0),this.tmpVoxelXYZFaceIndices=Array(e).fill(0),this.tmpVoxelYZXFaceIndices=Array(e).fill(0),this.voxelXZYFaceIndices=null,this.voxelXYZFaceIndices=null,this.voxelYZXFaceIndices=null}clear(){this.tmpVertIndexLookup.clear(),this.vertX.fill(0),this.vertY.fill(0),this.vertZ.fill(0),this.vertTmpX.fill(0),this.vertTmpY.fill(0),this.vertTmpZ.fill(0),this.vertHasTmp.clear(),this.vertColorR.fill(0),this.vertColorG.fill(0),this.vertColorB.fill(0),this.vertColorCount.fill(0),this.vertSmoothNormalX.fill(0),this.vertSmoothNormalY.fill(0),this.vertSmoothNormalZ.fill(0),this.vertBothNormalX.fill(0),this.vertBothNormalY.fill(0),this.vertBothNormalZ.fill(0),this.vertFlattenedX.clear(),this.vertFlattenedY.clear(),this.vertFlattenedZ.clear(),this.vertClampedX.clear(),this.vertClampedY.clear(),this.vertClampedZ.clear(),this.vertFullyClamped.clear(),this.vertDeformCount.fill(0),this.vertDeformDamping.fill(0),this.vertDeformStrength.fill(0),this.vertWarpAmplitude.fill(0),this.vertWarpFrequency.fill(0),this.vertScatter.fill(0),this.vertRing.fill(0),this.vertNrOfClampedLinks.fill(0),this.vertLinkCounts.fill(0),this.vertLinkIndices.fill(0),this.faceFlattened.clear(),this.faceClamped.clear(),this.faceSmooth.clear(),this.faceEquidistant.clear(),this.faceCulled.clear(),this.faceNameIndices.fill(0),this.faceMaterials.fill(0),this.faceVertIndices.fill(0),this.faceVertNormalX.fill(0),this.faceVertNormalY.fill(0),this.faceVertNormalZ.fill(0),this.faceVertFlatNormalX.fill(0),this.faceVertFlatNormalY.fill(0),this.faceVertFlatNormalZ.fill(0),this.faceVertSmoothNormalX.fill(0),this.faceVertSmoothNormalY.fill(0),this.faceVertSmoothNormalZ.fill(0),this.faceVertBothNormalX.fill(0),this.faceVertBothNormalY.fill(0),this.faceVertBothNormalZ.fill(0),this.faceVertColorR.fill(0),this.faceVertColorG.fill(0),this.faceVertColorB.fill(0),this.faceVertLightR.fill(0),this.faceVertLightG.fill(0),this.faceVertLightB.fill(0),this.faceVertAO.fill(0),this.faceVertUs.fill(0),this.faceVertVs.fill(0),this.tmpVoxelXZYFaceIndices.length=0,this.tmpVoxelXYZFaceIndices.length=0,this.tmpVoxelYZXFaceIndices.length=0,this.voxelXZYFaceIndices=null,this.voxelXYZFaceIndices=null,this.voxelYZXFaceIndices=null}};var Ts=new Ye(1024*1024);onmessage=function(S){let t=Bs(S.data.svoxmodel);postMessage({svoxmesh:t,elementId:S.data.elementId,worker:S.data.worker})};function Bs(S){let t="model size=9,scale=0.05,material lighting=flat,colors=B:#FF8800 C:#FF0000 A:#FFFFFF,voxels 10B7-2(2B2-3C2-2B4-C2-)2B2-3C2-2B7-11B7-B-6(7A2-)7A-B7-2B2-3C2-B-6(7A2-)7A-B2-3C2-2B2-C4-B-2(7A-C7A2C)7A-C7AC-7A-B2-C4-2B2-3C2-B3(-7A-C7AC)-7A-B2-3C2-2B2-C4-B-7A-C2(7AC-7A2C)7AC-7A-B2-C4-2B2-3C2-B-6(7A2-)7A-B2-3C2-2B7-B-6(7A2-)7A-B7-11B7-2(2B2-3C2-2B2-C4-)2B2-3C2-2B7-10B",s="model size=9,scale=0.05,material lighting=flat,colors=A:#FFFFFF B:#FF8800 C:#FF0000,voxels 10B7-2B-C3-C-2B2-C-C2-2B3-C3-2B2-C-C2-2B-C3-C-2B7-11B7-B-6(7A2-)7A-B7-2B-C3-C-B-7A-C7AC-2(7A2-)7A-C7AC-7A-B-C3-C-2B2-C-C2-B-7A2-2(7A-C7AC-)7A2-7A-B2-C-C2-2B3-C3-B-2(7A2-)7A-C7AC-2(7A2-)7A-B3-C3-2B2-C-C2-B-7A2-2(7A-C7AC-)7A2-7A-B2-C-C2-2B-C3-C-B-7A-C7AC-2(7A2-)7A-C7AC-7A-B-C3-C-2B7-B-6(7A2-)7A-B7-11B7-2B-C3-C-2B2-C-C2-2B3-C3-2B2-C-C2-2B-C3-C-2B7-10B",e;(!S||S.trim()==="")&&(e={name:"ConfigError",message:"Model not found"},S=t);let r=null;try{r=ue.readFromString(S)}catch(n){e=n,r=ue.readFromString(s)}let o=Wt.generate(r,Ts);return o.error=e,o}\n');
+  }
+
+  // src/svox/workerpool.js
+  var WorkerPool = class {
+    constructor(resultHandler, resultCallback) {
+      this._resultHandler = resultHandler;
+      this._resultCallback = resultCallback;
+      this._nrOfWorkers = window.navigator.hardwareConcurrency;
+      this._workers = [];
+      this._free = [];
+      this._tasks = [];
+    }
+    executeTask(task) {
+      if (this._workers.length < this._nrOfWorkers) {
+        const worker = new Worker2();
+        const _this = this;
+        worker.onmessage = function(task2) {
+          _this._free.push(event.data.worker);
+          _this._processNextTask();
+          _this._resultCallback.apply(_this._resultHandler, [event.data]);
+        };
+        this._free.push(this._workers.length);
+        this._workers.push(worker);
+      }
+      this._tasks.push(task);
+      this._processNextTask();
+    }
+    _processNextTask() {
+      if (this._tasks.length > 0 && this._free.length > 0) {
+        const task = this._tasks.shift();
+        task.worker = this._free.shift();
+        const worker = this._workers[task.worker];
+        worker.postMessage(task);
+      }
+    }
+  };
+
+  // src/svox/svoxtothreemeshconverter.js
+  var SvoxToThreeMeshConverter = class {
+    static generate(model) {
+      const materials = [];
+      model.materials.forEach(function(material) {
+        materials.push(SvoxToThreeMeshConverter._generateMaterial(material));
+      }, this);
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(model.positions, 3));
+      geometry.setAttribute("normal", new THREE.Float32BufferAttribute(model.normals, 3));
+      geometry.setAttribute("color", new THREE.Float32BufferAttribute(model.colors, 3));
+      if (model.uvs) {
+        geometry.setAttribute("uv", new THREE.Float32BufferAttribute(model.uvs, 2));
+      }
+      if (model.data) {
+        for (let d = 0; d < model.data.length; d++) {
+          geometry.setAttribute(model.data[d].name, new THREE.Float32BufferAttribute(model.data[d].values, model.data[d].width));
+        }
+      }
+      geometry.setIndex(model.indices);
+      model.groups.forEach(function(group) {
+        geometry.addGroup(group.start, group.count, group.materialIndex);
+      }, this);
+      geometry.computeBoundingBox();
+      geometry.uvsNeedUpdate = true;
+      const mesh = new THREE.Mesh(geometry, materials);
+      return mesh;
+    }
+    static _generateMaterial(definition) {
+      definition.reflectivity = (1 - definition.roughness) * (definition.metalness * 0.95 + 0.05);
+      definition.shininess = Math.pow(10, 5 * Math.pow(1 - definition.roughness, 1.1)) * 0.1;
+      switch (definition.side) {
+        case "back":
+          definition.side = THREE.BackSide;
+          break;
+        case "double":
+          definition.side = THREE.DoubleSide;
+          break;
+        default:
+          definition.side = THREE.FrontSide;
+          break;
+      }
+      if (definition.map) {
+        definition.map = SvoxToThreeMeshConverter._generateTexture(
+          definition.map.image,
+          THREE.sRGBEncoding,
+          definition.map.uscale,
+          definition.map.vscale,
+          definition.map.uoffset,
+          definition.map.voffset,
+          definition.map.rotation
+        );
+      }
+      if (definition.normalMap) {
+        definition.normalMap = SvoxToThreeMeshConverter._generateTexture(
+          definition.normalMap.image,
+          THREE.LinearEncoding,
+          definition.normalMap.uscale,
+          definition.normalMap.vscale,
+          definition.normalMap.uoffset,
+          definition.normalMap.voffset,
+          definition.normalMap.rotation
+        );
+      }
+      if (definition.roughnessMap) {
+        definition.roughnessMap = SvoxToThreeMeshConverter._generateTexture(
+          definition.roughnessMap.image,
+          THREE.LinearEncoding,
+          definition.roughnessMap.uscale,
+          definition.roughnessMap.vscale,
+          definition.roughnessMap.uoffset,
+          definition.roughnessMap.voffset,
+          definition.roughnessMap.rotation
+        );
+      }
+      if (definition.metalnessMap) {
+        definition.metalnessMap = SvoxToThreeMeshConverter._generateTexture(
+          definition.metalnessMap.image,
+          THREE.LinearEncoding,
+          definition.metalnessMap.uscale,
+          definition.metalnessMap.vscale,
+          definition.metalnessMap.uoffset,
+          definition.metalnessMap.voffset,
+          definition.metalnessMap.rotation
+        );
+      }
+      if (definition.emissiveMap) {
+        definition.emissiveMap = SvoxToThreeMeshConverter._generateTexture(
+          definition.emissiveMap.image,
+          THREE.sRGBEncoding,
+          definition.emissiveMap.uscale,
+          definition.emissiveMap.vscale,
+          definition.emissiveMap.uoffset,
+          definition.emissiveMap.voffset,
+          definition.emissiveMap.rotation
+        );
+      }
+      if (definition.matcap) {
+        definition.matcap = SvoxToThreeMeshConverter._generateTexture(definition.matcap.image, THREE.sRGBEncoding);
+      }
+      if (definition.reflectionMap) {
+        definition.envMap = new THREE.TextureLoader().load(definition.reflectionMap.image);
+        definition.envMap.encoding = THREE.sRGBEncoding;
+        definition.envMap.mapping = THREE.EquirectangularReflectionMapping;
+        delete definition.reflectionMap;
+      }
+      if (definition.refractionMap) {
+        definition.envMap = new THREE.TextureLoader().load(definition.refractionMap.image);
+        definition.envMap.encoding = THREE.sRGBEncoding;
+        definition.envMap.mapping = THREE.EquirectangularRefractionMapping;
+        delete definition.refractionMap;
+      }
+      let material = null;
+      const type = definition.type;
+      delete definition.index;
+      delete definition.type;
+      switch (type) {
+        case "standard":
+          delete definition.reflectivity;
+          delete definition.shininess;
+          material = new THREE.MeshStandardMaterial(definition);
+          break;
+        case "basic":
+          delete definition.roughness;
+          delete definition.metalness;
+          delete definition.shininess;
+          delete definition.emissive;
+          delete definition.emissiveIntensity;
+          delete definition.roughnessMap;
+          delete definition.metalnessMap;
+          delete definition.emissiveMap;
+          material = new THREE.MeshBasicMaterial(definition);
+          break;
+        case "lambert":
+          delete definition.roughness;
+          delete definition.metalness;
+          delete definition.shininess;
+          delete definition.roughnessMap;
+          delete definition.metalnessMap;
+          material = new THREE.MeshLambertMaterial(definition);
+          break;
+        case "phong":
+          delete definition.roughness;
+          delete definition.metalness;
+          delete definition.roughnessMap;
+          delete definition.metalnessMap;
+          material = new THREE.MeshPhongMaterial(definition);
+          break;
+        case "matcap":
+          delete definition.roughness;
+          delete definition.metalness;
+          delete definition.wireframe;
+          delete definition.reflectivity;
+          delete definition.shininess;
+          delete definition.emissive;
+          delete definition.emissiveIntensity;
+          delete definition.envMap;
+          delete definition.roughnessMap;
+          delete definition.metalnessMap;
+          delete definition.emissiveMap;
+          delete definition.reflectionMap;
+          delete definition.refractionMap;
+          delete definition.refractionRatio;
+          material = new THREE.MeshMatcapMaterial(definition);
+          break;
+        case "toon":
+          delete definition.roughness;
+          delete definition.metalness;
+          delete definition.reflectivity;
+          delete definition.shininess;
+          delete definition.emissive;
+          delete definition.emissiveIntensity;
+          delete definition.envMap;
+          delete definition.roughnessMap;
+          delete definition.metalnessMap;
+          delete definition.reflectionMap;
+          delete definition.refractionMap;
+          delete definition.refractionRatio;
+          material = new THREE.MeshToonMaterial(definition);
+          break;
+        case "normal":
+          delete definition.roughness;
+          delete definition.metalness;
+          delete definition.reflectivity;
+          delete definition.shininess;
+          delete definition.emissive;
+          delete definition.emissiveIntensity;
+          delete definition.map;
+          delete definition.envMap;
+          delete definition.roughnessMap;
+          delete definition.metalnessMap;
+          delete definition.emissiveMap;
+          delete definition.reflectionMap;
+          delete definition.refractionMap;
+          delete definition.refractionRatio;
+          material = new THREE.MeshNormalMaterial(definition);
+          break;
+        default: {
+          throw new Error(`SyntaxError: Unknown material type ${type}`);
+        }
+      }
+      return material;
+    }
+    static _generateTexture(image, encoding, uscale, vscale, uoffset, voffset, rotation) {
+      const threetexture = new THREE.TextureLoader().load(image);
+      threetexture.encoding = encoding;
+      threetexture.repeat.set(1 / uscale, 1 / vscale);
+      threetexture.wrapS = THREE.RepeatWrapping;
+      threetexture.wrapT = THREE.RepeatWrapping;
+      threetexture.offset = new THREE.Vector2(uoffset, voffset);
+      threetexture.rotation = rotation * Math.PI / 180;
+      return threetexture;
+    }
+  };
+
+  // src/svox/smoothvoxel.js
+  if (typeof window !== "undefined") {
+    if (typeof AFRAME !== "undefined") {
+      let WORKERPOOL = null;
+      AFRAME.registerComponent("svox", {
+        schema: {
+          model: { type: "string" },
+          worker: { type: "boolean", default: false }
+        },
+        multiple: false,
+        _MISSING: "model size=9,scale=0.05,material lighting=flat,colors=A:#FFFFFF B:#FF8800 C:#FF0000,voxels 10B7-2B-C3-C-2B2-C-C2-2B3-C3-2B2-C-C2-2B-C3-C-2B7-11B7-B-6(7A2-)7A-B7-2B-C3-C-B-7A-C7AC-2(7A2-)7A-C7AC-7A-B-C3-C-2B2-C-C2-B-7A2-2(7A-C7AC-)7A2-7A-B2-C-C2-2B3-C3-B-2(7A2-)7A-C7AC-2(7A2-)7A-B3-C3-2B2-C-C2-B-7A2-2(7A-C7AC-)7A2-7A-B2-C-C2-2B-C3-C-B-7A-C7AC-2(7A2-)7A-C7AC-7A-B-C3-C-2B7-B-6(7A2-)7A-B7-11B7-2B-C3-C-2B2-C-C2-2B3-C3-2B2-C-C2-2B-C3-C-2B7-10B",
+        _ERROR: "model size=9,scale=0.05,material lighting=flat,colors=B:#FF8800 C:#FF0000 A:#FFFFFF,voxels 10B7-2(2B2-3C2-2B4-C2-)2B2-3C2-2B7-11B7-B-6(7A2-)7A-B7-2B2-3C2-B-6(7A2-)7A-B2-3C2-2B2-C4-B-2(7A-C7A2C)7A-C7AC-7A-B2-C4-2B2-3C2-B3(-7A-C7AC)-7A-B2-3C2-2B2-C4-B-7A-C2(7AC-7A2C)7AC-7A-B2-C4-2B2-3C2-B-6(7A2-)7A-B2-3C2-2B7-B-6(7A2-)7A-B7-11B7-2(2B2-3C2-2B2-C4-)2B2-3C2-2B7-10B",
+        _workerPool: null,
+        init: function() {
+          const el = this.el;
+          const data = this.data;
+          let useWorker = data.worker;
+          let error = false;
+          const modelName = data.model;
+          let modelString = window.SVOX.models[modelName];
+          if (!modelString) {
+            this._logError({ name: "ConfigError", message: "Model not found" });
+            modelString = this._MISSING;
+            error = true;
+            useWorker = false;
+          }
+          if (!useWorker) {
+            this._generateModel(modelString, el, error);
+          } else {
+            this._generateModelInWorker(modelString, el);
+          }
+        },
+        _generateModel: function(modelString, el, error) {
+          let model;
+          try {
+            model = window.model = ModelReader.readFromString(modelString);
+          } catch (ex) {
+            this._logError(ex);
+            model = ModelReader.readFromString(this._ERROR);
+            error = true;
+          }
+          const buffers = new Buffers(1024 * 1024);
+          const t0 = performance.now();
+          const svoxmesh = SvoxMeshGenerator.generate(model, buffers);
+          console.log(svoxmesh);
+          const t1 = performance.now();
+          this.mesh = SvoxToThreeMeshConverter.generate(svoxmesh);
+          console.log(svoxmesh);
+          const statsText = `Time: ${Math.round(t1 - t0)}ms. Verts:${svoxmesh.maxIndex + 1} Faces:${svoxmesh.indices.length / 3} Materials:${this.mesh.material.length}`;
+          const statsEl = document.getElementById("svoxstats");
+          if (statsEl && !error) {
+            statsEl.innerHTML = "Last render: " + statsText;
+          }
+          el.setObject3D("mesh", this.mesh);
+        },
+        _generateModelInWorker: function(svoxmodel, el) {
+          if (!el.id) {
+            el.id = new Date().valueOf().toString(36) + Math.random().toString(36).substr(2);
+          }
+          const task = { svoxmodel, elementId: el.id };
+          if (!WORKERPOOL) {
+            WORKERPOOL = new WorkerPool(this, this._processResult);
+          }
+          WORKERPOOL.executeTask(task);
+        },
+        _processResult: function(data) {
+          if (data.svoxmesh.error) {
+            this._logError(data.svoxmesh.error);
+          } else {
+            const mesh = SvoxToThreeMeshConverter.generate(data.svoxmesh);
+            const el = document.querySelector("#" + data.elementId);
+            el.setObject3D("mesh", mesh);
+          }
+        },
+        _toSharedArrayBuffer(floatArray) {
+          const buffer = new Float32Array(new ArrayBuffer(floatArray.length * 4));
+          buffer.set(floatArray, 0);
+          return buffer;
+        },
+        _logError: function(error) {
+          const errorText = error.name + ": " + error.message;
+          const errorElement = document.getElementById("svoxerrors");
+          if (errorElement) {
+            errorElement.innerHTML = errorText;
+          }
+          console.error(`SVOXERROR (${this.data.model}) ${errorText}`);
+        },
+        update: function(oldData) {
+        },
+        remove: function() {
+          const maps = ["map", "normalMap", "roughnessMap", "metalnessMap", "emissiveMap", "matcap"];
+          if (this.mesh) {
+            while (this.mesh.material.length > 0) {
+              maps.forEach(function(map) {
+                if (this.mesh.material[0][map]) {
+                  this.mesh.material[0][map].dispose();
+                }
+              }, this);
+              this.mesh.material[0].dispose();
+              this.mesh.material.shift();
+            }
+            this.mesh.geometry.dispose();
+            this.el.removeObject3D("mesh");
+            delete this.mesh;
+          }
+        },
+        pause: function() {
+        },
+        play: function() {
+        },
+        events: {}
+      });
+    }
+  }
+
+  // src/index.js
+  var src_default = {
+    BaseMaterial,
+    Bits,
+    BoundingBox,
+    Color,
+    Light,
+    Material,
+    MaterialList,
+    SvoxMeshGenerator,
+    Model,
+    ModelReader,
+    ModelWriter,
+    Buffers,
+    Voxels,
+    xyzRangeForSize,
+    shiftForSize,
+    voxColorForRGBT,
+    rgbtForVoxColor,
+    WorkerPool
+  };
+})();

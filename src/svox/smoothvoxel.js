@@ -90,7 +90,7 @@ if (typeof window !== 'undefined') {
         this.mesh = SvoxToThreeMeshConverter.generate(svoxmesh)
 
         // Log stats
-        const statsText = `Time: ${Math.round(t1 - t0)}ms. Verts:${svoxmesh.positions.length / 3} Faces:${svoxmesh.indices.length / 3} Materials:${this.mesh.material.length}`
+        const statsText = `Time: ${Math.round(t1 - t0)}ms. Verts:${svoxmesh.maxIndex + 1} Faces:${svoxmesh.indices.length / 3} Materials:${this.mesh.material.length}`
         // console.log(`SVOX ${this.data.model}:  ${statsText}`);
         const statsEl = document.getElementById('svoxstats')
         if (statsEl && !error) { statsEl.innerHTML = 'Last render: ' + statsText }
