@@ -321,10 +321,11 @@ export default class SvoxMeshGenerator {
     const colors = mesh.colors
     const uvs = mesh.uvs
 
-    const vert0Key = vert0X * 3 + vert0Y * 61673 + vert0Z * 87119 + norm0X * 2766691 + norm0Y * 73091 + norm0Z * 5040949 + col0R * 8636137 + col0G * 2360719 + col0B * 4739729 + uv0U * 719959 + uv0V * 172741
-    const vert1Key = vert1X * 3 + vert1Y * 61673 + vert1Z * 87119 + norm1X * 2766691 + norm1Y * 73091 + norm1Z * 5040949 + col1R * 8636137 + col1G * 2360719 + col1B * 4739729 + uv1U * 719959 + uv1V * 172741
-    const vert2Key = vert2X * 3 + vert2Y * 61673 + vert2Z * 87119 + norm2X * 2766691 + norm2Y * 73091 + norm2Z * 5040949 + col2R * 8636137 + col2G * 2360719 + col2B * 4739729 + uv2U * 719959 + uv2V * 172741
-    const vert3Key = vert3X * 3 + vert3Y * 61673 + vert3Z * 87119 + norm3X * 2766691 + norm3Y * 73091 + norm3Z * 5040949 + col3R * 8636137 + col3G * 2360719 + col3B * 4739729 + uv3U * 719959 + uv3V * 172741
+    // UVs need to be rounded since left and right side are usually off by a bit
+    const vert0Key = vert0X * 3 + vert0Y * 61673 + vert0Z * 87119 + norm0X * 2766691 + norm0Y * 73091 + norm0Z * 5040949 + col0R * 8636137 + col0G * 2360719 + col0B * 4739729 + Math.round(uv0U * 1000) * 719959 + Math.round(uv0V * 1000) * 172741
+    const vert1Key = vert1X * 3 + vert1Y * 61673 + vert1Z * 87119 + norm1X * 2766691 + norm1Y * 73091 + norm1Z * 5040949 + col1R * 8636137 + col1G * 2360719 + col1B * 4739729 + Math.round(uv1U * 1000) * 719959 + Math.round(uv1V * 1000) * 172741
+    const vert2Key = vert2X * 3 + vert2Y * 61673 + vert2Z * 87119 + norm2X * 2766691 + norm2Y * 73091 + norm2Z * 5040949 + col2R * 8636137 + col2G * 2360719 + col2B * 4739729 + Math.round(uv2U * 1000) * 719959 + Math.round(uv2V * 1000) * 172741
+    const vert3Key = vert3X * 3 + vert3Y * 61673 + vert3Z * 87119 + norm3X * 2766691 + norm3Y * 73091 + norm3Z * 5040949 + col3R * 8636137 + col3G * 2360719 + col3B * 4739729 + Math.round(uv3U * 1000) * 719959 + Math.round(uv3V * 1000) * 172741
 
     const hasVert0 = vertCache.has(vert0Key)
     const hasVert1 = vertCache.has(vert1Key)
