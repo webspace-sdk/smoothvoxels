@@ -6,6 +6,31 @@ import Voxels, { voxColorForRGBT, shiftForSize } from './voxels'
 
 import { MATSTANDARD, FLAT, QUAD, SMOOTH, BOTH, MATBASIC, FRONT, BOUNDS, MODEL } from './constants.js'
 
+const PARSE_REGEX = {
+  linecontinuation: /_\s*[\r\n]/gm,
+  modelparts: new RegExp(/\s*(\/\/(.*?)\r?\n)/.source + '|' + // Comments
+                      /\s*(texture|light|model|material|voxels)\s+/.source + '|' + // SVOX Blocks
+                      /\s*([^=,\r\n]+=\s*data:image.*?base64,.*$)\s*/.source + '|' + // Name = data:image/...;base64,iVBORw...
+                      /\s*([^=,\r\n]+=[^\r\n=;,/]+)\s*/.source + '|' + // Name = Value
+                      /\s*([A-Za-z ()\d -]+)\s*/.source, // Voxel matrix
+  'gm')
+}
+
+const MANDATORY_MODEL_FIELDS = ['size', 'materials', 'textures', 'lights', 'voxels']
+const OPTIONAL_MODEL_FIELDS = ['name', 'shape', 'scale', 'rotation', 'position', 'simplify', 'origin', 'autoresize', 'resize',
+  'flatten', 'clamp', 'skip', 'tile', 'ao', 'aosides', 'aosamples', 'shell', 'wireframe', 'data']
+
+const MANDATORY_LIGHT_FIELDS = ['color']
+const OPTIONAL_LIGHT_FIELDS = ['direction', 'position', 'distance', 'size', 'detail']
+
+const MANDATORY_TEXTURE_FIELDS = ['id', 'image']
+const OPTIONAL_TEXTURE_FIELDS = ['cube']
+
+const MANDATORY_MATERIAL_FIELDS = ['colors']
+const OPTIONAL_MATERIAL_FIELDS = ['type', 'lighting', 'fade', 'simplify', 'roughness', 'metalness', 'emissive', 'fog', 'opacity', 'alphatest', 'transparent', 'refractionratio',
+  'deform', 'warp', 'scatter', 'flatten', 'clamp', 'skip', 'ao', 'lights', 'wireframe', 'side', 'shell',
+  'map', 'normalmap', 'roughnessmap', 'metalnessmap', 'emissivemap', 'matcap', 'reflectionmap', 'refractionmap', 'maptransform', 'data']
+
 export default class ModelReader {
   /**
      * Read the model from a string.
@@ -13,22 +38,9 @@ export default class ModelReader {
      * @returns {Model} The model.
      */
   static readFromString (modelString) {
-    let t0 = performance.now()
     const modelData = this._parse(modelString)
-    let t1 = performance.now()
-    console.log('Parsing took ' + (t1 - t0) + ' milliseconds.')
-
-    t0 = performance.now()
     this._validateModel(modelData)
-    t1 = performance.now()
-    console.log('Validation took ' + (t1 - t0) + ' milliseconds.')
-
-    t0 = performance.now()
-    const model = this._createModel(modelData)
-    t1 = performance.now()
-    console.log('Model creation took ' + (t1 - t0) + ' milliseconds.')
-
-    return model
+    return this._createModel(modelData)
   }
 
   /**
@@ -37,16 +49,6 @@ export default class ModelReader {
      * @returns {object} A simple object with the model data (not yet the actual model).
      */
   static _parse (modelString) {
-    const regex = {
-      linecontinuation: /_\s*[\r\n]/gm,
-      modelparts: new RegExp(/\s*(\/\/(.*?)\r?\n)/.source + '|' + // Comments
-                          /\s*(texture|light|model|material|voxels)\s+/.source + '|' + // SVOX Blocks
-                          /\s*([^=,\r\n]+=\s*data:image.*?base64,.*$)\s*/.source + '|' + // Name = data:image/...;base64,iVBORw...
-                          /\s*([^=,\r\n]+=[^\r\n=;,/]+)\s*/.source + '|' + // Name = Value
-                          /\s*([A-Za-z ()\d -]+)\s*/.source, // Voxel matrix
-      'gm')
-    }
-
     const modelData = { lights: [], textures: [], materials: [] }
     let parent = modelData
     let voxelString = null
@@ -56,7 +58,7 @@ export default class ModelReader {
     // - name = value (e.g. "emissive = #FFF 1")
     // - A line from the voxel matrix
     // while removing all comments
-    const lines = Array.from(modelString.replaceAll(regex.linecontinuation, ' ').matchAll(regex.modelparts), m => m[0].trim())
+    const lines = Array.from(modelString.replaceAll(PARSE_REGEX.linecontinuation, ' ').matchAll(PARSE_REGEX.modelparts), m => m[0].trim())
 
     // Now convert the lines to a javascript object
     lines.filter(l => l).forEach(function (line) {
@@ -155,17 +157,17 @@ export default class ModelReader {
       lightMaterial.addColorHEX('#FFFFFF')
     }
 
-    modelData.lights.forEach(function (lightData) {
+    for (const lightData of modelData.lights) {
       this._createLight(model, lightData)
-    }, this)
+    }
 
-    modelData.textures.forEach(function (textureData) {
+    for (const textureData of modelData.textures) {
       this._createTexture(model, textureData)
-    }, this)
+    }
 
-    modelData.materials.forEach(function (materialData) {
+    for (const materialData of modelData.materials) {
       this._createMaterial(model, materialData)
-    }, this)
+    }
 
     // Retrieve all colors and Id's from all materials
     model.colors = {}
@@ -803,22 +805,19 @@ export default class ModelReader {
      * @param {object} modelData The simple object from the parsed model string.
      */
   static _validateModel (modelData) {
-    const mandatory = ['size', 'materials', 'textures', 'lights', 'voxels']
-    const optional = ['name', 'shape', 'scale', 'rotation', 'position', 'simplify', 'origin', 'autoresize', 'resize',
-      'flatten', 'clamp', 'skip', 'tile', 'ao', 'aosides', 'aosamples', 'shell', 'wireframe', 'data']
-    this._validateProperties(modelData, mandatory, optional, 'model')
+    this._validateProperties(modelData, MANDATORY_MODEL_FIELDS, OPTIONAL_MODEL_FIELDS, 'model')
 
-    modelData.lights.forEach(function (lightData) {
+    for (const lightData of modelData.lights) {
       this._validateLight(lightData)
-    }, this)
+    }
 
-    modelData.textures.forEach(function (textureData) {
+    for (const textureData of modelData.textures) {
       this._validateTexture(textureData)
-    }, this)
+    }
 
-    modelData.materials.forEach(function (materialData) {
+    for (const materialData of modelData.materials) {
       this._validateMaterial(materialData)
-    }, this)
+    }
   }
 
   /**
@@ -826,9 +825,7 @@ export default class ModelReader {
      * @param {object} lightData The simple object from the parsed model string.
      */
   static _validateLight (lightData) {
-    const mandatory = ['color']
-    const optional = ['direction', 'position', 'distance', 'size', 'detail']
-    this._validateProperties(lightData, mandatory, optional, 'light')
+    this._validateProperties(lightData, MANDATORY_LIGHT_FIELDS, OPTIONAL_LIGHT_FIELDS, 'light')
 
     // Extra checks
     if (lightData.direction && lightData.position) {
@@ -847,9 +844,7 @@ export default class ModelReader {
      * @param {object} textureData The simple object from the parsed model string.
      */
   static _validateTexture (textureData) {
-    const mandatory = ['id', 'image']
-    const optional = ['cube']
-    this._validateProperties(textureData, mandatory, optional, 'texture')
+    this._validateProperties(textureData, MANDATORY_TEXTURE_FIELDS, OPTIONAL_TEXTURE_FIELDS, 'texture')
   }
 
   /**
@@ -857,11 +852,7 @@ export default class ModelReader {
      * @param {object} materialData The simple object from the parsed model string.
      */
   static _validateMaterial (materialData) {
-    const mandatory = ['colors']
-    const optional = ['type', 'lighting', 'fade', 'simplify', 'roughness', 'metalness', 'emissive', 'fog', 'opacity', 'alphatest', 'transparent', 'refractionratio',
-      'deform', 'warp', 'scatter', 'flatten', 'clamp', 'skip', 'ao', 'lights', 'wireframe', 'side', 'shell',
-      'map', 'normalmap', 'roughnessmap', 'metalnessmap', 'emissivemap', 'matcap', 'reflectionmap', 'refractionmap', 'maptransform', 'data']
-    this._validateProperties(materialData, mandatory, optional, 'material')
+    this._validateProperties(materialData, MANDATORY_MATERIAL_FIELDS, OPTIONAL_MATERIAL_FIELDS, 'material')
   }
 
   /**
@@ -874,7 +865,7 @@ export default class ModelReader {
   static _validateProperties (data, mandatory, optional, objectName) {
     // Ensure all mandatory properties are present
     for (const propertyName of mandatory) {
-      if (!data[propertyName]) {
+      if (!Object.hasOwn(data, propertyName)) {
         throw new Error('SyntaxError: ' + objectName + ' is missing mandatory property "' + propertyName + '".')
       }
     }

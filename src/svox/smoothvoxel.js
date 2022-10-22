@@ -67,9 +67,7 @@ if (typeof window !== 'undefined') {
       _generateModel: function (modelString, el, error) {
         let model
         try {
-          const t0 = performance.now()
           model = window.model = ModelReader.readFromString(modelString)
-          console.log('Model read in ' + (performance.now() - t0) + 'ms')
         } catch (ex) {
           this._logError(ex)
           model = ModelReader.readFromString(this._ERROR)
