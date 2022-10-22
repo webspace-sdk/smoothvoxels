@@ -68,9 +68,7 @@ if (typeof window !== 'undefined') {
         let model
         try {
           const t0 = performance.now()
-          for (let i = 0; i < 50; i++) {
-            model = window.model = ModelReader.readFromString(modelString)
-          }
+          model = window.model = ModelReader.readFromString(modelString)
           console.log('Model read in ' + (performance.now() - t0) + 'ms')
         } catch (ex) {
           this._logError(ex)

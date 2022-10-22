@@ -368,7 +368,11 @@ export default class ModelReader {
 
     for (let i = 0; i < rleArray.length; i++) {
       if (rleArray[i][0] !== '-') {
-        colorSet.add(colors[rleArray[i][0]].id)
+        const id = colors[rleArray[i][0]].id
+
+        if (!colorSet.has(id)) {
+          colorSet.add(id)
+        }
       }
     }
 
@@ -403,26 +407,59 @@ export default class ModelReader {
 
     model.bounds = new BoundingBox()
 
-    let materialIndex = 0
+    let materialIndex = null
+    let materialBounds = null
+    const modelBounds = model.bounds
+    const size = model.size
+    const shiftX = shiftForSize(size.x)
+    const shiftY = shiftForSize(size.y)
+    const shiftZ = shiftForSize(size.z)
+
+    const matColorMap = new Map()
+    const materials = model.materials.materials
+
+    for (let materialIndex = 0, l = materials.length; materialIndex < l; materialIndex++) {
+      const material = materials[materialIndex]
+
+      for (const color of material.colors) {
+        matColorMap.set(color.id, materialIndex)
+      }
+    }
+
     // Count all the colors to try to estimate the palette bits for the voxels
     // Create all chunks, using the context as cursor
-    for (let i = 0; i < rleArray.length; i++) {
+    for (let i = 0, l = rleArray.length; i < l; i++) {
       let color = null
-      if (rleArray[i][0] !== '-') {
-        color = colors[rleArray[i][0]]
-        materialIndex = model.materials.materials.findIndex(m => m.colors.includes(color))
+      const rleEntry = rleArray[i]
+      const firstChar = rleEntry[0]
+
+      if (firstChar !== '-') {
+        color = colors[firstChar]
 
         if (!color) {
           // Oops, this is not a known color, create a purple 'error' color
           if (errorMaterial === null) { errorMaterial = model.materials.createMaterial(MATSTANDARD, FLAT, 0.5, 0.0, false, 1.0, false) }
           color = Color.fromHex('#FF00FF')
-          color.id = rleArray[i][0]
+          color.id = firstChar
           errorMaterial.addColor(color)
-          colors[rleArray[i][0]] = color
+          colors[firstChar] = color
+          materialIndex = model.materials.materials.indexOf(errorMaterial)
+          matColorMap.set(color.id, materialIndex)
         }
+
+        materialIndex = matColorMap.get(color.id)
+
+        const material = materials[materialIndex]
+        materialBounds = material.bounds
       }
 
-      this._setVoxels(model, color, rleArray[i][1], context, voxChunk, materialIndex)
+      const count = rleEntry[1]
+
+      if (color) {
+        this._setVoxels(modelBounds, materialBounds, materialIndex, shiftX, shiftY, shiftZ, color, count, context, voxChunk)
+      } else {
+        this._advanceContext(count, shiftX, shiftY, shiftZ, context)
+      }
     }
   }
 
@@ -677,38 +714,88 @@ export default class ModelReader {
      * @param {int} count The number of voxels to set.
      * @param {object} context The context which holds the current 'cursor' in the voxel array.
      */
-  static _setVoxels (model, color, count, context, voxChunk, materialIndex) {
-    const material = model.materials.materials[materialIndex]
+  static _setVoxels (modelBounds, materialBounds, materialIndex, shiftX, shiftY, shiftZ, color, count, context, voxChunk) {
+    let { x: cx, y: cy, z: cz, maxx, maxy, minx, miny } = context
 
-    while (count-- > 0) {
-      if (color) {
+    cx -= shiftX
+    cy -= shiftY
+    cz -= shiftZ
+
+    minx -= shiftX
+    miny -= shiftY
+    maxx -= shiftX
+    maxy -= shiftY
+
+    if (color) {
+      const r = Math.floor(color.r * 255)
+      const g = Math.floor(color.g * 255)
+      const b = Math.floor(color.b * 255)
+      const rgbt = voxColorForRGBT(r, g, b, materialIndex)
+
+      while (count-- > 0) {
         // Convert the color to a 32 bit integer
-        const r = Math.floor(color.r * 255)
-        const g = Math.floor(color.g * 255)
-        const b = Math.floor(color.b * 255)
-        const t = materialIndex
+        modelBounds.set(cx, cy, cz)
+        materialBounds.set(cx, cy, cz)
+        voxChunk.setColorAt(cx, cy, cz, rgbt)
 
-        const rgbt = voxColorForRGBT(r, g, b, t)
+        cx++
 
-        const vx = context.x - shiftForSize(model.size.x)
-        const vy = context.y - shiftForSize(model.size.y)
-        const vz = context.z - shiftForSize(model.size.z)
+        if (cx > maxx) {
+          cx = minx
+          cy++
+        }
 
-        model.bounds.set(vx, vy, vz)
-        material.bounds.set(vx, vy, vz)
-        voxChunk.setColorAt(vx, vy, vz, rgbt)
+        if (cy > maxy) {
+          cy = miny
+          cz++
+        }
       }
-
-      context.x++
-      if (context.x > context.maxx) {
-        context.x = context.minx
-        context.y++
-      }
-      if (context.y > context.maxy) {
-        context.y = context.miny
-        context.z++
+    } else {
+      while (count-- > 0) {
+        cx++
+        if (cx > maxx) {
+          cx = minx
+          cy++
+        }
+        if (cy > maxy) {
+          cy = miny
+          cz++
+        }
       }
     }
+
+    context.x = cx + shiftX
+    context.y = cy + shiftY
+    context.z = cz + shiftZ
+  }
+
+  static _advanceContext (count, shiftX, shiftY, shiftZ, context) {
+    let { x: cx, y: cy, z: cz, maxx, maxy, minx, miny } = context
+
+    cx -= shiftX
+    cy -= shiftY
+    cz -= shiftZ
+
+    minx -= shiftX
+    miny -= shiftY
+    maxx -= shiftX
+    maxy -= shiftY
+
+    while (count-- > 0) {
+      cx++
+      if (cx > maxx) {
+        cx = minx
+        cy++
+      }
+      if (cy > maxy) {
+        cy = miny
+        cz++
+      }
+    }
+
+    context.x = cx + shiftX
+    context.y = cy + shiftY
+    context.z = cz + shiftZ
   }
 
   /**
