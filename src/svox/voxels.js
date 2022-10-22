@@ -80,9 +80,9 @@ function createViewsForBitsPerIndex (size, bitsPerIndex, buffer = null) {
 export default class Voxels {
   constructor (
     size = null,
+    bitsPerIndex = 8,
     paletteBuffer = null,
     indicesBuffer = null,
-    bitsPerIndex = 8,
     paletteOffset = 0,
     paletteByteLength = null,
     indicesOffset = 0,
@@ -103,7 +103,7 @@ export default class Voxels {
     } else if (size) {
       // Need at least two bits to start because of empty,
       // remove, and palette value. Start with palette of size 2.
-      const [buffer, palette, indices] = createViewsForBitsPerIndex(size, 1)
+      const [buffer, palette, indices] = createViewsForBitsPerIndex(size, bitsPerIndex)
       this.palette = palette
       this.indices = indices
       this._refCounts = new Array(this.palette.length).fill(0)

@@ -14,8 +14,9 @@ const buildConfig = {
   constants: {},
   entry: 'src/index.js',
   format: 'iife',
-  minify: true,
+  minify: false,
   outdir: 'dist',
+  sourcemap: true,
   platform: { name: 'browser', target: 'chrome', version: 96 }
 }
 
@@ -52,6 +53,7 @@ class Builder {
       minify: buildConfig.minify,
       outdir: buildConfig.outdir,
       platform: buildConfig.platform.name,
+      sourcemap: buildConfig.sourcemap,
       plugins: [inlineWorkerPlugin()],
       target: `${buildConfig.platform.target}${buildConfig.platform.version}`
     })
@@ -91,7 +93,7 @@ class Builder {
   }
 
   convertToProductionFile () {
-    const filename = basename(buildConfig.entry).replace(/\.ts$/, '.js')
+    const filename = basename(buildConfig.entry)
     const newFilename = `${pkg.name}.js`
     const contents = readFileSync(`${buildConfig.outdir}/${filename}`, { encoding: 'utf-8' })
 

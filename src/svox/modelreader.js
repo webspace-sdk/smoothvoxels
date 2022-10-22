@@ -13,10 +13,20 @@ export default class ModelReader {
      * @returns {Model} The model.
      */
   static readFromString (modelString) {
+    let t0 = performance.now()
     const modelData = this._parse(modelString)
-    this._validateModel(modelData)
+    let t1 = performance.now()
+    console.log('Parsing took ' + (t1 - t0) + ' milliseconds.')
 
+    t0 = performance.now()
+    this._validateModel(modelData)
+    t1 = performance.now()
+    console.log('Validation took ' + (t1 - t0) + ' milliseconds.')
+
+    t0 = performance.now()
     const model = this._createModel(modelData)
+    t1 = performance.now()
+    console.log('Model creation took ' + (t1 - t0) + ' milliseconds.')
 
     return model
   }
@@ -354,7 +364,22 @@ export default class ModelReader {
     // Check the voxel matrix size against the specified size
     const totalSize = model.size.x * model.size.y * model.size.z
     let voxelLength = 0
-    const voxChunk = model.voxChunk = new Voxels([model.size.x, model.size.y, model.size.z])
+    const colorSet = new Set()
+
+    for (let i = 0; i < rleArray.length; i++) {
+      if (rleArray[i][0] !== '-') {
+        colorSet.add(colors[rleArray[i][0]].id)
+      }
+    }
+
+    // Palette bits is 1, 2, 4, or 8, and represents the number of bits
+    // that are needed to store a palette index given the color count, leaving one extra value for empty
+    let paletteBits = 1
+    if (colorSet.size >= 2) { paletteBits = 2 }
+    if (colorSet.size >= 4) { paletteBits = 4 }
+    if (colorSet.size >= 16) { paletteBits = 8 }
+
+    const voxChunk = model.voxChunk = new Voxels([model.size.x, model.size.y, model.size.z], paletteBits)
 
     for (let i = 0; i < rleArray.length; i++) {
       voxelLength += rleArray[i][1]
@@ -379,6 +404,7 @@ export default class ModelReader {
     model.bounds = new BoundingBox()
 
     let materialIndex = 0
+    // Count all the colors to try to estimate the palette bits for the voxels
     // Create all chunks, using the context as cursor
     for (let i = 0; i < rleArray.length; i++) {
       let color = null
