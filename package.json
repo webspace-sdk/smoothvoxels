@@ -1,5 +1,5 @@
 {
-  "name": "svox",
+  "name": "smoothvoxels",
   "version": "1.2.0",
   "description": "Smooth Voxels",
   "main": "src/index.js",
