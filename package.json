@@ -1,7 +1,7 @@
 {
-  "name": "Smooth Voxels",
+  "name": "svox",
   "version": "1.1.0",
-  "description": "",
+  "description": "Smooth Voxels",
   "main": "src/index.js",
   "scripts": {
     "build": "node scripts/build.mjs --production"
@@ -11,7 +11,7 @@
     "url": "git+https://github.com/jel-app/svox.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Samuel van Egmond + Greg Fodor",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/jel-app/svox/issues"
