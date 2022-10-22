@@ -14,7 +14,7 @@ const buildConfig = {
   constants: {},
   entry: 'src/index.js',
   format: 'iife',
-  minify: true,
+  minify: false,
   outdir: 'dist',
   sourcemap: false,
   platform: { name: 'browser', target: 'chrome', version: 96 }
