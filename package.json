@@ -4,7 +4,8 @@
   "description": "Smooth Voxels",
   "main": "src/index.js",
   "scripts": {
-    "build": "node scripts/build.mjs --production"
+    "build": "node scripts/build.mjs --production",
+    "test": "exit 0"
   },
   "repository": {
     "type": "git",
