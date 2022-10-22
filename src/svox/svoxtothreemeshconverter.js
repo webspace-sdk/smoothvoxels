@@ -23,7 +23,14 @@ export default class SvoxToThreeMeshConverter {
       }
     }
 
-    geometry.setIndex(model.indices)
+    const modelIndices = model.indices
+    const indices = Array(modelIndices.length)
+
+    for (let i = 0, l = modelIndices.length; i < l; i++) {
+      indices[i] = modelIndices[i]
+    }
+
+    geometry.setIndex(indices)
 
     // let indices = [];
     // for (let i = 0; i < model.positions.length / 3; i++) {

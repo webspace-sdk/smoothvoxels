@@ -4,11 +4,19 @@ import ModelReader from './modelreader'
 import SvoxMeshGenerator from './svoxmeshgenerator'
 import Buffers from './buffers'
 
-const buffers = new Buffers(1024 * 1024)
+const buffers = new Buffers(384 * 1024)
 
 onmessage = function (event) { // eslint-disable-line
-  const svoxmesh = generateModel(event.data.svoxmodel)
-  postMessage({ svoxmesh, elementId: event.data.elementId, worker: event.data.worker })
+  try {
+    const svoxmesh = generateModel(event.data.svoxmodel)
+
+    postMessage(
+      { svoxmesh, elementId: event.data.elementId, worker: event.data.worker },
+      [svoxmesh.positions.buffer, svoxmesh.normals.buffer, svoxmesh.colors.buffer, svoxmesh.indices.buffer, svoxmesh.uvs.buffer]
+    )
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 function generateModel (svoxmodel) {

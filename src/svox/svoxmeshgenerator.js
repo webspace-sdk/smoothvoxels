@@ -13,7 +13,7 @@ export default class SvoxMeshGenerator {
     const mesh = {
       materials: [],
       groups: [],
-      indices: Array(nonCulledFaceCount * 6),
+      indices: new Uint32Array(nonCulledFaceCount * 4 * 6),
       indicesIndex: 0,
       maxIndex: -1,
       positions: new Float32Array(nonCulledFaceCount * 4 * 3),
@@ -179,11 +179,13 @@ export default class SvoxMeshGenerator {
       mesh.groups.push({ start, count: (end - start), materialIndex: baseMaterial.index })
     }, this)
 
-    mesh.indices.length = mesh.indicesIndex
-    mesh.positions = new Float32Array(mesh.positions, 0, mesh.indicesIndex * 3)
-    mesh.normals = new Float32Array(mesh.normals, 0, mesh.indicesIndex * 3)
-    mesh.colors = new Float32Array(mesh.colors, 0, mesh.indicesIndex * 3)
-    mesh.uvs = new Float32Array(mesh.uvs, 0, mesh.indicesIndex * 2)
+    const vertCount = (mesh.maxIndex + 1)
+
+    mesh.indices = new Uint32Array(mesh.indices.buffer, mesh.indices.byteOffset, mesh.indicesIndex)
+    mesh.positions = new Float32Array(mesh.positions.buffer, mesh.positions.byteOffset, vertCount * 3)
+    mesh.normals = new Float32Array(mesh.normals.buffer, mesh.normals.byteOffset, vertCount * 3)
+    mesh.colors = new Float32Array(mesh.colors.buffer, mesh.colors.byteOffset, vertCount * 3)
+    mesh.uvs = new Float32Array(mesh.uvs.buffer, mesh.uvs.byteOffset, vertCount * 2)
   }
 
   static _generateFace (model, buffers, faceIndex, mesh) {
