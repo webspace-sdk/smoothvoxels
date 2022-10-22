@@ -8,3 +8,6 @@ Beyond this it also includes:
 
 - Ability to re-use memory across re-meshing
 - Per-voxel colorization (not per-material)
+
+A copy of the Smooth Voxel Playground using this library can be found here: https://gfodor.github.io/smoothvoxels/
+Full documentation here (which applies to both libraries, other than the section on Shells) https://svox.glitch.me/
