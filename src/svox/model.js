@@ -117,6 +117,7 @@ export default class Model {
 
     this.faceCount = 0
     this.vertCount = 0
+    const { maxFaces } = buffers
 
     // let t0 = performance.now()
 
@@ -167,6 +168,10 @@ export default class Model {
 
             if (created) {
               const faceIndex = this.faceCount - 1
+
+              if (this.faceCount >= maxFaces) {
+                throw new Error('Failed to create smooth voxel mesh, buffer limit reached.')
+              }
 
               tmpVoxelXZYFaceIndices[faceIndex] = xzyKey + faceIndex
               tmpVoxelXYZFaceIndices[faceIndex] = xyzKey + faceIndex

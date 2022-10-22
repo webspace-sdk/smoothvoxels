@@ -7,6 +7,8 @@ export default class Buffers {
     const maxFaceBits = Math.floor(maxFaces / 8)
     const maxFaceVerts = maxFaces * 4
 
+    this.maxFaces = maxFaces
+
     this.tmpVertIndexLookup = new Map()
 
     this.vertX = new Float32Array(maxVerts)

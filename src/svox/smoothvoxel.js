@@ -27,7 +27,7 @@ if (typeof window !== 'undefined') {
     AFRAME.registerComponent('svox', {
       schema: {
         model: { type: 'string' },
-        worker: { type: 'boolean', default: false }
+        worker: { type: 'boolean', default: true }
       },
 
       /**
