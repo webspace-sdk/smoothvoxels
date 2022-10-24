@@ -7,7 +7,7 @@ export default class NormalsCalculator {
 
     const { faceNameIndices, faceEquidistant, faceSmooth, faceFlattened, faceClamped, vertX, vertY, vertZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, faceMaterials, faceVertIndices, vertSmoothNormalX, vertSmoothNormalY, vertSmoothNormalZ, vertBothNormalX, vertBothNormalY, vertBothNormalZ } = buffers
 
-    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(model.voxChunk.size)
+    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(model.voxels.size)
 
     // Zero out smooth + both normals because buffers may be re-rused
     for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {

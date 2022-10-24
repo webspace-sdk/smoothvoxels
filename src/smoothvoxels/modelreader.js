@@ -2,9 +2,27 @@ import Model from './model'
 import Color from './color'
 import Light from './light'
 import BoundingBox from './boundingbox'
-import Voxels, { voxColorForRGBT, shiftForSize } from './voxels'
+import Voxels, { shiftForSize } from './voxels'
 
 import { MATSTANDARD, FLAT, QUAD, SMOOTH, BOTH, MATBASIC, FRONT, BOUNDS, MODEL } from './constants.js'
+
+function voxBGRForHex (hex) {
+  hex = hex.trim().toUpperCase()
+
+  if (hex.match(/^#([0-9a-fA-F]{3}|#?[0-9a-fA-F]{6})$/)) {
+    hex = hex.replace('#', '')
+
+    if (hex.length === 3) {
+      hex = hex[2] + hex[2] + hex[1] + hex[1] + hex[0] + hex[0]
+    } else {
+      hex = hex[4] + hex[5] + hex[2] + hex[3] + hex[0] + hex[1]
+    }
+
+    return parseInt(hex, 16)
+  }
+
+  return 0
+}
 
 const PARSE_REGEX = {
   linecontinuation: /_\s*[\r\n]/gm,
@@ -148,13 +166,12 @@ export default class ModelReader {
 
     if (modelData.lights.some((light) => light.size)) {
       // There are visible lights, so create a basic material for them
-      const lightMaterial = model.materials.createMaterial(MATBASIC, FLAT, 1, 0,
+      model.materials.createMaterial(MATBASIC, FLAT, 1, 0,
         false, false, 1, 0, false, 1, false, FRONT,
         '#FFF', 0, false,
         null, null, null, null, null, null,
         null, null,
         -1, -1, 0, 0, 0)
-      lightMaterial.addColorHEX('#FFFFFF')
     }
 
     for (const lightData of modelData.lights) {
@@ -165,26 +182,21 @@ export default class ModelReader {
       this._createTexture(model, textureData)
     }
 
+    const colorIdToVoxBgr = new Map()
+    const colorIdToMaterialIndex = new Map()
+
     for (const materialData of modelData.materials) {
-      this._createMaterial(model, materialData)
+      this._createMaterial(model, materialData, colorIdToVoxBgr, colorIdToMaterialIndex)
     }
 
-    // Retrieve all colors and Id's from all materials
-    model.colors = {}
-    model.materials.forEach(function (material) {
-      material.colors.forEach(function (color) {
-        model.colors[color.id] = color
-      })
-    })
-
     // Find the color (& material) for the shell(s)
-    this._resolveShellColors(model.shell, model)
-    model.materials.forEach(function (material) {
-      this._resolveShellColors(material.shell, model)
-    }, this)
+    // this._resolveShellColors(model.shell, model)
+    // model.materials.forEach(function (material) {
+    //   this._resolveShellColors(material.shell, model)
+    // }, this)
 
     // Create all voxels
-    this._createVoxels(model, modelData.voxels)
+    this._createVoxels(model, modelData.voxels, colorIdToVoxBgr, colorIdToMaterialIndex)
 
     return model
   }
@@ -227,7 +239,7 @@ export default class ModelReader {
      * Create one material from its parsed data
      * @param {object} materialData The simple object from the parsed model string.
      */
-  static _createMaterial (model, materialData) {
+  static _createMaterial (model, materialData, colorIdToVoxBgr, colorIdToMaterialIndex) {
     // Cleanup data
     let lighting = FLAT
     if (materialData.lighting === QUAD) lighting = QUAD
@@ -284,6 +296,8 @@ export default class ModelReader {
       parseFloat(materialData.maptransform.split(' ')[4] || 0.0) // rotation in degrees
     )
 
+    const materialIndex = model.materials.materials.indexOf(material)
+
     if (materialData.deform) {
       // Parse deform count, strength and damping
       material.setDeform(parseFloat(materialData.deform.split(' ')[0]), // Count
@@ -323,19 +337,25 @@ export default class ModelReader {
 
     colors.forEach(function (colorData) {
       let colorId = colorData.split(':')[0]
-      let colorExId = null
+
+      // Color ex id is used for VOX import, needs to be dealt with later
+      // let colorExId = null
       if (colorId.includes('(')) {
-        colorExId = Number(colorId.split('(')[1].replace(')', ''))
+      // colorExId = Number(colorId.split('(')[1].replace(')', ''))
         colorId = colorId.split('(')[0]
       }
-      let color = colorData.split(':')[1]
-      if (!material.colors[colorId]) {
-        color = material.addColor(Color.fromHex(color))
+
+      const color = colorData.split(':')[1]
+
+      if (!colorIdToVoxBgr.has(colorId)) {
+        const bgr = voxBGRForHex(color)
         if (!/^[A-Z][a-z]*$/.test(colorId)) {
           throw new Error(`SyntaxError: Invalid color ID '${colorId}'`)
         }
-        color.id = colorId
-        color.exId = colorExId
+        colorIdToVoxBgr.set(colorId, bgr)
+        colorIdToMaterialIndex.set(colorId, materialIndex)
+      } else {
+        throw new Error(`SyntaxError: Duplicate ID '${colorId}'`)
       }
     }, this)
   }
@@ -345,17 +365,16 @@ export default class ModelReader {
      * @param {Model} model The model in which the voxels will be set
      * @param {string} voxels The (RLE) voxel string
      */
-  static _createVoxels (model, voxels) {
-    const colors = model.colors
+  static _createVoxels (model, voxelData, colorIdToVoxBgr, colorIdToMaterialIndex) {
     let errorMaterial = null
 
     // Split the voxel string in numbers, (repeated) single letters or _ , Longer color Id's or ( and )
     let chunks = []
-    if (voxels.matchAll) { chunks = voxels.matchAll(/[0-9]+|[A-Z][a-z]*|-+|[()]/g) } else {
+    if (voxelData.matchAll) { chunks = voxelData.matchAll(/[0-9]+|[A-Z][a-z]*|-+|[()]/g) } else {
       // In case this browser does not support matchAll, DIY match all
       const regex = /[0-9]+|[A-Z][a-z]*|-+|[()]/g
       let chunk
-      while ((chunk = regex.exec(voxels)) !== null) {
+      while ((chunk = regex.exec(voxelData)) !== null) {
         chunks.push(chunk)
       }
       chunks = chunks[Symbol.iterator]()
@@ -366,26 +385,17 @@ export default class ModelReader {
     // Check the voxel matrix size against the specified size
     const totalSize = model.size.x * model.size.y * model.size.z
     let voxelLength = 0
-    const colorSet = new Set()
 
-    for (let i = 0; i < rleArray.length; i++) {
-      if (rleArray[i][0] !== '-') {
-        const id = colors[rleArray[i][0]].id
-
-        if (!colorSet.has(id)) {
-          colorSet.add(id)
-        }
-      }
-    }
+    const numberOfColors = colorIdToVoxBgr.size
 
     // Palette bits is 1, 2, 4, or 8, and represents the number of bits
     // that are needed to store a palette index given the color count, leaving one extra value for empty
     let paletteBits = 1
-    if (colorSet.size >= 2) { paletteBits = 2 }
-    if (colorSet.size >= 4) { paletteBits = 4 }
-    if (colorSet.size >= 16) { paletteBits = 8 }
+    if (numberOfColors >= 2) { paletteBits = 2 }
+    if (numberOfColors >= 4) { paletteBits = 4 }
+    if (numberOfColors >= 16) { paletteBits = 8 }
 
-    const voxChunk = model.voxChunk = new Voxels([model.size.x, model.size.y, model.size.z], paletteBits)
+    const voxels = model.voxels = new Voxels([model.size.x, model.size.y, model.size.z], paletteBits)
 
     for (let i = 0; i < rleArray.length; i++) {
       voxelLength += rleArray[i][1]
@@ -417,39 +427,27 @@ export default class ModelReader {
     const shiftY = shiftForSize(size.y)
     const shiftZ = shiftForSize(size.z)
 
-    const matColorMap = new Map()
     const materials = model.materials.materials
-
-    for (let materialIndex = 0, l = materials.length; materialIndex < l; materialIndex++) {
-      const material = materials[materialIndex]
-
-      for (const color of material.colors) {
-        matColorMap.set(color.id, materialIndex)
-      }
-    }
 
     // Count all the colors to try to estimate the palette bits for the voxels
     // Create all chunks, using the context as cursor
     for (let i = 0, l = rleArray.length; i < l; i++) {
-      let color = null
+      let colorId = null
       const rleEntry = rleArray[i]
       const firstChar = rleEntry[0]
 
       if (firstChar !== '-') {
-        color = colors[firstChar]
+        colorId = firstChar
 
-        if (!color) {
+        if (!colorIdToVoxBgr.has(colorId)) {
           // Oops, this is not a known color, create a purple 'error' color
           if (errorMaterial === null) { errorMaterial = model.materials.createMaterial(MATSTANDARD, FLAT, 0.5, 0.0, false, 1.0, false) }
-          color = Color.fromHex('#FF00FF')
-          color.id = firstChar
-          errorMaterial.addColor(color)
-          colors[firstChar] = color
           materialIndex = model.materials.materials.indexOf(errorMaterial)
-          matColorMap.set(color.id, materialIndex)
+          colorIdToVoxBgr.set(firstChar, voxBGRForHex('#FF00FF'))
+          colorIdToMaterialIndex.set(firstChar, materialIndex)
         }
 
-        materialIndex = matColorMap.get(color.id)
+        materialIndex = colorIdToMaterialIndex.get(firstChar)
 
         const material = materials[materialIndex]
         materialBounds = material.bounds
@@ -457,8 +455,9 @@ export default class ModelReader {
 
       const count = rleEntry[1]
 
-      if (color) {
-        this._setVoxels(modelBounds, materialBounds, materialIndex, shiftX, shiftY, shiftZ, color, count, context, voxChunk)
+      if (colorIdToVoxBgr.has(colorId)) {
+        const voxBgr = colorIdToVoxBgr.get(colorId)
+        this._setVoxels(modelBounds, materialBounds, materialIndex, shiftX, shiftY, shiftZ, voxBgr, count, context, voxels)
       } else {
         this._advanceContext(count, shiftX, shiftY, shiftZ, context)
       }
@@ -716,7 +715,7 @@ export default class ModelReader {
      * @param {int} count The number of voxels to set.
      * @param {object} context The context which holds the current 'cursor' in the voxel array.
      */
-  static _setVoxels (modelBounds, materialBounds, materialIndex, shiftX, shiftY, shiftZ, color, count, context, voxChunk) {
+  static _setVoxels (modelBounds, materialBounds, materialIndex, shiftX, shiftY, shiftZ, voxBgr, count, context, voxels) {
     let { x: cx, y: cy, z: cz, maxx, maxy, minx, miny } = context
 
     cx -= shiftX
@@ -728,41 +727,24 @@ export default class ModelReader {
     maxx -= shiftX
     maxy -= shiftY
 
-    if (color) {
-      const r = Math.floor(color.r * 255)
-      const g = Math.floor(color.g * 255)
-      const b = Math.floor(color.b * 255)
-      const rgbt = voxColorForRGBT(r, g, b, materialIndex)
+    const voxColor = (voxBgr | (materialIndex << 24)) >>> 0
 
-      while (count-- > 0) {
-        // Convert the color to a 32 bit integer
-        modelBounds.set(cx, cy, cz)
-        materialBounds.set(cx, cy, cz)
-        voxChunk.setColorAt(cx, cy, cz, rgbt)
+    while (count-- > 0) {
+      // Convert the color to a 32 bit integer
+      modelBounds.set(cx, cy, cz)
+      materialBounds.set(cx, cy, cz)
+      voxels.setColorAt(cx, cy, cz, voxColor)
 
-        cx++
+      cx++
 
-        if (cx > maxx) {
-          cx = minx
-          cy++
-        }
-
-        if (cy > maxy) {
-          cy = miny
-          cz++
-        }
+      if (cx > maxx) {
+        cx = minx
+        cy++
       }
-    } else {
-      while (count-- > 0) {
-        cx++
-        if (cx > maxx) {
-          cx = minx
-          cy++
-        }
-        if (cy > maxy) {
-          cy = miny
-          cz++
-        }
+
+      if (cy > maxy) {
+        cy = miny
+        cz++
       }
     }
 

@@ -1,6 +1,5 @@
 import Planar from './planar'
 import BoundingBox from './boundingbox'
-import Color from './color'
 
 export default class Material {
   constructor (baseMaterial, lighting, fade, simplify, side) {
@@ -176,21 +175,4 @@ export default class Material {
 
   set aoSides (sides) { this._aoSides = Planar.parse(sides) }
   get aoSides () { return Planar.toString(this._aoSides) }
-
-  addColorHEX (hex) {
-    return this.addColor(Color.fromHex(hex))
-  }
-
-  addColorRGB (r, g, b) {
-    return this.addColor(Color.fromRgb(r, g, b))
-  }
-
-  addColor (color) {
-    if (!(color instanceof Color)) { throw new Error("addColor requires a Color object, e.g. material.addColor(Color.fromHex('#FFFFFF'))") }
-
-    color._setMaterial(this)
-    this._colors.push(color)
-    this._baseMaterial._colors.push(color)
-    return color
-  }
 }

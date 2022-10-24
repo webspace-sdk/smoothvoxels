@@ -56,15 +56,6 @@ export default class MaterialList {
     return this.materials.find(func)
   }
 
-  findColorByExId (exId) {
-    let color = null
-    this.forEach(function (material) {
-      if (!color) { color = material.colors.find(c => c.exId === exId) }
-    }, this)
-
-    return color
-  }
-
   getMaterialListIndex (material) {
     return this.materials.indexOf(material)
   }

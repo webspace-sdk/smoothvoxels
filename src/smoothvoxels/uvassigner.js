@@ -18,9 +18,9 @@ export default class UVAssigner {
       let vscale = 1
 
       if (material.map || material.normalMap || material.roughnessMap || material.metalnessMap || material.emissiveMap) {
-        const sizeX = model.voxChunk.size[0]
-        const sizeY = model.voxChunk.size[1]
-        const sizeZ = model.voxChunk.size[2]
+        const sizeX = model.voxels.size[0]
+        const sizeY = model.voxels.size[1]
+        const sizeZ = model.voxels.size[2]
 
         if (material.mapTransform.uscale === -1) {
           uscale = 1 / Math.max(sizeX, sizeY, sizeZ)
