@@ -425,11 +425,11 @@ export default class ModelReader {
           // Oops, this is not a known color, create a purple 'error' color
           if (errorMaterial === null) { errorMaterial = model.materials.createMaterial(MATSTANDARD, FLAT, 0.5, 0.0, false, 1.0, false) }
           materialIndex = model.materials.materials.indexOf(errorMaterial)
-          colorIdToVoxBgr.set(firstChar, voxBGRForHex('#FF00FF'))
-          colorIdToMaterialIndex.set(firstChar, materialIndex)
+          colorIdToVoxBgr.set(colorId, voxBGRForHex('#FF00FF'))
+          colorIdToMaterialIndex.set(colorId, materialIndex)
         }
 
-        materialIndex = colorIdToMaterialIndex.get(firstChar)
+        materialIndex = colorIdToMaterialIndex.get(colorId)
 
         const material = materials[materialIndex]
         materialBounds = material.bounds
