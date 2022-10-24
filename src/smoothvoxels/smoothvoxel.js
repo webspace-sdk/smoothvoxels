@@ -126,7 +126,6 @@ if (typeof window !== 'undefined') {
    * @param {error} Error object with name and message
    */
       _logError: function (error) {
-        console.trace()
         const errorText = error.name + ': ' + error.message
         const errorElement = document.getElementById('svoxerrors')
         if (errorElement) { errorElement.innerHTML = errorText }
