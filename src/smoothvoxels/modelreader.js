@@ -2,27 +2,9 @@ import Model from './model'
 import Color from './color'
 import Light from './light'
 import BoundingBox from './boundingbox'
-import Voxels, { shiftForSize } from './voxels'
+import Voxels, { shiftForSize, voxBGRForHex } from './voxels'
 
 import { MATSTANDARD, FLAT, QUAD, SMOOTH, BOTH, MATBASIC, FRONT, BOUNDS, MODEL } from './constants.js'
-
-function voxBGRForHex (hex) {
-  hex = hex.trim().toUpperCase()
-
-  if (hex.match(/^#([0-9a-fA-F]{3}|#?[0-9a-fA-F]{6})$/)) {
-    hex = hex.replace('#', '')
-
-    if (hex.length === 3) {
-      hex = hex[2] + hex[2] + hex[1] + hex[1] + hex[0] + hex[0]
-    } else {
-      hex = hex[4] + hex[5] + hex[2] + hex[3] + hex[0] + hex[1]
-    }
-
-    return parseInt(hex, 16)
-  }
-
-  return 0
-}
 
 const PARSE_REGEX = {
   linecontinuation: /_\s*[\r\n]/gm,

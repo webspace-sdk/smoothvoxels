@@ -681,6 +681,24 @@ export function voxColorForRGBT (r, g, b, t = VOXEL_TYPE_DIFFUSE) {
   return (r | (g << 8) | (b << 16) | (t << 24)) >>> 0
 }
 
+export function voxBGRForHex (hex) {
+  hex = hex.trim().toUpperCase()
+
+  if (hex.match(/^#([0-9a-fA-F]{3}|#?[0-9a-fA-F]{6})$/)) {
+    hex = hex.replace('#', '')
+
+    if (hex.length === 3) {
+      hex = hex[2] + hex[2] + hex[1] + hex[1] + hex[0] + hex[0]
+    } else {
+      hex = hex[4] + hex[5] + hex[2] + hex[3] + hex[0] + hex[1]
+    }
+
+    return parseInt(hex, 16)
+  }
+
+  return 0
+}
+
 export function rgbtForVoxColor (voxColor) {
   const r = voxColor & 0x000000ff
   const g = (voxColor & 0x0000ff00) >> 8
