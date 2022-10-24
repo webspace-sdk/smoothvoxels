@@ -68,7 +68,7 @@ export default class Model {
     this.lights = []
     this.textures = {}
     this.materials = new MaterialList()
-    this.voxChunk = null
+    this.voxels = null
 
     this.scale = { x: 1, y: 1, z: 1 }
     this.rotation = { x: 0, y: 0, z: 0 } // In degrees
@@ -99,19 +99,9 @@ export default class Model {
     this.nonCulledFaceCount = 0
   }
 
-  prepareForWrite () {
-    if (this.lights.some((light) => light.size)) {
-      // There are visible lights, so the modelreader created a material and a color for them
-      // Set the count to 1 to indicate it is used
-      this.materials.materials[0].colors[0].count = 1
-    }
-  }
-
   prepareForRender (buffers) {
     const { tmpVertIndexLookup, tmpVoxelXZYFaceIndices, tmpVoxelXYZFaceIndices, tmpVoxelYZXFaceIndices } = buffers
-    const { voxChunk } = this
-
-    this.prepareForWrite()
+    const { voxels } = this
 
     const maximumDeformCount = Deformer.maximumDeformCount(this)
 
@@ -122,17 +112,17 @@ export default class Model {
     // let t0 = performance.now()
 
     const allowDeform = maximumDeformCount > 0
-    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(voxChunk.size)
+    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(voxels.size)
 
     const materials = this.materials.materials
-    const xShift = shiftForSize(voxChunk.size[0])
-    const yShift = shiftForSize(voxChunk.size[1])
-    const zShift = shiftForSize(voxChunk.size[2])
+    const xShift = shiftForSize(voxels.size[0])
+    const yShift = shiftForSize(voxels.size[1])
+    const zShift = shiftForSize(voxels.size[2])
 
     for (let vx = minX; vx <= maxX; vx++) {
       for (let vy = minY; vy <= maxY; vy++) {
         for (let vz = minZ; vz <= maxZ; vz++) {
-          const paletteIndex = voxChunk.getPaletteIndexAt(vx, vy, vz)
+          const paletteIndex = voxels.getPaletteIndexAt(vx, vy, vz)
           if (paletteIndex === 0) continue
 
           // Shift to positive values
@@ -161,10 +151,10 @@ export default class Model {
               // Neighbor is outside the chunk
               neighborPaletteIndex = 0
             } else {
-              neighborPaletteIndex = voxChunk.getPaletteIndexAt(nvx, nvy, nvz)
+              neighborPaletteIndex = voxels.getPaletteIndexAt(nvx, nvy, nvz)
             }
 
-            const created = this._createFace(voxChunk, buffers, materials, vx, vy, vz, xShift, yShift, zShift, paletteIndex, neighborPaletteIndex, faceNameIndex, allowDeform, tmpVertIndexLookup)
+            const created = this._createFace(voxels, buffers, materials, vx, vy, vz, xShift, yShift, zShift, paletteIndex, neighborPaletteIndex, faceNameIndex, allowDeform, tmpVertIndexLookup)
 
             if (created) {
               const faceIndex = this.faceCount - 1
@@ -272,7 +262,7 @@ export default class Model {
       }
 
       if (resize === MODEL) {
-        const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(this.voxChunk.size)
+        const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(this.voxels.size)
 
         // Resize the actual model to the original voxel bounds
         const scaleX = (maxX - minX + 1) / (maxX - minX)
@@ -309,8 +299,8 @@ export default class Model {
     return bos
   }
 
-  _createFace (voxChunk, buffers, materials, vx, vy, vz, xShift, yShift, zShift, paletteIndex, neighborPaletteIndex, faceNameIndex, linkVertices, vertIndexLookup) {
-    const color = voxChunk.colorForPaletteIndex(paletteIndex)
+  _createFace (voxels, buffers, materials, vx, vy, vz, xShift, yShift, zShift, paletteIndex, neighborPaletteIndex, faceNameIndex, linkVertices, vertIndexLookup) {
+    const color = voxels.colorForPaletteIndex(paletteIndex)
     const materialIndex = (color & 0xff000000) >> 24
     const material = materials[materialIndex]
 
@@ -320,7 +310,7 @@ export default class Model {
     } else if (neighborPaletteIndex === 0) {
       // The voxel is next to an empty voxel, so create a face
     } else {
-      const neightborMaterialIndex = (voxChunk.colorForPaletteIndex(neighborPaletteIndex) & 0xff000000) >> 24
+      const neightborMaterialIndex = (voxels.colorForPaletteIndex(neighborPaletteIndex) & 0xff000000) >> 24
       const neighborMaterial = materials[neightborMaterialIndex]
 
       if (!neighborMaterial.isTransparent && !material.wireframe) {
@@ -328,7 +318,7 @@ export default class Model {
         return false
       } else if (!material.isTransparent && !material.wireframe) {
         // The voxel is not see through, but the neighbor is, so create the face
-      } else if (material.isTransparent && !material.wireframe && neighborPaletteIndex !== 0 && materials[(voxChunk.colorForPaletteIndex(neighborPaletteIndex) & 0xff000000) >> 24].wireframe) {
+      } else if (material.isTransparent && !material.wireframe && neighborPaletteIndex !== 0 && materials[(voxels.colorForPaletteIndex(neighborPaletteIndex) & 0xff000000) >> 24].wireframe) {
         // The voxel is transparent and the neighbor is wireframe, create the face
       } else {
         return false

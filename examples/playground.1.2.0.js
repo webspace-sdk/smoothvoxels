@@ -7326,7 +7326,7 @@ material lighting = both, roughness = 0.2, metalness = 0.2, deform = 50, fade = 
 material lighting = both, roughness = 0.2, metalness = 0.2, deform = 3, fade = false, clamp = z
   colors = E:#222 F:#600 
 material lighting = smooth, roughness = 0.2, metalness = 0.2, deform = 4
-  colors = G:#222
+  colors = H:#222
 voxels
 
 ---GGGGGGGGGGGGGGGG--- ---GGGGGGGGGGGGGGGG--- ---DDDDDDDDDDDDDDDD--- 
@@ -7513,7 +7513,7 @@ SVOX.models.Rose = `
 size = 9 20 9 
 scale = 0.025
 origin = -y
-material lighting = smooth, deform = 2, warp = 1 0.25, roughness = 0.5, colors = R:#600 S:#300 G:#050 T:#200
+material lighting = smooth, deform = 2, warp = 1 0.25, roughness = 0.5, colors = S:#300 G:#050 T:#200
 material lighting = smooth, deform = 2, warp = 1 0.25, roughness = 0.5, colors = R:#600 
 voxels
 --------- --------- --------- --------- --------- --------- --------- --------- --------- --------- --------- --------- --------- --RRRRR-- --RRRRR-- --RRRRR-- --RRRRR-- --RRRRR-- --RRRR--- --RRR---- 

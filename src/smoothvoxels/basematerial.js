@@ -67,8 +67,6 @@ export default class BaseMaterial {
     }
 
     this.aoActive = false
-
-    this._colors = []
   }
 
   get baseId () {
@@ -104,17 +102,5 @@ export default class BaseMaterial {
 
   get emissive () {
     return this._emissive
-  }
-
-  get colors () {
-    return this._colors
-  }
-
-  get colorCount () {
-    return this._colors.length
-  }
-
-  get colorUsageCount () {
-    return this._colors.reduce((s, c) => (s + c.count), 0)
   }
 }

@@ -19,7 +19,7 @@ export default class Deformer {
   }
 
   static _circularDeform (model, buffers, xStrength, yStrength, zStrength) {
-    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(model.voxChunk.size)
+    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(model.voxels.size)
 
     const xMid = (minX + maxX) / 2 + 0.5
     const yMid = (minY + maxY) / 2 + 0.5
@@ -138,7 +138,7 @@ export default class Deformer {
   static warpAndScatter (model, buffers) {
     const noise = Noise().noise
     const { nx: tnx, px: tpx, ny: tny, py: tpy, nz: tnz, pz: tpz } = model._tile
-    let [vxMinX, vxMaxX, vxMinY, vxMaxY, vxMinZ, vxMaxZ] = xyzRangeForSize(model.voxChunk.size)
+    let [vxMinX, vxMaxX, vxMinY, vxMaxY, vxMinZ, vxMaxZ] = xyzRangeForSize(model.voxels.size)
 
     const { vertX, vertY, vertZ, vertWarpAmplitude, vertWarpFrequency, vertScatter, vertFlattenedX, vertFlattenedY, vertFlattenedZ, vertClampedX, vertClampedY, vertClampedZ } = buffers
 

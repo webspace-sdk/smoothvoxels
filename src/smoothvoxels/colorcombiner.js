@@ -4,12 +4,12 @@ export default class ColorCombiner {
     const materials = model.materials.materials
 
     // No need to fade colors when there is no material with fade
-    const fadeAny = !!model.materials.find(m => m.colors.length > 1 && m.fade)
+    const fadeAny = !!model.materials.find(m => m.fade)
 
     const fadeMaterials = Array(materials.length).fill(false)
 
     for (let m = 0, l = materials.length; m < l; m++) {
-      if (fadeAny && materials[m].colors.length > 1 && materials[m].fade) {
+      if (fadeAny && materials[m].fade) {
         fadeMaterials[m] = true
       }
     }

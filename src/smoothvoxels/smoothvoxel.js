@@ -27,7 +27,7 @@ if (typeof window !== 'undefined') {
     AFRAME.registerComponent('svox', {
       schema: {
         model: { type: 'string' },
-        worker: { type: 'boolean', default: true }
+        worker: { type: 'boolean', default: false }
       },
 
       /**
@@ -66,13 +66,7 @@ if (typeof window !== 'undefined') {
 
       _generateModel: function (modelString, el, error) {
         let model
-        try {
-          model = window.model = ModelReader.readFromString(modelString)
-        } catch (ex) {
-          this._logError(ex)
-          model = ModelReader.readFromString(this._ERROR)
-          error = true
-        }
+        model = window.model = ModelReader.readFromString(modelString)
 
         // let meshGenerator = new MeshGenerator();
         // this.mesh = meshGenerator.generate(model);
