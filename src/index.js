@@ -10,16 +10,20 @@ import Model from './smoothvoxels/model'
 import ModelReader from './smoothvoxels/modelreader'
 import ModelWriter from './smoothvoxels/modelwriter'
 import Buffers from './smoothvoxels/buffers'
-import Voxels, { xyzRangeForSize, shiftForSize, voxColorForRGBT, rgbtForVoxColor } from './smoothvoxels/voxels'
+import Noise from './smoothvoxels/noise'
+import Voxels, { xyzRangeForSize, shiftForSize, voxColorForRGBT, voxBGRForHex, rgbtForVoxColor } from './smoothvoxels/voxels'
 import WorkerPool from './smoothvoxels/workerpool'
 import './smoothvoxels/smoothvoxel'
 
-export default {
+import parseMagicaVoxel from './parse-magica-voxel'
+
+export {
   BaseMaterial,
   Bits,
   BoundingBox,
   Color,
   Light,
+  Noise,
   Material,
   MaterialList,
   SvoxMeshGenerator,
@@ -31,6 +35,8 @@ export default {
   xyzRangeForSize,
   shiftForSize,
   voxColorForRGBT,
+  voxBGRForHex,
   rgbtForVoxColor,
-  WorkerPool
+  WorkerPool,
+  parseMagicaVoxel
 }

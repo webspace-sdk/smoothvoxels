@@ -12,2879 +12,22 @@
 /* global PALETTES */
 /* global editor */
 /* global formulaEditor */
-/* global Model */
-/* global ModelReader */
-/* global ModelWriter */
-/* global Color */
-/* global Voxel */
-/* global SvoxMeshGenerator */
-/* global totalEndIndex */
-/* global SharedArrayBuffer */
-/* global base64 */
-/* global BigInt */
-/* global ieee754 */
-
-'use strict'
-
-// =====================================================
-// /parse-magica-voxel/assert.js
-// =====================================================
-
-// Simple assert and debug replacements
-
-function assert (assertion, message) {
-  console.assert(assertion, message)
-}
-
-function debug (message) {
-  console.debug(message)
-}
-
-// =====================================================
-// /parse-magica-voxel/buffer.js
-// =====================================================
-
-'use strict'
-
-// byteLength = byteLength
-// toByteArray = toByteArray
-// fromByteArray = fromByteArray
-
-const lookup = []
-const revLookup = []
-const Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
-
-const code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-for (let i = 0, len = code.length; i < len; ++i) {
-  lookup[i] = code[i]
-  revLookup[code.charCodeAt(i)] = i
-}
-
-// Support decoding URL-safe base64 strings, as Node.js does.
-// See: https://en.wikipedia.org/wiki/Base64#URL_applications
-revLookup['-'.charCodeAt(0)] = 62
-revLookup['_'.charCodeAt(0)] = 63
-
-function getLens (b64) {
-  const len = b64.length
-
-  if (len % 4 > 0) {
-    throw new Error('Invalid string. Length must be a multiple of 4')
-  }
-
-  // Trim off extra bytes after placeholder bytes are found
-  // See: https://github.com/beatgammit/base64-js/issues/42
-  let validLen = b64.indexOf('=')
-  if (validLen === -1) validLen = len
-
-  const placeHoldersLen = validLen === len
-    ? 0
-    : 4 - (validLen % 4)
-
-  return [validLen, placeHoldersLen]
-}
-
-// base64 is 4/3 + up to two characters of the original data
-function byteLength (b64) {
-  const lens = getLens(b64)
-  const validLen = lens[0]
-  const placeHoldersLen = lens[1]
-  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
-}
-
-function _byteLength (b64, validLen, placeHoldersLen) {
-  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
-}
-
-function toByteArray (b64) {
-  let tmp
-  const lens = getLens(b64)
-  const validLen = lens[0]
-  const placeHoldersLen = lens[1]
-
-  const arr = new Arr(_byteLength(b64, validLen, placeHoldersLen))
-
-  let curByte = 0
-
-  // if there are placeholders, only get up to the last complete 4 chars
-  const len = placeHoldersLen > 0
-    ? validLen - 4
-    : validLen
-
-  let i
-  for (i = 0; i < len; i += 4) {
-    tmp =
-      (revLookup[b64.charCodeAt(i)] << 18) |
-      (revLookup[b64.charCodeAt(i + 1)] << 12) |
-      (revLookup[b64.charCodeAt(i + 2)] << 6) |
-      revLookup[b64.charCodeAt(i + 3)]
-    arr[curByte++] = (tmp >> 16) & 0xFF
-    arr[curByte++] = (tmp >> 8) & 0xFF
-    arr[curByte++] = tmp & 0xFF
-  }
-
-  if (placeHoldersLen === 2) {
-    tmp =
-      (revLookup[b64.charCodeAt(i)] << 2) |
-      (revLookup[b64.charCodeAt(i + 1)] >> 4)
-    arr[curByte++] = tmp & 0xFF
-  }
-
-  if (placeHoldersLen === 1) {
-    tmp =
-      (revLookup[b64.charCodeAt(i)] << 10) |
-      (revLookup[b64.charCodeAt(i + 1)] << 4) |
-      (revLookup[b64.charCodeAt(i + 2)] >> 2)
-    arr[curByte++] = (tmp >> 8) & 0xFF
-    arr[curByte++] = tmp & 0xFF
-  }
-
-  return arr
-}
-
-function tripletToBase64 (num) {
-  return lookup[num >> 18 & 0x3F] +
-    lookup[num >> 12 & 0x3F] +
-    lookup[num >> 6 & 0x3F] +
-    lookup[num & 0x3F]
-}
-
-function encodeChunk (uint8, start, end) {
-  let tmp
-  const output = []
-  for (let i = start; i < end; i += 3) {
-    tmp =
-      ((uint8[i] << 16) & 0xFF0000) +
-      ((uint8[i + 1] << 8) & 0xFF00) +
-      (uint8[i + 2] & 0xFF)
-    output.push(tripletToBase64(tmp))
-  }
-  return output.join('')
-}
-
-function fromByteArray (uint8) {
-  let tmp
-  const len = uint8.length
-  const extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
-  const parts = []
-  const maxChunkLength = 16383 // must be multiple of 3
-
-  // go through the array every three bytes, we'll deal with trailing stuff later
-  for (let i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
-    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
-  }
-
-  // pad the end with zeros, but make sure to not forget the extra bytes
-  if (extraBytes === 1) {
-    tmp = uint8[len - 1]
-    parts.push(
-      lookup[tmp >> 2] +
-      lookup[(tmp << 4) & 0x3F] +
-      '=='
-    )
-  } else if (extraBytes === 2) {
-    tmp = (uint8[len - 2] << 8) + uint8[len - 1]
-    parts.push(
-      lookup[tmp >> 10] +
-      lookup[(tmp >> 4) & 0x3F] +
-      lookup[(tmp << 2) & 0x3F] +
-      '='
-    )
-  }
-
-  return parts.join('')
-}
-
-/*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
-const read = function (buffer, offset, isLE, mLen, nBytes) {
-  let e, m
-  const eLen = (nBytes * 8) - mLen - 1
-  const eMax = (1 << eLen) - 1
-  const eBias = eMax >> 1
-  let nBits = -7
-  let i = isLE ? (nBytes - 1) : 0
-  const d = isLE ? -1 : 1
-  let s = buffer[offset + i]
-
-  i += d
-
-  e = s & ((1 << (-nBits)) - 1)
-  s >>= (-nBits)
-  nBits += eLen
-  for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {}
-
-  m = e & ((1 << (-nBits)) - 1)
-  e >>= (-nBits)
-  nBits += mLen
-  for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {}
-
-  if (e === 0) {
-    e = 1 - eBias
-  } else if (e === eMax) {
-    return m ? NaN : ((s ? -1 : 1) * Infinity)
-  } else {
-    m = m + Math.pow(2, mLen)
-    e = e - eBias
-  }
-  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
-}
-
-const write = function (buffer, value, offset, isLE, mLen, nBytes) {
-  let e, m, c
-  let eLen = (nBytes * 8) - mLen - 1
-  const eMax = (1 << eLen) - 1
-  const eBias = eMax >> 1
-  const rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
-  let i = isLE ? 0 : (nBytes - 1)
-  const d = isLE ? 1 : -1
-  const s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
-
-  value = Math.abs(value)
-
-  if (isNaN(value) || value === Infinity) {
-    m = isNaN(value) ? 1 : 0
-    e = eMax
-  } else {
-    e = Math.floor(Math.log(value) / Math.LN2)
-    if (value * (c = Math.pow(2, -e)) < 1) {
-      e--
-      c *= 2
-    }
-    if (e + eBias >= 1) {
-      value += rt / c
-    } else {
-      value += rt * Math.pow(2, 1 - eBias)
-    }
-    if (value * c >= 2) {
-      e++
-      c /= 2
-    }
-
-    if (e + eBias >= eMax) {
-      m = 0
-      e = eMax
-    } else if (e + eBias >= 1) {
-      m = ((value * c) - 1) * Math.pow(2, mLen)
-      e = e + eBias
-    } else {
-      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
-      e = 0
-    }
-  }
-
-  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
-
-  e = (e << mLen) | m
-  eLen += mLen
-  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
-
-  buffer[offset + i - d] |= s * 128
-}
-
-/*!
- * The buffer module from node.js, for the browser.
- *
- * @author   Feross Aboukhadijeh <https://feross.org>
- * @license  MIT
- */
-/* eslint-disable no-proto */
-
-// const base64 = require('base64-js')
-// const ieee754 = require('ieee754')
-
-const customInspectSymbol =
-  (typeof Symbol === 'function' && typeof Symbol['for'] === 'function') // eslint-disable-line dot-notation
-    ? Symbol['for']('nodejs.util.inspect.custom') // eslint-disable-line dot-notation
-    : null
-
-// Buffer = Buffer
-// SlowBuffer = SlowBuffer
-const INSPECT_MAX_BYTES = 50
-
-const K_MAX_LENGTH = 0x7fffffff
-const kMaxLength = K_MAX_LENGTH
-
-/**
- * If `Buffer.TYPED_ARRAY_SUPPORT`:
- *   === true    Use Uint8Array implementation (fastest)
- *   === false   Print warning and recommend using `buffer` v4.x which has an Object
- *               implementation (most compatible, even IE6)
- *
- * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
- * Opera 11.6+, iOS 4.2+.
- *
- * We report that the browser does not support typed arrays if the are not subclassable
- * using __proto__. Firefox 4-29 lacks support for adding new properties to `Uint8Array`
- * (See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438). IE 10 lacks support
- * for __proto__ and has a buggy typed array implementation.
- */
-Buffer.TYPED_ARRAY_SUPPORT = typedArraySupport()
-
-if (!Buffer.TYPED_ARRAY_SUPPORT && typeof console !== 'undefined' &&
-    typeof console.error === 'function') {
-  console.error(
-    'This browser lacks typed array (Uint8Array) support which is required by ' +
-    '`buffer` v5.x. Use `buffer` v4.x if you require old browser support.'
-  )
-}
-
-function typedArraySupport () {
-  // Can typed array instances can be augmented?
-  try {
-    const arr = new Uint8Array(1)
-    const proto = { foo: function () { return 42 } }
-    Object.setPrototypeOf(proto, Uint8Array.prototype)
-    Object.setPrototypeOf(arr, proto)
-    return arr.foo() === 42
-  } catch (e) {
-    return false
-  }
-}
-
-Object.defineProperty(Buffer.prototype, 'parent', {
-  enumerable: true,
-  get: function () {
-    if (!Buffer.isBuffer(this)) return undefined
-    return this.buffer
-  }
-})
-
-Object.defineProperty(Buffer.prototype, 'offset', {
-  enumerable: true,
-  get: function () {
-    if (!Buffer.isBuffer(this)) return undefined
-    return this.byteOffset
-  }
-})
-
-function createBuffer (length) {
-  if (length > K_MAX_LENGTH) {
-    throw new RangeError('The value "' + length + '" is invalid for option "size"')
-  }
-  // Return an augmented `Uint8Array` instance
-  const buf = new Uint8Array(length)
-  Object.setPrototypeOf(buf, Buffer.prototype)
-  return buf
-}
-
-/**
- * The Buffer constructor returns instances of `Uint8Array` that have their
- * prototype changed to `Buffer.prototype`. Furthermore, `Buffer` is a subclass of
- * `Uint8Array`, so the returned instances will have all the node `Buffer` methods
- * and the `Uint8Array` methods. Square bracket notation works as expected -- it
- * returns a single octet.
- *
- * The `Uint8Array` prototype remains unmodified.
- */
-
-function Buffer (arg, encodingOrOffset, length) {
-  // Common case.
-  if (typeof arg === 'number') {
-    if (typeof encodingOrOffset === 'string') {
-      throw new TypeError(
-        'The "string" argument must be of type string. Received type number'
-      )
-    }
-    return allocUnsafe(arg)
-  }
-  return from(arg, encodingOrOffset, length)
-}
-
-Buffer.poolSize = 8192 // not used by this implementation
-
-function from (value, encodingOrOffset, length) {
-  if (typeof value === 'string') {
-    return fromString(value, encodingOrOffset)
-  }
-
-  if (ArrayBuffer.isView(value)) {
-    return fromArrayView(value)
-  }
-
-  if (value == null) {
-    throw new TypeError(
-      'The first argument must be one of type string, Buffer, ArrayBuffer, Array, ' +
-      'or Array-like Object. Received type ' + (typeof value)
-    )
-  }
-
-  if (isInstance(value, ArrayBuffer) ||
-      (value && isInstance(value.buffer, ArrayBuffer))) {
-    return fromArrayBuffer(value, encodingOrOffset, length)
-  }
-
-  if (typeof SharedArrayBuffer !== 'undefined' &&
-      (isInstance(value, SharedArrayBuffer) ||
-      (value && isInstance(value.buffer, SharedArrayBuffer)))) {
-    return fromArrayBuffer(value, encodingOrOffset, length)
-  }
-
-  if (typeof value === 'number') {
-    throw new TypeError(
-      'The "value" argument must not be of type number. Received type number'
-    )
-  }
-
-  const valueOf = value.valueOf && value.valueOf()
-  if (valueOf != null && valueOf !== value) {
-    return Buffer.from(valueOf, encodingOrOffset, length)
-  }
-
-  const b = fromObject(value)
-  if (b) return b
-
-  if (typeof Symbol !== 'undefined' && Symbol.toPrimitive != null &&
-      typeof value[Symbol.toPrimitive] === 'function') {
-    return Buffer.from(value[Symbol.toPrimitive]('string'), encodingOrOffset, length)
-  }
-
-  throw new TypeError(
-    'The first argument must be one of type string, Buffer, ArrayBuffer, Array, ' +
-    'or Array-like Object. Received type ' + (typeof value)
-  )
-}
-
-/**
- * Functionally equivalent to Buffer(arg, encoding) but throws a TypeError
- * if value is a number.
- * Buffer.from(str[, encoding])
- * Buffer.from(array)
- * Buffer.from(buffer)
- * Buffer.from(arrayBuffer[, byteOffset[, length]])
- **/
-Buffer.from = function (value, encodingOrOffset, length) {
-  return from(value, encodingOrOffset, length)
-}
-
-// Note: Change prototype *after* Buffer.from is defined to workaround Chrome bug:
-// https://github.com/feross/buffer/pull/148
-Object.setPrototypeOf(Buffer.prototype, Uint8Array.prototype)
-Object.setPrototypeOf(Buffer, Uint8Array)
-
-function assertSize (size) {
-  if (typeof size !== 'number') {
-    throw new TypeError('"size" argument must be of type number')
-  } else if (size < 0) {
-    throw new RangeError('The value "' + size + '" is invalid for option "size"')
-  }
-}
-
-function alloc (size, fill, encoding) {
-  assertSize(size)
-  if (size <= 0) {
-    return createBuffer(size)
-  }
-  if (fill !== undefined) {
-    // Only pay attention to encoding if it's a string. This
-    // prevents accidentally sending in a number that would
-    // be interpreted as a start offset.
-    return typeof encoding === 'string'
-      ? createBuffer(size).fill(fill, encoding)
-      : createBuffer(size).fill(fill)
-  }
-  return createBuffer(size)
-}
-
-/**
- * Creates a new filled Buffer instance.
- * alloc(size[, fill[, encoding]])
- **/
-Buffer.alloc = function (size, fill, encoding) {
-  return alloc(size, fill, encoding)
-}
-
-function allocUnsafe (size) {
-  assertSize(size)
-  return createBuffer(size < 0 ? 0 : checked(size) | 0)
-}
-
-/**
- * Equivalent to Buffer(num), by default creates a non-zero-filled Buffer instance.
- * */
-Buffer.allocUnsafe = function (size) {
-  return allocUnsafe(size)
-}
-/**
- * Equivalent to SlowBuffer(num), by default creates a non-zero-filled Buffer instance.
- */
-Buffer.allocUnsafeSlow = function (size) {
-  return allocUnsafe(size)
-}
-
-function fromString (string, encoding) {
-  if (typeof encoding !== 'string' || encoding === '') {
-    encoding = 'utf8'
-  }
-
-  if (!Buffer.isEncoding(encoding)) {
-    throw new TypeError('Unknown encoding: ' + encoding)
-  }
-
-  const length = byteLength(string, encoding) | 0
-  let buf = createBuffer(length)
-
-  const actual = buf.write(string, encoding)
-
-  if (actual !== length) {
-    // Writing a hex string, for example, that contains invalid characters will
-    // cause everything after the first invalid character to be ignored. (e.g.
-    // 'abxxcd' will be treated as 'ab')
-    buf = buf.slice(0, actual)
-  }
-
-  return buf
-}
-
-function fromArrayLike (array) {
-  const length = array.length < 0 ? 0 : checked(array.length) | 0
-  const buf = createBuffer(length)
-  for (let i = 0; i < length; i += 1) {
-    buf[i] = array[i] & 255
-  }
-  return buf
-}
-
-function fromArrayView (arrayView) {
-  if (isInstance(arrayView, Uint8Array)) {
-    const copy = new Uint8Array(arrayView)
-    return fromArrayBuffer(copy.buffer, copy.byteOffset, copy.byteLength)
-  }
-  return fromArrayLike(arrayView)
-}
-
-function fromArrayBuffer (array, byteOffset, length) {
-  if (byteOffset < 0 || array.byteLength < byteOffset) {
-    throw new RangeError('"offset" is outside of buffer bounds')
-  }
-
-  if (array.byteLength < byteOffset + (length || 0)) {
-    throw new RangeError('"length" is outside of buffer bounds')
-  }
-
-  let buf
-  if (byteOffset === undefined && length === undefined) {
-    buf = new Uint8Array(array)
-  } else if (length === undefined) {
-    buf = new Uint8Array(array, byteOffset)
-  } else {
-    buf = new Uint8Array(array, byteOffset, length)
-  }
-
-  // Return an augmented `Uint8Array` instance
-  Object.setPrototypeOf(buf, Buffer.prototype)
-
-  return buf
-}
-
-function fromObject (obj) {
-  if (Buffer.isBuffer(obj)) {
-    const len = checked(obj.length) | 0
-    const buf = createBuffer(len)
-
-    if (buf.length === 0) {
-      return buf
-    }
-
-    obj.copy(buf, 0, 0, len)
-    return buf
-  }
-
-  if (obj.length !== undefined) {
-    if (typeof obj.length !== 'number' || numberIsNaN(obj.length)) {
-      return createBuffer(0)
-    }
-    return fromArrayLike(obj)
-  }
-
-  if (obj.type === 'Buffer' && Array.isArray(obj.data)) {
-    return fromArrayLike(obj.data)
-  }
-}
-
-function checked (length) {
-  // Note: cannot use `length < K_MAX_LENGTH` here because that fails when
-  // length is NaN (which is otherwise coerced to zero.)
-  if (length >= K_MAX_LENGTH) {
-    throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
-                         'size: 0x' + K_MAX_LENGTH.toString(16) + ' bytes')
-  }
-  return length | 0
-}
-
-function SlowBuffer (length) {
-  if (+length != length) { // eslint-disable-line eqeqeq
-    length = 0
-  }
-  return Buffer.alloc(+length)
-}
-
-Buffer.isBuffer = function isBuffer (b) {
-  return b != null && b._isBuffer === true &&
-    b !== Buffer.prototype // so Buffer.isBuffer(Buffer.prototype) will be false
-}
-
-Buffer.compare = function compare (a, b) {
-  if (isInstance(a, Uint8Array)) a = Buffer.from(a, a.offset, a.byteLength)
-  if (isInstance(b, Uint8Array)) b = Buffer.from(b, b.offset, b.byteLength)
-  if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b)) {
-    throw new TypeError(
-      'The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array'
-    )
-  }
-
-  if (a === b) return 0
-
-  let x = a.length
-  let y = b.length
-
-  for (let i = 0, len = Math.min(x, y); i < len; ++i) {
-    if (a[i] !== b[i]) {
-      x = a[i]
-      y = b[i]
-      break
-    }
-  }
-
-  if (x < y) return -1
-  if (y < x) return 1
-  return 0
-}
-
-Buffer.isEncoding = function isEncoding (encoding) {
-  switch (String(encoding).toLowerCase()) {
-    case 'hex':
-    case 'utf8':
-    case 'utf-8':
-    case 'ascii':
-    case 'latin1':
-    case 'binary':
-    case 'base64':
-    case 'ucs2':
-    case 'ucs-2':
-    case 'utf16le':
-    case 'utf-16le':
-      return true
-    default:
-      return false
-  }
-}
-
-Buffer.concat = function concat (list, length) {
-  if (!Array.isArray(list)) {
-    throw new TypeError('"list" argument must be an Array of Buffers')
-  }
-
-  if (list.length === 0) {
-    return Buffer.alloc(0)
-  }
-
-  let i
-  if (length === undefined) {
-    length = 0
-    for (i = 0; i < list.length; ++i) {
-      length += list[i].length
-    }
-  }
-
-  const buffer = Buffer.allocUnsafe(length)
-  let pos = 0
-  for (i = 0; i < list.length; ++i) {
-    let buf = list[i]
-    if (isInstance(buf, Uint8Array)) {
-      if (pos + buf.length > buffer.length) {
-        if (!Buffer.isBuffer(buf)) buf = Buffer.from(buf)
-        buf.copy(buffer, pos)
-      } else {
-        Uint8Array.prototype.set.call(
-          buffer,
-          buf,
-          pos
-        )
-      }
-    } else if (!Buffer.isBuffer(buf)) {
-      throw new TypeError('"list" argument must be an Array of Buffers')
-    } else {
-      buf.copy(buffer, pos)
-    }
-    pos += buf.length
-  }
-  return buffer
-}
-
-Buffer.byteLength = function (string, encoding) {
-  if (Buffer.isBuffer(string)) {
-    return string.length
-  }
-  if (ArrayBuffer.isView(string) || isInstance(string, ArrayBuffer)) {
-    return string.byteLength
-  }
-  if (typeof string !== 'string') {
-    throw new TypeError(
-      'The "string" argument must be one of type string, Buffer, or ArrayBuffer. ' +
-      'Received type ' + typeof string
-    )
-  }
-
-  const len = string.length
-  const mustMatch = (arguments.length > 2 && arguments[2] === true)
-  if (!mustMatch && len === 0) return 0
-
-  // Use a for loop to avoid recursion
-  let loweredCase = false
-  for (;;) {
-    switch (encoding) {
-      case 'ascii':
-      case 'latin1':
-      case 'binary':
-        return len
-      case 'utf8':
-      case 'utf-8':
-        return utf8ToBytes(string).length
-      case 'ucs2':
-      case 'ucs-2':
-      case 'utf16le':
-      case 'utf-16le':
-        return len * 2
-      case 'hex':
-        return len >>> 1
-      case 'base64':
-        return base64ToBytes(string).length
-      default:
-        if (loweredCase) {
-          return mustMatch ? -1 : utf8ToBytes(string).length // assume utf8
-        }
-        encoding = ('' + encoding).toLowerCase()
-        loweredCase = true
-    }
-  }
-}
-Buffer.byteLength = byteLength
-
-function slowToString (encoding, start, end) {
-  let loweredCase = false
-
-  // No need to verify that "this.length <= MAX_UINT32" since it's a read-only
-  // property of a typed array.
-
-  // This behaves neither like String nor Uint8Array in that we set start/end
-  // to their upper/lower bounds if the value passed is out of range.
-  // undefined is handled specially as per ECMA-262 6th Edition,
-  // Section 13.3.3.7 Runtime Semantics: KeyedBindingInitialization.
-  if (start === undefined || start < 0) {
-    start = 0
-  }
-  // Return early if start > this.length. Done here to prevent potential uint32
-  // coercion fail below.
-  if (start > this.length) {
-    return ''
-  }
-
-  if (end === undefined || end > this.length) {
-    end = this.length
-  }
-
-  if (end <= 0) {
-    return ''
-  }
-
-  // Force coercion to uint32. This will also coerce falsey/NaN values to 0.
-  end >>>= 0
-  start >>>= 0
-
-  if (end <= start) {
-    return ''
-  }
-
-  if (!encoding) encoding = 'utf8'
-
-  while (true) {
-    switch (encoding) {
-      case 'hex':
-        return hexSlice(this, start, end)
-
-      case 'utf8':
-      case 'utf-8':
-        return utf8Slice(this, start, end)
-
-      case 'ascii':
-        return asciiSlice(this, start, end)
-
-      case 'latin1':
-      case 'binary':
-        return latin1Slice(this, start, end)
-
-      case 'base64':
-        return base64Slice(this, start, end)
-
-      case 'ucs2':
-      case 'ucs-2':
-      case 'utf16le':
-      case 'utf-16le':
-        return utf16leSlice(this, start, end)
-
-      default:
-        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
-        encoding = (encoding + '').toLowerCase()
-        loweredCase = true
-    }
-  }
-}
-
-// This property is used by `Buffer.isBuffer` (and the `is-buffer` npm package)
-// to detect a Buffer instance. It's not possible to use `instanceof Buffer`
-// reliably in a browserify context because there could be multiple different
-// copies of the 'buffer' package in use. This method works even for Buffer
-// instances that were created from another copy of the `buffer` package.
-// See: https://github.com/feross/buffer/issues/154
-Buffer.prototype._isBuffer = true
-
-function swap (b, n, m) {
-  const i = b[n]
-  b[n] = b[m]
-  b[m] = i
-}
-
-Buffer.prototype.swap16 = function swap16 () {
-  const len = this.length
-  if (len % 2 !== 0) {
-    throw new RangeError('Buffer size must be a multiple of 16-bits')
-  }
-  for (let i = 0; i < len; i += 2) {
-    swap(this, i, i + 1)
-  }
-  return this
-}
-
-Buffer.prototype.swap32 = function swap32 () {
-  const len = this.length
-  if (len % 4 !== 0) {
-    throw new RangeError('Buffer size must be a multiple of 32-bits')
-  }
-  for (let i = 0; i < len; i += 4) {
-    swap(this, i, i + 3)
-    swap(this, i + 1, i + 2)
-  }
-  return this
-}
-
-Buffer.prototype.swap64 = function swap64 () {
-  const len = this.length
-  if (len % 8 !== 0) {
-    throw new RangeError('Buffer size must be a multiple of 64-bits')
-  }
-  for (let i = 0; i < len; i += 8) {
-    swap(this, i, i + 7)
-    swap(this, i + 1, i + 6)
-    swap(this, i + 2, i + 5)
-    swap(this, i + 3, i + 4)
-  }
-  return this
-}
-
-Buffer.prototype.toString = function toString () {
-  const length = this.length
-  if (length === 0) return ''
-  if (arguments.length === 0) return utf8Slice(this, 0, length)
-  return slowToString.apply(this, arguments)
-}
-
-Buffer.prototype.toLocaleString = Buffer.prototype.toString
-
-Buffer.prototype.equals = function equals (b) {
-  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
-  if (this === b) return true
-  return Buffer.compare(this, b) === 0
-}
-
-Buffer.prototype.inspect = function inspect () {
-  let str = ''
-  const max = INSPECT_MAX_BYTES
-  str = this.toString('hex', 0, max).replace(/(.{2})/g, '$1 ').trim()
-  if (this.length > max) str += ' ... '
-  return '<Buffer ' + str + '>'
-}
-if (customInspectSymbol) {
-  Buffer.prototype[customInspectSymbol] = Buffer.prototype.inspect
-}
-
-Buffer.prototype.compare = function compare (target, start, end, thisStart, thisEnd) {
-  if (isInstance(target, Uint8Array)) {
-    target = Buffer.from(target, target.offset, target.byteLength)
-  }
-  if (!Buffer.isBuffer(target)) {
-    throw new TypeError(
-      'The "target" argument must be one of type Buffer or Uint8Array. ' +
-      'Received type ' + (typeof target)
-    )
-  }
-
-  if (start === undefined) {
-    start = 0
-  }
-  if (end === undefined) {
-    end = target ? target.length : 0
-  }
-  if (thisStart === undefined) {
-    thisStart = 0
-  }
-  if (thisEnd === undefined) {
-    thisEnd = this.length
-  }
-
-  if (start < 0 || end > target.length || thisStart < 0 || thisEnd > this.length) {
-    throw new RangeError('out of range index')
-  }
-
-  if (thisStart >= thisEnd && start >= end) {
-    return 0
-  }
-  if (thisStart >= thisEnd) {
-    return -1
-  }
-  if (start >= end) {
-    return 1
-  }
-
-  start >>>= 0
-  end >>>= 0
-  thisStart >>>= 0
-  thisEnd >>>= 0
-
-  if (this === target) return 0
-
-  let x = thisEnd - thisStart
-  let y = end - start
-  const len = Math.min(x, y)
-
-  const thisCopy = this.slice(thisStart, thisEnd)
-  const targetCopy = target.slice(start, end)
-
-  for (let i = 0; i < len; ++i) {
-    if (thisCopy[i] !== targetCopy[i]) {
-      x = thisCopy[i]
-      y = targetCopy[i]
-      break
-    }
-  }
-
-  if (x < y) return -1
-  if (y < x) return 1
-  return 0
-}
-
-// Finds either the first index of `val` in `buffer` at offset >= `byteOffset`,
-// OR the last index of `val` in `buffer` at offset <= `byteOffset`.
-//
-// Arguments:
-// - buffer - a Buffer to search
-// - val - a string, Buffer, or number
-// - byteOffset - an index into `buffer`; will be clamped to an int32
-// - encoding - an optional encoding, relevant is val is a string
-// - dir - true for indexOf, false for lastIndexOf
-function bidirectionalIndexOf (buffer, val, byteOffset, encoding, dir) {
-  // Empty buffer means no match
-  if (buffer.length === 0) return -1
-
-  // Normalize byteOffset
-  if (typeof byteOffset === 'string') {
-    encoding = byteOffset
-    byteOffset = 0
-  } else if (byteOffset > 0x7fffffff) {
-    byteOffset = 0x7fffffff
-  } else if (byteOffset < -0x80000000) {
-    byteOffset = -0x80000000
-  }
-  byteOffset = +byteOffset // Coerce to Number.
-  if (numberIsNaN(byteOffset)) {
-    // byteOffset: it it's undefined, null, NaN, "foo", etc, search whole buffer
-    byteOffset = dir ? 0 : (buffer.length - 1)
-  }
-
-  // Normalize byteOffset: negative offsets start from the end of the buffer
-  if (byteOffset < 0) byteOffset = buffer.length + byteOffset
-  if (byteOffset >= buffer.length) {
-    if (dir) return -1
-    else byteOffset = buffer.length - 1
-  } else if (byteOffset < 0) {
-    if (dir) byteOffset = 0
-    else return -1
-  }
-
-  // Normalize val
-  if (typeof val === 'string') {
-    val = Buffer.from(val, encoding)
-  }
-
-  // Finally, search either indexOf (if dir is true) or lastIndexOf
-  if (Buffer.isBuffer(val)) {
-    // Special case: looking for empty string/buffer always fails
-    if (val.length === 0) {
-      return -1
-    }
-    return arrayIndexOf(buffer, val, byteOffset, encoding, dir)
-  } else if (typeof val === 'number') {
-    val = val & 0xFF // Search for a byte value [0-255]
-    if (typeof Uint8Array.prototype.indexOf === 'function') {
-      if (dir) {
-        return Uint8Array.prototype.indexOf.call(buffer, val, byteOffset)
-      } else {
-        return Uint8Array.prototype.lastIndexOf.call(buffer, val, byteOffset)
-      }
-    }
-    return arrayIndexOf(buffer, [val], byteOffset, encoding, dir)
-  }
-
-  throw new TypeError('val must be string, number or Buffer')
-}
-
-function arrayIndexOf (arr, val, byteOffset, encoding, dir) {
-  let indexSize = 1
-  let arrLength = arr.length
-  let valLength = val.length
-
-  if (encoding !== undefined) {
-    encoding = String(encoding).toLowerCase()
-    if (encoding === 'ucs2' || encoding === 'ucs-2' ||
-        encoding === 'utf16le' || encoding === 'utf-16le') {
-      if (arr.length < 2 || val.length < 2) {
-        return -1
-      }
-      indexSize = 2
-      arrLength /= 2
-      valLength /= 2
-      byteOffset /= 2
-    }
-  }
-
-  function read (buf, i) {
-    if (indexSize === 1) {
-      return buf[i]
-    } else {
-      return buf.readUInt16BE(i * indexSize)
-    }
-  }
-
-  let i
-  if (dir) {
-    let foundIndex = -1
-    for (i = byteOffset; i < arrLength; i++) {
-      if (read(arr, i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
-        if (foundIndex === -1) foundIndex = i
-        if (i - foundIndex + 1 === valLength) return foundIndex * indexSize
-      } else {
-        if (foundIndex !== -1) i -= i - foundIndex
-        foundIndex = -1
-      }
-    }
-  } else {
-    if (byteOffset + valLength > arrLength) byteOffset = arrLength - valLength
-    for (i = byteOffset; i >= 0; i--) {
-      let found = true
-      for (let j = 0; j < valLength; j++) {
-        if (read(arr, i + j) !== read(val, j)) {
-          found = false
-          break
-        }
-      }
-      if (found) return i
-    }
-  }
-
-  return -1
-}
-
-Buffer.prototype.includes = function includes (val, byteOffset, encoding) {
-  return this.indexOf(val, byteOffset, encoding) !== -1
-}
-
-Buffer.prototype.indexOf = function indexOf (val, byteOffset, encoding) {
-  return bidirectionalIndexOf(this, val, byteOffset, encoding, true)
-}
-
-Buffer.prototype.lastIndexOf = function lastIndexOf (val, byteOffset, encoding) {
-  return bidirectionalIndexOf(this, val, byteOffset, encoding, false)
-}
-
-function hexWrite (buf, string, offset, length) {
-  offset = Number(offset) || 0
-  const remaining = buf.length - offset
-  if (!length) {
-    length = remaining
-  } else {
-    length = Number(length)
-    if (length > remaining) {
-      length = remaining
-    }
-  }
-
-  const strLen = string.length
-
-  if (length > strLen / 2) {
-    length = strLen / 2
-  }
-  let i
-  for (i = 0; i < length; ++i) {
-    const parsed = parseInt(string.substr(i * 2, 2), 16)
-    if (numberIsNaN(parsed)) return i
-    buf[offset + i] = parsed
-  }
-  return i
-}
-
-function utf8Write (buf, string, offset, length) {
-  return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
-}
-
-function asciiWrite (buf, string, offset, length) {
-  return blitBuffer(asciiToBytes(string), buf, offset, length)
-}
-
-function base64Write (buf, string, offset, length) {
-  return blitBuffer(base64ToBytes(string), buf, offset, length)
-}
-
-function ucs2Write (buf, string, offset, length) {
-  return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
-}
-
-Buffer.prototype.write = function write (string, offset, length, encoding) {
-  // Buffer#write(string)
-  if (offset === undefined) {
-    encoding = 'utf8'
-    length = this.length
-    offset = 0
-  // Buffer#write(string, encoding)
-  } else if (length === undefined && typeof offset === 'string') {
-    encoding = offset
-    length = this.length
-    offset = 0
-  // Buffer#write(string, offset[, length][, encoding])
-  } else if (isFinite(offset)) {
-    offset = offset >>> 0
-    if (isFinite(length)) {
-      length = length >>> 0
-      if (encoding === undefined) encoding = 'utf8'
-    } else {
-      encoding = length
-      length = undefined
-    }
-  } else {
-    throw new Error(
-      'Buffer.write(string, encoding, offset[, length]) is no longer supported'
-    )
-  }
-
-  const remaining = this.length - offset
-  if (length === undefined || length > remaining) length = remaining
-
-  if ((string.length > 0 && (length < 0 || offset < 0)) || offset > this.length) {
-    throw new RangeError('Attempt to write outside buffer bounds')
-  }
-
-  if (!encoding) encoding = 'utf8'
-
-  let loweredCase = false
-  for (;;) {
-    switch (encoding) {
-      case 'hex':
-        return hexWrite(this, string, offset, length)
-
-      case 'utf8':
-      case 'utf-8':
-        return utf8Write(this, string, offset, length)
-
-      case 'ascii':
-      case 'latin1':
-      case 'binary':
-        return asciiWrite(this, string, offset, length)
-
-      case 'base64':
-        // Warning: maxLength not taken into account in base64Write
-        return base64Write(this, string, offset, length)
-
-      case 'ucs2':
-      case 'ucs-2':
-      case 'utf16le':
-      case 'utf-16le':
-        return ucs2Write(this, string, offset, length)
-
-      default:
-        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
-        encoding = ('' + encoding).toLowerCase()
-        loweredCase = true
-    }
-  }
-}
-
-Buffer.prototype.toJSON = function toJSON () {
-  return {
-    type: 'Buffer',
-    data: Array.prototype.slice.call(this._arr || this, 0)
-  }
-}
-
-function base64Slice (buf, start, end) {
-  if (start === 0 && end === buf.length) {
-    return base64.fromByteArray(buf)
-  } else {
-    return base64.fromByteArray(buf.slice(start, end))
-  }
-}
-
-function utf8Slice (buf, start, end) {
-  end = Math.min(buf.length, end)
-  const res = []
-
-  let i = start
-  while (i < end) {
-    const firstByte = buf[i]
-    let codePoint = null
-    let bytesPerSequence = (firstByte > 0xEF)
-      ? 4
-      : (firstByte > 0xDF)
-          ? 3
-          : (firstByte > 0xBF)
-              ? 2
-              : 1
-
-    if (i + bytesPerSequence <= end) {
-      let secondByte, thirdByte, fourthByte, tempCodePoint
-
-      switch (bytesPerSequence) {
-        case 1:
-          if (firstByte < 0x80) {
-            codePoint = firstByte
-          }
-          break
-        case 2:
-          secondByte = buf[i + 1]
-          if ((secondByte & 0xC0) === 0x80) {
-            tempCodePoint = (firstByte & 0x1F) << 0x6 | (secondByte & 0x3F)
-            if (tempCodePoint > 0x7F) {
-              codePoint = tempCodePoint
-            }
-          }
-          break
-        case 3:
-          secondByte = buf[i + 1]
-          thirdByte = buf[i + 2]
-          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80) {
-            tempCodePoint = (firstByte & 0xF) << 0xC | (secondByte & 0x3F) << 0x6 | (thirdByte & 0x3F)
-            if (tempCodePoint > 0x7FF && (tempCodePoint < 0xD800 || tempCodePoint > 0xDFFF)) {
-              codePoint = tempCodePoint
-            }
-          }
-          break
-        case 4:
-          secondByte = buf[i + 1]
-          thirdByte = buf[i + 2]
-          fourthByte = buf[i + 3]
-          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80 && (fourthByte & 0xC0) === 0x80) {
-            tempCodePoint = (firstByte & 0xF) << 0x12 | (secondByte & 0x3F) << 0xC | (thirdByte & 0x3F) << 0x6 | (fourthByte & 0x3F)
-            if (tempCodePoint > 0xFFFF && tempCodePoint < 0x110000) {
-              codePoint = tempCodePoint
-            }
-          }
-      }
-    }
-
-    if (codePoint === null) {
-      // we did not generate a valid codePoint so insert a
-      // replacement char (U+FFFD) and advance only 1 byte
-      codePoint = 0xFFFD
-      bytesPerSequence = 1
-    } else if (codePoint > 0xFFFF) {
-      // encode to utf16 (surrogate pair dance)
-      codePoint -= 0x10000
-      res.push(codePoint >>> 10 & 0x3FF | 0xD800)
-      codePoint = 0xDC00 | codePoint & 0x3FF
-    }
-
-    res.push(codePoint)
-    i += bytesPerSequence
-  }
-
-  return decodeCodePointsArray(res)
-}
-
-// Based on http://stackoverflow.com/a/22747272/680742, the browser with
-// the lowest limit is Chrome, with 0x10000 args.
-// We go 1 magnitude less, for safety
-const MAX_ARGUMENTS_LENGTH = 0x1000
-
-function decodeCodePointsArray (codePoints) {
-  const len = codePoints.length
-  if (len <= MAX_ARGUMENTS_LENGTH) {
-    return String.fromCharCode.apply(String, codePoints) // avoid extra slice()
-  }
-
-  // Decode in chunks to avoid "call stack size exceeded".
-  let res = ''
-  let i = 0
-  while (i < len) {
-    res += String.fromCharCode.apply(
-      String,
-      codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH)
-    )
-  }
-  return res
-}
-
-function asciiSlice (buf, start, end) {
-  let ret = ''
-  end = Math.min(buf.length, end)
-
-  for (let i = start; i < end; ++i) {
-    ret += String.fromCharCode(buf[i] & 0x7F)
-  }
-  return ret
-}
-
-function latin1Slice (buf, start, end) {
-  let ret = ''
-  end = Math.min(buf.length, end)
-
-  for (let i = start; i < end; ++i) {
-    ret += String.fromCharCode(buf[i])
-  }
-  return ret
-}
-
-function hexSlice (buf, start, end) {
-  const len = buf.length
-
-  if (!start || start < 0) start = 0
-  if (!end || end < 0 || end > len) end = len
-
-  let out = ''
-  for (let i = start; i < end; ++i) {
-    out += hexSliceLookupTable[buf[i]]
-  }
-  return out
-}
-
-function utf16leSlice (buf, start, end) {
-  const bytes = buf.slice(start, end)
-  let res = ''
-  // If bytes.length is odd, the last 8 bits must be ignored (same as node.js)
-  for (let i = 0; i < bytes.length - 1; i += 2) {
-    res += String.fromCharCode(bytes[i] + (bytes[i + 1] * 256))
-  }
-  return res
-}
-
-Buffer.prototype.slice = function slice (start, end) {
-  const len = this.length
-  start = ~~start
-  end = end === undefined ? len : ~~end
-
-  if (start < 0) {
-    start += len
-    if (start < 0) start = 0
-  } else if (start > len) {
-    start = len
-  }
-
-  if (end < 0) {
-    end += len
-    if (end < 0) end = 0
-  } else if (end > len) {
-    end = len
-  }
-
-  if (end < start) end = start
-
-  const newBuf = this.subarray(start, end)
-  // Return an augmented `Uint8Array` instance
-  Object.setPrototypeOf(newBuf, Buffer.prototype)
-
-  return newBuf
-}
-
-/*
- * Need to make sure that buffer isn't trying to write out of bounds.
- */
-function checkOffset (offset, ext, length) {
-  if ((offset % 1) !== 0 || offset < 0) throw new RangeError('offset is not uint')
-  if (offset + ext > length) throw new RangeError('Trying to access beyond buffer length')
-}
-
-Buffer.prototype.readUintLE =
-Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkOffset(offset, byteLength, this.length)
-
-  let val = this[offset]
-  let mul = 1
-  let i = 0
-  while (++i < byteLength && (mul *= 0x100)) {
-    val += this[offset + i] * mul
-  }
-
-  return val
-}
-
-Buffer.prototype.readUintBE =
-Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) {
-    checkOffset(offset, byteLength, this.length)
-  }
-
-  let val = this[offset + --byteLength]
-  let mul = 1
-  while (byteLength > 0 && (mul *= 0x100)) {
-    val += this[offset + --byteLength] * mul
-  }
-
-  return val
-}
-
-Buffer.prototype.readUint8 =
-Buffer.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 1, this.length)
-  return this[offset]
-}
-
-Buffer.prototype.readUint16LE =
-Buffer.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 2, this.length)
-  return this[offset] | (this[offset + 1] << 8)
-}
-
-Buffer.prototype.readUint16BE =
-Buffer.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 2, this.length)
-  return (this[offset] << 8) | this[offset + 1]
-}
-
-Buffer.prototype.readUint32LE =
-Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 4, this.length)
-
-  return ((this[offset]) |
-      (this[offset + 1] << 8) |
-      (this[offset + 2] << 16)) +
-      (this[offset + 3] * 0x1000000)
-}
-
-Buffer.prototype.readUint32BE =
-Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 4, this.length)
-
-  return (this[offset] * 0x1000000) +
-    ((this[offset + 1] << 16) |
-    (this[offset + 2] << 8) |
-    this[offset + 3])
-}
-
-Buffer.prototype.readBigUInt64LE = defineBigIntMethod(function readBigUInt64LE (offset) {
-  offset = offset >>> 0
-  validateNumber(offset, 'offset')
-  const first = this[offset]
-  const last = this[offset + 7]
-  if (first === undefined || last === undefined) {
-    boundsError(offset, this.length - 8)
-  }
-
-  const lo = first +
-    this[++offset] * 2 ** 8 +
-    this[++offset] * 2 ** 16 +
-    this[++offset] * 2 ** 24
-
-  const hi = this[++offset] +
-    this[++offset] * 2 ** 8 +
-    this[++offset] * 2 ** 16 +
-    last * 2 ** 24
-
-  return BigInt(lo) + (BigInt(hi) << BigInt(32))
-})
-
-Buffer.prototype.readBigUInt64BE = defineBigIntMethod(function readBigUInt64BE (offset) {
-  offset = offset >>> 0
-  validateNumber(offset, 'offset')
-  const first = this[offset]
-  const last = this[offset + 7]
-  if (first === undefined || last === undefined) {
-    boundsError(offset, this.length - 8)
-  }
-
-  const hi = first * 2 ** 24 +
-    this[++offset] * 2 ** 16 +
-    this[++offset] * 2 ** 8 +
-    this[++offset]
-
-  const lo = this[++offset] * 2 ** 24 +
-    this[++offset] * 2 ** 16 +
-    this[++offset] * 2 ** 8 +
-    last
-
-  return (BigInt(hi) << BigInt(32)) + BigInt(lo)
-})
-
-Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkOffset(offset, byteLength, this.length)
-
-  let val = this[offset]
-  let mul = 1
-  let i = 0
-  while (++i < byteLength && (mul *= 0x100)) {
-    val += this[offset + i] * mul
-  }
-  mul *= 0x80
-
-  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
-
-  return val
-}
-
-Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkOffset(offset, byteLength, this.length)
-
-  let i = byteLength
-  let mul = 1
-  let val = this[offset + --i]
-  while (i > 0 && (mul *= 0x100)) {
-    val += this[offset + --i] * mul
-  }
-  mul *= 0x80
-
-  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
-
-  return val
-}
-
-Buffer.prototype.readInt8 = function readInt8 (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 1, this.length)
-  if (!(this[offset] & 0x80)) return (this[offset])
-  return ((0xff - this[offset] + 1) * -1)
-}
-
-Buffer.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 2, this.length)
-  const val = this[offset] | (this[offset + 1] << 8)
-  return (val & 0x8000) ? val | 0xFFFF0000 : val
-}
-
-Buffer.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 2, this.length)
-  const val = this[offset + 1] | (this[offset] << 8)
-  return (val & 0x8000) ? val | 0xFFFF0000 : val
-}
-
-Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 4, this.length)
-
-  return (this[offset]) |
-    (this[offset + 1] << 8) |
-    (this[offset + 2] << 16) |
-    (this[offset + 3] << 24)
-}
-
-Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 4, this.length)
-
-  return (this[offset] << 24) |
-    (this[offset + 1] << 16) |
-    (this[offset + 2] << 8) |
-    (this[offset + 3])
-}
-
-Buffer.prototype.readBigInt64LE = defineBigIntMethod(function readBigInt64LE (offset) {
-  offset = offset >>> 0
-  validateNumber(offset, 'offset')
-  const first = this[offset]
-  const last = this[offset + 7]
-  if (first === undefined || last === undefined) {
-    boundsError(offset, this.length - 8)
-  }
-
-  const val = this[offset + 4] +
-    this[offset + 5] * 2 ** 8 +
-    this[offset + 6] * 2 ** 16 +
-    (last << 24) // Overflow
-
-  return (BigInt(val) << BigInt(32)) +
-    BigInt(first +
-    this[++offset] * 2 ** 8 +
-    this[++offset] * 2 ** 16 +
-    this[++offset] * 2 ** 24)
-})
-
-Buffer.prototype.readBigInt64BE = defineBigIntMethod(function readBigInt64BE (offset) {
-  offset = offset >>> 0
-  validateNumber(offset, 'offset')
-  const first = this[offset]
-  const last = this[offset + 7]
-  if (first === undefined || last === undefined) {
-    boundsError(offset, this.length - 8)
-  }
-
-  const val = (first << 24) + // Overflow
-    this[++offset] * 2 ** 16 +
-    this[++offset] * 2 ** 8 +
-    this[++offset]
-
-  return (BigInt(val) << BigInt(32)) +
-    BigInt(this[++offset] * 2 ** 24 +
-    this[++offset] * 2 ** 16 +
-    this[++offset] * 2 ** 8 +
-    last)
-})
-
-Buffer.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 4, this.length)
-  return ieee754.read(this, offset, true, 23, 4)
-}
-
-Buffer.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 4, this.length)
-  return ieee754.read(this, offset, false, 23, 4)
-}
-
-Buffer.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 8, this.length)
-  return ieee754.read(this, offset, true, 52, 8)
-}
-
-Buffer.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
-  offset = offset >>> 0
-  if (!noAssert) checkOffset(offset, 8, this.length)
-  return ieee754.read(this, offset, false, 52, 8)
-}
-
-function checkInt (buf, value, offset, ext, max, min) {
-  if (!Buffer.isBuffer(buf)) throw new TypeError('"buffer" argument must be a Buffer instance')
-  if (value > max || value < min) throw new RangeError('"value" argument is out of bounds')
-  if (offset + ext > buf.length) throw new RangeError('Index out of range')
-}
-
-Buffer.prototype.writeUintLE =
-Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) {
-    const maxBytes = Math.pow(2, 8 * byteLength) - 1
-    checkInt(this, value, offset, byteLength, maxBytes, 0)
-  }
-
-  let mul = 1
-  let i = 0
-  this[offset] = value & 0xFF
-  while (++i < byteLength && (mul *= 0x100)) {
-    this[offset + i] = (value / mul) & 0xFF
-  }
-
-  return offset + byteLength
-}
-
-Buffer.prototype.writeUintBE =
-Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) {
-    const maxBytes = Math.pow(2, 8 * byteLength) - 1
-    checkInt(this, value, offset, byteLength, maxBytes, 0)
-  }
-
-  let i = byteLength - 1
-  let mul = 1
-  this[offset + i] = value & 0xFF
-  while (--i >= 0 && (mul *= 0x100)) {
-    this[offset + i] = (value / mul) & 0xFF
-  }
-
-  return offset + byteLength
-}
-
-Buffer.prototype.writeUint8 =
-Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
-  this[offset] = (value & 0xff)
-  return offset + 1
-}
-
-Buffer.prototype.writeUint16LE =
-Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
-  this[offset] = (value & 0xff)
-  this[offset + 1] = (value >>> 8)
-  return offset + 2
-}
-
-Buffer.prototype.writeUint16BE =
-Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
-  this[offset] = (value >>> 8)
-  this[offset + 1] = (value & 0xff)
-  return offset + 2
-}
-
-Buffer.prototype.writeUint32LE =
-Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
-  this[offset + 3] = (value >>> 24)
-  this[offset + 2] = (value >>> 16)
-  this[offset + 1] = (value >>> 8)
-  this[offset] = (value & 0xff)
-  return offset + 4
-}
-
-Buffer.prototype.writeUint32BE =
-Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
-  this[offset] = (value >>> 24)
-  this[offset + 1] = (value >>> 16)
-  this[offset + 2] = (value >>> 8)
-  this[offset + 3] = (value & 0xff)
-  return offset + 4
-}
-
-function wrtBigUInt64LE (buf, value, offset, min, max) {
-  checkIntBI(value, min, max, buf, offset, 7)
-
-  let lo = Number(value & BigInt(0xffffffff))
-  buf[offset++] = lo
-  lo = lo >> 8
-  buf[offset++] = lo
-  lo = lo >> 8
-  buf[offset++] = lo
-  lo = lo >> 8
-  buf[offset++] = lo
-  let hi = Number(value >> BigInt(32) & BigInt(0xffffffff))
-  buf[offset++] = hi
-  hi = hi >> 8
-  buf[offset++] = hi
-  hi = hi >> 8
-  buf[offset++] = hi
-  hi = hi >> 8
-  buf[offset++] = hi
-  return offset
-}
-
-function wrtBigUInt64BE (buf, value, offset, min, max) {
-  checkIntBI(value, min, max, buf, offset, 7)
-
-  let lo = Number(value & BigInt(0xffffffff))
-  buf[offset + 7] = lo
-  lo = lo >> 8
-  buf[offset + 6] = lo
-  lo = lo >> 8
-  buf[offset + 5] = lo
-  lo = lo >> 8
-  buf[offset + 4] = lo
-  let hi = Number(value >> BigInt(32) & BigInt(0xffffffff))
-  buf[offset + 3] = hi
-  hi = hi >> 8
-  buf[offset + 2] = hi
-  hi = hi >> 8
-  buf[offset + 1] = hi
-  hi = hi >> 8
-  buf[offset] = hi
-  return offset + 8
-}
-
-Buffer.prototype.writeBigUInt64LE = defineBigIntMethod(function writeBigUInt64LE (value, offset = 0) {
-  return wrtBigUInt64LE(this, value, offset, BigInt(0), BigInt('0xffffffffffffffff'))
-})
-
-Buffer.prototype.writeBigUInt64BE = defineBigIntMethod(function writeBigUInt64BE (value, offset = 0) {
-  return wrtBigUInt64BE(this, value, offset, BigInt(0), BigInt('0xffffffffffffffff'))
-})
-
-Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) {
-    const limit = Math.pow(2, (8 * byteLength) - 1)
-
-    checkInt(this, value, offset, byteLength, limit - 1, -limit)
-  }
-
-  let i = 0
-  let mul = 1
-  let sub = 0
-  this[offset] = value & 0xFF
-  while (++i < byteLength && (mul *= 0x100)) {
-    if (value < 0 && sub === 0 && this[offset + i - 1] !== 0) {
-      sub = 1
-    }
-    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
-  }
-
-  return offset + byteLength
-}
-
-Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) {
-    const limit = Math.pow(2, (8 * byteLength) - 1)
-
-    checkInt(this, value, offset, byteLength, limit - 1, -limit)
-  }
-
-  let i = byteLength - 1
-  let mul = 1
-  let sub = 0
-  this[offset + i] = value & 0xFF
-  while (--i >= 0 && (mul *= 0x100)) {
-    if (value < 0 && sub === 0 && this[offset + i + 1] !== 0) {
-      sub = 1
-    }
-    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
-  }
-
-  return offset + byteLength
-}
-
-Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
-  if (value < 0) value = 0xff + value + 1
-  this[offset] = (value & 0xff)
-  return offset + 1
-}
-
-Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
-  this[offset] = (value & 0xff)
-  this[offset + 1] = (value >>> 8)
-  return offset + 2
-}
-
-Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
-  this[offset] = (value >>> 8)
-  this[offset + 1] = (value & 0xff)
-  return offset + 2
-}
-
-Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
-  this[offset] = (value & 0xff)
-  this[offset + 1] = (value >>> 8)
-  this[offset + 2] = (value >>> 16)
-  this[offset + 3] = (value >>> 24)
-  return offset + 4
-}
-
-Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
-  if (value < 0) value = 0xffffffff + value + 1
-  this[offset] = (value >>> 24)
-  this[offset + 1] = (value >>> 16)
-  this[offset + 2] = (value >>> 8)
-  this[offset + 3] = (value & 0xff)
-  return offset + 4
-}
-
-Buffer.prototype.writeBigInt64LE = defineBigIntMethod(function writeBigInt64LE (value, offset = 0) {
-  return wrtBigUInt64LE(this, value, offset, -BigInt('0x8000000000000000'), BigInt('0x7fffffffffffffff'))
-})
-
-Buffer.prototype.writeBigInt64BE = defineBigIntMethod(function writeBigInt64BE (value, offset = 0) {
-  return wrtBigUInt64BE(this, value, offset, -BigInt('0x8000000000000000'), BigInt('0x7fffffffffffffff'))
-})
-
-function checkIEEE754 (buf, value, offset, ext, max, min) {
-  if (offset + ext > buf.length) throw new RangeError('Index out of range')
-  if (offset < 0) throw new RangeError('Index out of range')
-}
-
-function writeFloat (buf, value, offset, littleEndian, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) {
-    checkIEEE754(buf, value, offset, 4, 3.4028234663852886e+38, -3.4028234663852886e+38)
-  }
-  ieee754.write(buf, value, offset, littleEndian, 23, 4)
-  return offset + 4
-}
-
-Buffer.prototype.writeFloatLE = function writeFloatLE (value, offset, noAssert) {
-  return writeFloat(this, value, offset, true, noAssert)
-}
-
-Buffer.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) {
-  return writeFloat(this, value, offset, false, noAssert)
-}
-
-function writeDouble (buf, value, offset, littleEndian, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) {
-    checkIEEE754(buf, value, offset, 8, 1.7976931348623157E+308, -1.7976931348623157E+308)
-  }
-  ieee754.write(buf, value, offset, littleEndian, 52, 8)
-  return offset + 8
-}
-
-Buffer.prototype.writeDoubleLE = function writeDoubleLE (value, offset, noAssert) {
-  return writeDouble(this, value, offset, true, noAssert)
-}
-
-Buffer.prototype.writeDoubleBE = function writeDoubleBE (value, offset, noAssert) {
-  return writeDouble(this, value, offset, false, noAssert)
-}
-
-// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
-Buffer.prototype.copy = function copy (target, targetStart, start, end) {
-  if (!Buffer.isBuffer(target)) throw new TypeError('argument should be a Buffer')
-  if (!start) start = 0
-  if (!end && end !== 0) end = this.length
-  if (targetStart >= target.length) targetStart = target.length
-  if (!targetStart) targetStart = 0
-  if (end > 0 && end < start) end = start
-
-  // Copy 0 bytes; we're done
-  if (end === start) return 0
-  if (target.length === 0 || this.length === 0) return 0
-
-  // Fatal error conditions
-  if (targetStart < 0) {
-    throw new RangeError('targetStart out of bounds')
-  }
-  if (start < 0 || start >= this.length) throw new RangeError('Index out of range')
-  if (end < 0) throw new RangeError('sourceEnd out of bounds')
-
-  // Are we oob?
-  if (end > this.length) end = this.length
-  if (target.length - targetStart < end - start) {
-    end = target.length - targetStart + start
-  }
-
-  const len = end - start
-
-  if (this === target && typeof Uint8Array.prototype.copyWithin === 'function') {
-    // Use built-in when available, missing from IE11
-    this.copyWithin(targetStart, start, end)
-  } else {
-    Uint8Array.prototype.set.call(
-      target,
-      this.subarray(start, end),
-      targetStart
-    )
-  }
-
-  return len
-}
-
-// Usage:
-//    buffer.fill(number[, offset[, end]])
-//    buffer.fill(buffer[, offset[, end]])
-//    buffer.fill(string[, offset[, end]][, encoding])
-Buffer.prototype.fill = function fill (val, start, end, encoding) {
-  // Handle string cases:
-  if (typeof val === 'string') {
-    if (typeof start === 'string') {
-      encoding = start
-      start = 0
-      end = this.length
-    } else if (typeof end === 'string') {
-      encoding = end
-      end = this.length
-    }
-    if (encoding !== undefined && typeof encoding !== 'string') {
-      throw new TypeError('encoding must be a string')
-    }
-    if (typeof encoding === 'string' && !Buffer.isEncoding(encoding)) {
-      throw new TypeError('Unknown encoding: ' + encoding)
-    }
-    if (val.length === 1) {
-      const code = val.charCodeAt(0)
-      if ((encoding === 'utf8' && code < 128) ||
-          encoding === 'latin1') {
-        // Fast path: If `val` fits into a single byte, use that numeric value.
-        val = code
-      }
-    }
-  } else if (typeof val === 'number') {
-    val = val & 255
-  } else if (typeof val === 'boolean') {
-    val = Number(val)
-  }
-
-  // Invalid ranges are not set to a default, so can range check early.
-  if (start < 0 || this.length < start || this.length < end) {
-    throw new RangeError('Out of range index')
-  }
-
-  if (end <= start) {
-    return this
-  }
-
-  start = start >>> 0
-  end = end === undefined ? this.length : end >>> 0
-
-  if (!val) val = 0
-
-  let i
-  if (typeof val === 'number') {
-    for (i = start; i < end; ++i) {
-      this[i] = val
-    }
-  } else {
-    const bytes = Buffer.isBuffer(val)
-      ? val
-      : Buffer.from(val, encoding)
-    const len = bytes.length
-    if (len === 0) {
-      throw new TypeError('The value "' + val +
-        '" is invalid for argument "value"')
-    }
-    for (i = 0; i < end - start; ++i) {
-      this[i + start] = bytes[i % len]
-    }
-  }
-
-  return this
-}
-
-// CUSTOM ERRORS
-// =============
-
-// Simplified versions from Node, changed for Buffer-only usage
-const errors = {}
-function E (sym, getMessage, Base) {
-  errors[sym] = class NodeError extends Base {
-    constructor () {
-      super()
-
-      Object.defineProperty(this, 'message', {
-        value: getMessage.apply(this, arguments),
-        writable: true,
-        configurable: true
-      })
-
-      // Add the error code to the name to include it in the stack trace.
-      this.name = `${this.name} [${sym}]`
-      // Access the stack to generate the error message including the error code
-      // from the name.
-      this.stack // eslint-disable-line no-unused-expressions
-      // Reset the name to the actual name.
-      delete this.name
-    }
-
-    get code () {
-      return sym
-    }
-
-    set code (value) {
-      Object.defineProperty(this, 'code', {
-        configurable: true,
-        enumerable: true,
-        value,
-        writable: true
-      })
-    }
-
-    toString () {
-      return `${this.name} [${sym}]: ${this.message}`
-    }
-  }
-}
-
-E('ERR_BUFFER_OUT_OF_BOUNDS',
-  function (name) {
-    if (name) {
-      return `${name} is outside of buffer bounds`
-    }
-
-    return 'Attempt to access memory outside buffer bounds'
-  }, RangeError)
-E('ERR_INVALID_ARG_TYPE',
-  function (name, actual) {
-    return `The "${name}" argument must be of type number. Received type ${typeof actual}`
-  }, TypeError)
-E('ERR_OUT_OF_RANGE',
-  function (str, range, input) {
-    let msg = `The value of "${str}" is out of range.`
-    let received = input
-    if (Number.isInteger(input) && Math.abs(input) > 2 ** 32) {
-      received = addNumericalSeparator(String(input))
-    } else if (typeof input === 'bigint') {
-      received = String(input)
-      if (input > BigInt(2) ** BigInt(32) || input < -(BigInt(2) ** BigInt(32))) {
-        received = addNumericalSeparator(received)
-      }
-      received += 'n'
-    }
-    msg += ` It must be ${range}. Received ${received}`
-    return msg
-  }, RangeError)
-
-function addNumericalSeparator (val) {
-  let res = ''
-  let i = val.length
-  const start = val[0] === '-' ? 1 : 0
-  for (; i >= start + 4; i -= 3) {
-    res = `_${val.slice(i - 3, i)}${res}`
-  }
-  return `${val.slice(0, i)}${res}`
-}
-
-// CHECK FUNCTIONS
-// ===============
-
-function checkBounds (buf, offset, byteLength) {
-  validateNumber(offset, 'offset')
-  if (buf[offset] === undefined || buf[offset + byteLength] === undefined) {
-    boundsError(offset, buf.length - (byteLength + 1))
-  }
-}
-
-function checkIntBI (value, min, max, buf, offset, byteLength) {
-  if (value > max || value < min) {
-    const n = typeof min === 'bigint' ? 'n' : ''
-    let range
-    if (byteLength > 3) {
-      if (min === 0 || min === BigInt(0)) {
-        range = `>= 0${n} and < 2${n} ** ${(byteLength + 1) * 8}${n}`
-      } else {
-        range = `>= -(2${n} ** ${(byteLength + 1) * 8 - 1}${n}) and < 2 ** ` +
-                `${(byteLength + 1) * 8 - 1}${n}`
-      }
-    } else {
-      range = `>= ${min}${n} and <= ${max}${n}`
-    }
-    throw new errors.ERR_OUT_OF_RANGE('value', range, value)
-  }
-  checkBounds(buf, offset, byteLength)
-}
-
-function validateNumber (value, name) {
-  if (typeof value !== 'number') {
-    throw new errors.ERR_INVALID_ARG_TYPE(name, 'number', value)
-  }
-}
-
-function boundsError (value, length, type) {
-  if (Math.floor(value) !== value) {
-    validateNumber(value, type)
-    throw new errors.ERR_OUT_OF_RANGE(type || 'offset', 'an integer', value)
-  }
-
-  if (length < 0) {
-    throw new errors.ERR_BUFFER_OUT_OF_BOUNDS()
-  }
-
-  throw new errors.ERR_OUT_OF_RANGE(type || 'offset',
-                                    `>= ${type ? 1 : 0} and <= ${length}`,
-                                    value)
-}
-
-// HELPER FUNCTIONS
-// ================
-
-const INVALID_BASE64_RE = /[^+/0-9A-Za-z-_]/g
-
-function base64clean (str) {
-  // Node takes equal signs as end of the Base64 encoding
-  str = str.split('=')[0]
-  // Node strips out invalid characters like \n and \t from the string, base64-js does not
-  str = str.trim().replace(INVALID_BASE64_RE, '')
-  // Node converts strings with length < 2 to ''
-  if (str.length < 2) return ''
-  // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
-  while (str.length % 4 !== 0) {
-    str = str + '='
-  }
-  return str
-}
-
-function utf8ToBytes (string, units) {
-  units = units || Infinity
-  let codePoint
-  const length = string.length
-  let leadSurrogate = null
-  const bytes = []
-
-  for (let i = 0; i < length; ++i) {
-    codePoint = string.charCodeAt(i)
-
-    // is surrogate component
-    if (codePoint > 0xD7FF && codePoint < 0xE000) {
-      // last char was a lead
-      if (!leadSurrogate) {
-        // no lead yet
-        if (codePoint > 0xDBFF) {
-          // unexpected trail
-          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-          continue
-        } else if (i + 1 === length) {
-          // unpaired lead
-          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-          continue
-        }
-
-        // valid lead
-        leadSurrogate = codePoint
-
-        continue
-      }
-
-      // 2 leads in a row
-      if (codePoint < 0xDC00) {
-        if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-        leadSurrogate = codePoint
-        continue
-      }
-
-      // valid surrogate pair
-      codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000
-    } else if (leadSurrogate) {
-      // valid bmp char, but last char was a lead
-      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-    }
-
-    leadSurrogate = null
-
-    // encode utf8
-    if (codePoint < 0x80) {
-      if ((units -= 1) < 0) break
-      bytes.push(codePoint)
-    } else if (codePoint < 0x800) {
-      if ((units -= 2) < 0) break
-      bytes.push(
-        codePoint >> 0x6 | 0xC0,
-        codePoint & 0x3F | 0x80
-      )
-    } else if (codePoint < 0x10000) {
-      if ((units -= 3) < 0) break
-      bytes.push(
-        codePoint >> 0xC | 0xE0,
-        codePoint >> 0x6 & 0x3F | 0x80,
-        codePoint & 0x3F | 0x80
-      )
-    } else if (codePoint < 0x110000) {
-      if ((units -= 4) < 0) break
-      bytes.push(
-        codePoint >> 0x12 | 0xF0,
-        codePoint >> 0xC & 0x3F | 0x80,
-        codePoint >> 0x6 & 0x3F | 0x80,
-        codePoint & 0x3F | 0x80
-      )
-    } else {
-      throw new Error('Invalid code point')
-    }
-  }
-
-  return bytes
-}
-
-function asciiToBytes (str) {
-  const byteArray = []
-  for (let i = 0; i < str.length; ++i) {
-    // Node's code seems to be doing this and not & 0x7F..
-    byteArray.push(str.charCodeAt(i) & 0xFF)
-  }
-  return byteArray
-}
-
-function utf16leToBytes (str, units) {
-  let c, hi, lo
-  const byteArray = []
-  for (let i = 0; i < str.length; ++i) {
-    if ((units -= 2) < 0) break
-
-    c = str.charCodeAt(i)
-    hi = c >> 8
-    lo = c % 256
-    byteArray.push(lo)
-    byteArray.push(hi)
-  }
-
-  return byteArray
-}
-
-function base64ToBytes (str) {
-  return base64.toByteArray(base64clean(str))
-}
-
-function blitBuffer (src, dst, offset, length) {
-  let i
-  for (i = 0; i < length; ++i) {
-    if ((i + offset >= dst.length) || (i >= src.length)) break
-    dst[i + offset] = src[i]
-  }
-  return i
-}
-
-// ArrayBuffer or Uint8Array objects from other contexts (i.e. iframes) do not pass
-// the `instanceof` check but they should be treated as of that type.
-// See: https://github.com/feross/buffer/issues/166
-function isInstance (obj, type) {
-  return obj instanceof type ||
-    (obj != null && obj.constructor != null && obj.constructor.name != null &&
-      obj.constructor.name === type.name)
-}
-function numberIsNaN (obj) {
-  // For IE11 support
-  return obj !== obj // eslint-disable-line no-self-compare
-}
-
-// Create lookup table for `toString('hex')`
-// See: https://github.com/feross/buffer/issues/219
-const hexSliceLookupTable = (function () {
-  const alphabet = '0123456789abcdef'
-  const table = new Array(256)
-  for (let i = 0; i < 16; ++i) {
-    const i16 = i * 16
-    for (let j = 0; j < 16; ++j) {
-      table[i16 + j] = alphabet[i] + alphabet[j]
-    }
-  }
-  return table
-})()
-
-// Return not function with Error if BigInt not supported
-function defineBigIntMethod (fn) {
-  return typeof BigInt === 'undefined' ? BufferBigIntNotDefined : fn
-}
-
-function BufferBigIntNotDefined () {
-  throw new Error('BigInt not supported')
-}
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/LAYR.js
-// =====================================================
-
-function LAYRHandler (state, startIndex, endIndex) {
-  const ret = {}
-
-  // node id
-  ret.id = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  // DICT node attributes
-  ret.attributes = readDict(state)
-
-  ret.reserved_id = state.Buffer.readInt32LE(state.readByteIndex)
-  assert(ret.reserved_id === -1, 'LAYR reserved_id must be -1')
-  state.readByteIndex += 4
-
-  return ret
-}
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/MATL.js
-// =====================================================
-
-function MATLHandler (state, startIndex, endIndex) {
-  const ret = {}
-
-  // node id
-  ret.id = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  ret.properties = readDict(state)
-
-  return ret
-};
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/MATT.js
-// =====================================================
-
-function MATTHandler (state, startIndex, endIndex) {
-  const ret = {}
-
-  ret.id = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  ret.materialType = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  ret.materialWeight = state.Buffer.readFloatLE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  ret.propertyBits = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  ret.normalizedPropertyValues = []
-  while (state.readByteIndex < totalEndIndex) {
-    ret.normalizedPropertyValues.push(state.Buffer.readFloatLE(state.readByteIndex))
-    state.readByteIndex += 4
-  }
-
-  return ret
-};
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/PACK.js
-// =====================================================
-
-function PACKHandler (state) {
-  return state.Buffer.readInt32LE(state.readByteIndex)
-};
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/RGBA.js
-// =====================================================
-
-function RGBAHandler (state, startIndex, endIndex) {
-  const colors = new Array()
-  for (let n = 0; n < 256; n++) {
-    colors[n] = {
-      r: state.Buffer[state.readByteIndex++],
-      g: state.Buffer[state.readByteIndex++],
-      b: state.Buffer[state.readByteIndex++],
-      a: state.Buffer[state.readByteIndex++]
-    }
-  }
-  return colors
-};
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/SIZE.js
-// =====================================================
-
-function SIZEHandler (state, startIndex, endIndex) {
-  const sizex = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  const sizey = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  const sizez = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  assert(state.readByteIndex === endIndex, "Chunk handler didn't reach end")
-
-  return {
-    x: sizex,
-    y: sizey,
-    z: sizez
-  }
-};
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/XYZI.js
-// =====================================================
-
-function XYZIHandler (state, startIndex, endIndex) {
-  const numVoxels = Math.abs(state.Buffer.readInt32LE(state.readByteIndex))
-  state.readByteIndex += 4
-
-  const voxelData = []
-  for (let n = 0; n < numVoxels; n++) {
-    voxelData[n] = {
-      x: state.Buffer[state.readByteIndex++] & 0xFF,
-      y: state.Buffer[state.readByteIndex++] & 0xFF,
-      z: state.Buffer[state.readByteIndex++] & 0xFF,
-      c: state.Buffer[state.readByteIndex++] & 0xFF // color index in RGBA
-    }
-  }
-
-  assert(state.readByteIndex === endIndex, 'XYZI chunk did not fully read')
-  return voxelData
-};
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/nGRP.js
-// =====================================================
-
-function nGRPHandler (state, startIndex, endIndex) {
-  const ret = {}
-
-  // node id
-  ret.id = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  // DICT node attributes
-  ret.attributes = readDict(state)
-
-  ret.num_of_children = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  ret.child_ids = []
-  for (let i = 0; i < ret.num_of_children; i++) {
-    ret.child_ids.push(state.Buffer.readInt32LE(state.readByteIndex))
-    state.readByteIndex += 4
-  }
-
-  assert(state.readByteIndex === endIndex, `nGRP chunk length mismatch: ${state.readByteIndex} ${endIndex}`)
-  return ret
-}
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/nSHP.js
-// =====================================================
-
-function nSHPHandler (state, startIndex, endIndex) {
-  const ret = {}
-
-  // node id
-  ret.id = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  // DICT node attributes
-  ret.attributes = readDict(state)
-
-  ret.num_of_models = state.Buffer.readInt32LE(state.readByteIndex)
-  assert(ret.num_of_models >= 1, 'nSHP num of models must be 1')
-  state.readByteIndex += 4
-
-  ret.models = []
-  for (let i = 0; i < ret.num_of_models; i++) {
-    const model = {}
-    model.id = state.Buffer.readInt32LE(state.readByteIndex)
-    state.readByteIndex += 4
-
-    // supposed to be a DICT here but marked as reserved in docs
-    // https://github.com/ephtracy/voxel-model/blob/master/MagicaVoxel-file-format-vox-extension.txt#L103
-    // might not be valid
-    model.attributes = readDict(state)
-
-    ret.models.push(model)
-  }
-
-  assert(state.readByteIndex === endIndex, `nSHP chunk length mismatch: ${state.readByteIndex} ${endIndex}`)
-  return ret
-}
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/nTRN.js
-// =====================================================
-
-function nTRNHandler (state, startIndex, endIndex) {
-  const ret = {}
-
-  // node id
-  ret.node_id = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  // DICT node attributes
-  ret.attributes = readDict(state)
-  // child node id
-  ret.child_id = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  // reserved id
-  ret.reserved_id = state.Buffer.readInt32LE(state.readByteIndex)
-  assert(ret.reserved_id === -1, 'reserved id must be -1')
-  state.readByteIndex += 4
-
-  // layer id
-  ret.layer_id = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  // num of frames
-  ret.num_of_frames = state.Buffer.readInt32LE(state.readByteIndex)
-  assert(ret.num_of_frames >= 1, 'num frames must be 1')
-  state.readByteIndex += 4
-
-  ret.frame_transforms = []
-  for (let i = 0; i < ret.num_of_frames; i++) {
-    ret.frame_transforms.push(readDict(state))
-  }
-
-  assert(state.readByteIndex === endIndex, `nTRN chunk length mismatch: ${state.readByteIndex} ${endIndex}`)
-
-  return ret
-};
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/rOBJ.js
-// =====================================================
-
-function rOBJHandler (state, startIndex, endIndex) {
-  let ret = {}
-
-  // DICT node attributes
-  ret = readDict(state)
-  return ret
-}
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/IMAP.js
-// =====================================================
-
-function IMAPHandler (state, startIndex, endIndex) {
-  const ret = {}
-  ret.pal_indices = []
-
-  for (let i = 0; i < 256; i++) {
-    ret.pal_indices.push(state.Buffer[state.readByteIndex++])
-  }
-
-  return ret
-}
-
-// =====================================================
-// /parse-magica-voxel/chunkHandlers/SKIP.js
-// =====================================================
-
-// Skip this chunk.
-function SKIPHandler (state, startIndex, endIndex) {
-  state.readByteIndex = endIndex
-  return { error: 'Unsupported chunk type' }
-}
-
-// =====================================================
-// /parse-magica-voxel/getChunkData.js
-// =====================================================
-
-const chunkHandlers = {
-  SIZE: SIZEHandler,
-  XYZI: XYZIHandler,
-  RGBA: RGBAHandler,
-  PACK: PACKHandler,
-  MATT: MATTHandler,
-  nTRN: nTRNHandler,
-  nGRP: nGRPHandler,
-  nSHP: nSHPHandler,
-  LAYR: LAYRHandler,
-  MATL: MATLHandler,
-  rOBJ: rOBJHandler,
-  IMAP: IMAPHandler
-}
-
-function getChunkData (state, id, startIndex, endIndex) {
-  if (!chunkHandlers[id]) {
-    console.log('Unsupported chunk type ' + id)
-    return SKIPHandler(state, startIndex, endIndex)
-  }
-  return chunkHandlers[id](state, startIndex, endIndex)
-};
-
-// =====================================================
-// /parse-magica-voxel/recReadChunksInRange.js
-// =====================================================
-
-function recReadChunksInRange (Buffer, bufferStartIndex, bufferEndIndex, accum) {
-  const state = {
-    Buffer,
-    readByteIndex: bufferStartIndex
-  }
-
-  const id = readId(state, bufferStartIndex)
-
-  const chunkContentByteLength = Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += intByteLength
-
-  var childContentByteLength = Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += intByteLength
-
-  var bufferStartIndex = bufferStartIndex
-  const definitionEndIndex = state.readByteIndex
-  const contentByteLength = chunkContentByteLength
-  var childContentByteLength = childContentByteLength
-  const totalChunkEndIndex = state.readByteIndex + chunkContentByteLength + childContentByteLength
-
-  if (contentByteLength == 0 && childContentByteLength == 0) {
-    debug('no content or children for', id)
-    return accum
-  }
-
-  if (contentByteLength && id) {
-    const chunkContent = getChunkData(state, id, definitionEndIndex, totalChunkEndIndex)
-    assert(state.readByteIndex === totalChunkEndIndex, `${id} length mismatch ${state.readByteIndex}:${totalChunkEndIndex}`)
-    if (!accum[id]) {
-      accum[id] = chunkContent
-    } else if (accum[id] && !accum[id].length) {
-      accum[id] = [accum[id], chunkContent]
-    } else if (accum[id] && accum[id].length) {
-      accum[id].push(chunkContent)
-    }
-  }
-
-  // read children
-  if (childContentByteLength > 0) {
-    return recReadChunksInRange(Buffer,
-      definitionEndIndex + contentByteLength,
-      bufferEndIndex,
-      {})
-  }
-
-  // accumulate siblings
-  if (totalChunkEndIndex != bufferEndIndex) {
-    return recReadChunksInRange(Buffer,
-      totalChunkEndIndex,
-      bufferEndIndex,
-      accum)
-  }
-
-  return accum
-};
-
-// =====================================================
-// /parse-magica-voxel/parseHeader.js
-// =====================================================
-
-function parseHeader (Buffer) {
-  const ret = {}
-  const state = {
-    Buffer,
-    readByteIndex: 0
-  }
-  ret[readId(state)] = Buffer.readInt32LE(intByteLength)
-  return ret
-};
-
-// =====================================================
-// /parse-magica-voxel/readDict.js
-// =====================================================
-
-function readDict (state) {
-  const ret = {}
-
-  const attributePairLength = state.Buffer.readInt32LE(state.readByteIndex)
-  state.readByteIndex += 4
-
-  // Read all the key value pairs of the DICT
-  for (let i = 0; i < attributePairLength; i++) {
-    const keyByteLength = state.Buffer.readInt32LE(state.readByteIndex)
-    state.readByteIndex += 4
-
-    const key = state.Buffer.readInt8(keyByteLength)
-    state.readByteIndex += 1 * keyByteLength
-
-    const valueByteLength = state.Buffer.readInt32LE(state.readByteIndex)
-    state.readByteIndex += 4
-
-    const value = state.Buffer.readInt8(valueByteLength)
-    state.readByteIndex += 1 * valueByteLength
-
-    ret[key] = value
-  }
-
-  return ret
-}
-
-// =====================================================
-// /parse-magica-voxel/readId.js
-// =====================================================
-
-function readId (state) {
-  const id = String.fromCharCode(parseInt(state.Buffer[state.readByteIndex++])) +
-           String.fromCharCode(parseInt(state.Buffer[state.readByteIndex++])) +
-           String.fromCharCode(parseInt(state.Buffer[state.readByteIndex++])) +
-           String.fromCharCode(parseInt(state.Buffer[state.readByteIndex++]))
-
-  return id
-};
-
-// =====================================================
-// /parse-magica-voxel/useDefaultPalette.js
-// =====================================================
-
-const defaultPalette = [
-  0x000000, 0xffffff, 0xccffff, 0x99ffff, 0x66ffff, 0x33ffff, 0x00ffff, 0xffccff, 0xccccff, 0x99ccff, 0x66ccff, 0x33ccff, 0x00ccff, 0xff99ff, 0xcc99ff, 0x9999ff,
-  0x6699ff, 0x3399ff, 0x0099ff, 0xff66ff, 0xcc66ff, 0x9966ff, 0x6666ff, 0x3366ff, 0x0066ff, 0xff33ff, 0xcc33ff, 0x9933ff, 0x6633ff, 0x3333ff, 0x0033ff, 0xff00ff,
-  0xcc00ff, 0x9900ff, 0x6600ff, 0x3300ff, 0x0000ff, 0xffffcc, 0xccffcc, 0x99ffcc, 0x66ffcc, 0x33ffcc, 0x00ffcc, 0xffcccc, 0xcccccc, 0x99cccc, 0x66cccc, 0x33cccc,
-  0x00cccc, 0xff99cc, 0xcc99cc, 0x9999cc, 0x6699cc, 0x3399cc, 0x0099cc, 0xff66cc, 0xcc66cc, 0x9966cc, 0x6666cc, 0x3366cc, 0x0066cc, 0xff33cc, 0xcc33cc, 0x9933cc,
-  0x6633cc, 0x3333cc, 0x0033cc, 0xff00cc, 0xcc00cc, 0x9900cc, 0x6600cc, 0x3300cc, 0x0000cc, 0xffff99, 0xccff99, 0x99ff99, 0x66ff99, 0x33ff99, 0x00ff99, 0xffcc99,
-  0xcccc99, 0x99cc99, 0x66cc99, 0x33cc99, 0x00cc99, 0xff9999, 0xcc9999, 0x999999, 0x669999, 0x339999, 0x009999, 0xff6699, 0xcc6699, 0x996699, 0x666699, 0x336699,
-  0x006699, 0xff3399, 0xcc3399, 0x993399, 0x663399, 0x333399, 0x003399, 0xff0099, 0xcc0099, 0x990099, 0x660099, 0x330099, 0x000099, 0xffff66, 0xccff66, 0x99ff66,
-  0x66ff66, 0x33ff66, 0x00ff66, 0xffcc66, 0xcccc66, 0x99cc66, 0x66cc66, 0x33cc66, 0x00cc66, 0xff9966, 0xcc9966, 0x999966, 0x669966, 0x339966, 0x009966, 0xff6666,
-  0xcc6666, 0x996666, 0x666666, 0x336666, 0x006666, 0xff3366, 0xcc3366, 0x993366, 0x663366, 0x333366, 0x003366, 0xff0066, 0xcc0066, 0x990066, 0x660066, 0x330066,
-  0x000066, 0xffff33, 0xccff33, 0x99ff33, 0x66ff33, 0x33ff33, 0x00ff33, 0xffcc33, 0xcccc33, 0x99cc33, 0x66cc33, 0x33cc33, 0x00cc33, 0xff9933, 0xcc9933, 0x999933,
-  0x669933, 0x339933, 0x009933, 0xff6633, 0xcc6633, 0x996633, 0x666633, 0x336633, 0x006633, 0xff3333, 0xcc3333, 0x993333, 0x663333, 0x333333, 0x003333, 0xff0033,
-  0xcc0033, 0x990033, 0x660033, 0x330033, 0x000033, 0xffff00, 0xccff00, 0x99ff00, 0x66ff00, 0x33ff00, 0x00ff00, 0xffcc00, 0xcccc00, 0x99cc00, 0x66cc00, 0x33cc00,
-  0x00cc00, 0xff9900, 0xcc9900, 0x999900, 0x669900, 0x339900, 0x009900, 0xff6600, 0xcc6600, 0x996600, 0x666600, 0x336600, 0x006600, 0xff3300, 0xcc3300, 0x993300,
-  0x663300, 0x333300, 0x003300, 0xff0000, 0xcc0000, 0x990000, 0x660000, 0x330000, 0x0000ee, 0x0000dd, 0x0000bb, 0x0000aa, 0x000088, 0x000077, 0x000055, 0x000044,
-  0x000022, 0x000011, 0x00ee00, 0x00dd00, 0x00bb00, 0x00aa00, 0x008800, 0x007700, 0x005500, 0x004400, 0x002200, 0x001100, 0xee0000, 0xdd0000, 0xbb0000, 0xaa0000,
-  0x880000, 0x770000, 0x550000, 0x440000, 0x220000, 0x110000, 0xeeeeee, 0xdddddd, 0xbbbbbb, 0xaaaaaa, 0x888888, 0x777777, 0x555555, 0x444444, 0x222222, 0x111111
-]
-
-function useDefaultPalette () {
-  const colors = defaultPalette.map(function (hex) {
-    return {
-      b: (hex & 0xff0000) >> 16,
-      g: (hex & 0x00ff00) >> 8,
-      r: (hex & 0x0000ff),
-      a: 1
-    }
-  })
-
-  return colors
-};
-
-// =====================================================
-// /parse-magica-voxel/index.js
-// =====================================================
-
-const intByteLength = 4
-
-function parseMagicaVoxel (BufferLikeData) {
-  let buffer = BufferLikeData
-  // if(!Buffer.isBuffer(buffer)){
-  try {
-    buffer = new Buffer(new Uint8Array(BufferLikeData))
-  } catch (ex) {
-    throw ex
-  }
-  // }
-
-  const header = parseHeader(buffer)
-  const body = recReadChunksInRange(
-    buffer,
-    8, // start on the 8th byte as the header dosen't follow RIFF pattern.
-    buffer.length,
-    header
-  )
-
-  if (!body.RGBA) {
-    body.RGBA = useDefaultPalette()
-  }
-
-  const result = Object.assign(header, body)
-  debug('result...')
-  debug(JSON.stringify(result, null, 2))
-
-  return result
-};
-
+/* global HTMLImageElement */
+/* global HTMLCanvasElement */
+/* global OffscreenCanvas */
+/* global ImageBitmap */
+/* global Blob */
+/* global alert */
+/* global Image */
 // =====================================================
 // /playground/playground.js
 // =====================================================
 
+import { Noise, voxBGRForHex, voxColorForRGBT, shiftForSize, parseMagicaVoxel, ModelReader, Model, ModelWriter, SvoxMeshGenerator } from '../dist/smoothvoxels.js'
+
 /* ------ Startup functions ------ */
 
-function fillModels () {
+export function fillModels () {
   const models = document.getElementById('models')
 
   for (const modelName in SVOX.models) {
@@ -2897,7 +40,7 @@ function fillModels () {
   }
 }
 
-function fillFormulas () {
+export function fillFormulas () {
   const formulas = document.getElementById('formulas')
   for (let f = 0; f < FORMULAS.length; f++) {
     render(formulas, 'option', {
@@ -2906,7 +49,7 @@ function fillFormulas () {
   }
 }
 
-function fillPalettes () {
+export function fillPalettes () {
   const palettes = document.getElementById('palettes')
   for (let f = 0; f < PALETTES.length; f++) {
     render(palettes, 'option', {
@@ -2915,7 +58,7 @@ function fillPalettes () {
   }
 }
 
-function makeReadable (name) {
+export function makeReadable (name) {
   return name.replace(/([a-z])([A-Z])/g, '$1 $2')
     .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
     .replace(/([a-zA-Z])([0-9])/g, '$1 $2')
@@ -2924,7 +67,7 @@ function makeReadable (name) {
 
 /* ------ Drop down selections ------ */
 
-function onChooseModel () {
+export function onChooseModel () {
   const name = document.getElementById('models').value
   let model = SVOX.models[name].trim() + '\r\n'
   model = model.replace('%ENVIRONMENT%', day ? environmentDaySmall : environmentNightSmall)
@@ -2933,7 +76,7 @@ function onChooseModel () {
   if (!autoRender) { renderModel() }
 }
 
-function onChooseFormula (generate) {
+export function onChooseFormula (generate) {
   if (generate === undefined) generate = true
   const name = document.getElementById('formulas').value
   const formula = FORMULAS.find(f => f.name === name)
@@ -2943,7 +86,7 @@ function onChooseFormula (generate) {
   if (generate) { generateModel() }
 }
 
-function onChoosePalette () {
+export function onChoosePalette () {
   const name = document.getElementById('palettes').value
   const palette = PALETTES.find(p => p.name === name)
   if (palette.size === 1) { document.getElementById('direction').classList.add('hide') } else { document.getElementById('direction').classList.remove('hide') }
@@ -2951,7 +94,7 @@ function onChoosePalette () {
 
 /* ------ Reset the view ------ */
 
-function resetFlyingCamera () {
+export function resetFlyingCamera () {
   const scene = document.getElementById('scene')
   let rig = document.getElementById('rig')
   let camera = document.getElementById('camera')
@@ -2987,7 +130,7 @@ function resetFlyingCamera () {
   resetCameraAspectRatio()
 }
 
-function resetCameraAspectRatio () {
+export function resetCameraAspectRatio () {
   // To reset the aspect ratio we need to resize the window
   // But first hide the scene off screen. This prevents the user
   // from seeing this deformed image, now they see a flicker which is less ugly.
@@ -3001,7 +144,7 @@ function resetCameraAspectRatio () {
   }, 0)
 }
 
-function resetOrbitCamera () {
+export function resetOrbitCamera () {
   const scene = document.getElementById('scene')
   let rig = document.getElementById('rig')
   let camera = document.getElementById('camera')
@@ -3064,27 +207,31 @@ var environmentNightSmall = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/
 /* ------ Toggles ------ */
 
 let autoRender = false
-function toggleAutoRender () {
+export function toggleAutoRender () {
   autoRender = !autoRender
   setRadioButtons('toggleAutoRender', 'Render', 'Auto', 'Off', autoRender)
 }
 
+export function getAutoRender () {
+  return autoRender
+}
+
 let day = false
-function toggleScene () {
+export function toggleScene () {
   day = !day
   setRadioButtons('toggleScene', 'Scene', 'Day', 'Night', day)
   changeScene()
 }
 
 let background = false
-function toggleBackground () {
+export function toggleBackground () {
   background = !background
   setRadioButtons('toggleBackground', 'Background', 'On', 'Off', background)
   changeScene()
 }
 
 let environment = false
-function toggleEnvironment () {
+export function toggleEnvironment () {
   environment = !environment
   setRadioButtons('toggleEnvironment', 'Env. Map', 'On', 'Off', environment)
   changeScene()
@@ -3104,7 +251,7 @@ function changeScene () {
 }
 
 let baseVisible = false
-function toggleBaseVisible () {
+export function toggleBaseVisible () {
   baseVisible = !baseVisible
   setRadioButtons('toggleBaseVisible', 'Base', 'On', 'Off', baseVisible)
 
@@ -3113,7 +260,7 @@ function toggleBaseVisible () {
 }
 
 let lights = false
-function toggleLights () {
+export function toggleLights () {
   lights = !lights
   setRadioButtons('toggleLights', 'Lights', 'On', 'Off', lights)
 
@@ -3124,7 +271,7 @@ function toggleLights () {
 }
 
 let rotateModel = false
-function toggleRotate () {
+export function toggleRotate () {
   rotateModel = !rotateModel
   setRadioButtons('toggleRotate', 'Rotate', 'On', 'Off', rotateModel)
 
@@ -3138,7 +285,7 @@ function toggleRotate () {
 }
 
 let shadow = false
-function toggleShadow () {
+export function toggleShadow () {
   shadow = !shadow
   setRadioButtons('toggleShadow', 'Shadow', 'On', 'Off', shadow)
 
@@ -3149,8 +296,7 @@ function toggleShadow () {
 }
 
 let fpsEnabled = true
-function toggleFps () {
-  const scene = document.getElementById('scene')
+export function toggleFps () {
   const camera = document.getElementById('camera')
   let fps = document.getElementById('fps')
 
@@ -3173,7 +319,7 @@ function toggleFps () {
   }
 }
 
-function toggleClampColors () {
+export function toggleClampColors () {
   SVOX.clampColors = !SVOX.clampColors
   setRadioButtons('toggleClampColors', 'Clamp colors', 'On', 'Off', SVOX.clampColors)
   renderModel()
@@ -3190,7 +336,7 @@ function setRadioButtons (id, prefix, trueValue, falseValue, value) {
 
 /* ------ Rendering the model ------ */
 
-function renderModel () {
+export function renderModel () {
   document.getElementById('svoxerrors').innerHTML = ''
   document.getElementById('svoxstats').innerHTML = ''
 
@@ -3208,7 +354,7 @@ function renderModel () {
 
 /* ------ Generating a model from a formula and palette ------ */
 
-function generateModel () {
+export function generateModel () {
   try {
     document.getElementById('formulaerrors').innerHTML = ''
 
@@ -3221,8 +367,8 @@ function generateModel () {
     const direction = document.getElementById('direction').value
 
     const formula = formulaEditor.getValue()
-    const func = new Function('size', 'x', 'y', 'z', 'noise', 'ctx', formula)
-    const noise = SVOX.Noise().noise
+    const func = new Function('size', 'x', 'y', 'z', 'noise', 'ctx', formula) // eslint-disable-line no-new-func
+    const noise = Noise().noise
     let voxels = ''
     const ctx = {}
     for (let vz = 0; vz < size; vz++) {
@@ -3291,7 +437,7 @@ function generateModel () {
 
 /* ------ Loading a Smooth Voxel file ------ */
 
-function loadSvox () {
+export function loadSvox () {
   const fileUpload = document.createElement('input')
   fileUpload.setAttribute('type', 'file')
   fileUpload.setAttribute('accept', '.svox')
@@ -3327,7 +473,7 @@ function handleSvoxUpload (e) {
 
 /* ------ Reloading a MagicaVoxel file ------ */
 
-function reloadMagicaVoxel () {
+export function reloadMagicaVoxel () {
   const fileUpload = document.createElement('input')
   fileUpload.setAttribute('type', 'file')
   fileUpload.setAttribute('accept', '.vox')
@@ -3351,7 +497,7 @@ function handleMagicaVoxelUpload (e) {
       const modelString = editor.getValue()
       if (modelString.trim().length > 0) {
         model = ModelReader.readFromString(modelString)
-        model.voxels.reset()
+        model.voxels.clear()
       } else {
         model = new Model()
         model.scale = { x: 0.01, y: 0.01, z: 0.01 }
@@ -3383,6 +529,7 @@ function convertMagicaVoxel (vox, model) {
   // Alpha channel is unused(?) in Magica voxel, so just use the same material for all
   // If all colors are already available this new material will have no colors and not be written by the modelwriter
   const newMaterial = model.materials.createMaterial(SVOX.MATSTANDARD, SVOX.FLAT)
+  const newMaterialIndex = model.materials.materials.indexOf(newMaterial)
 
   // Palette map (since palette indices can be moved in Magica Voxel by CTRL-Drag)
   const iMap = []
@@ -3392,17 +539,31 @@ function convertMagicaVoxel (vox, model) {
     }
   }
 
+  let minX = Infinity; let minY = Infinity; let minZ = Infinity
+  let maxX = -Infinity; let maxY = -Infinity; let maxZ = -Infinity
+
+  vox.XYZI.forEach(function (v) {
+    minX = Math.min(minX, v.x)
+    minY = Math.min(minY, v.y)
+    minZ = Math.min(minZ, v.z)
+    maxX = Math.max(maxX, v.x)
+    maxY = Math.max(maxY, v.y)
+    maxZ = Math.max(maxZ, v.z)
+  })
+
+  const sizeX = maxX - minX + 1
+  const sizeY = maxY - minY + 1
+  const sizeZ = maxZ - minZ + 1
+
+  const shiftX = shiftForSize(sizeX)
+  const shiftY = shiftForSize(sizeY)
+  const shiftZ = shiftForSize(sizeZ)
+
   vox.XYZI.forEach(function (v) {
     const c = v.c
-    const cId = iMap[v.c] || v.c
-    let svoxcol = model.materials.findColorByExId(cId)
-    if (!svoxcol) {
-      const voxcol = vox.RGBA[c - 1]
-      svoxcol = newMaterial.addColorRGB(voxcol.r / 255, voxcol.g / 255, voxcol.b / 255)
-      svoxcol.exId = cId
-    }
-
-    model.voxels.setVoxel(v.x, v.z, -v.y, new Voxel(svoxcol, model.materials))
+    const voxcol = vox.RGBA[c - 1]
+    const svoxColor = voxColorForRGBT(voxcol.r, voxcol.g, voxcol.b, newMaterialIndex)
+    model.voxels.setColorAt(v.x - shiftX, v.z - shiftZ, -v.y - shiftY, svoxColor)
   })
 
   // let scale = 1 / Math.max(model.voxels.bounds.size.x, model.voxels.bounds.size.y, model.voxels.bounds.size.z);
@@ -3411,7 +572,7 @@ function convertMagicaVoxel (vox, model) {
 
 /* ------ Create a model from an image ------ */
 
-function loadImage () {
+export function loadImage () {
   const fileUpload = document.createElement('input')
   fileUpload.setAttribute('type', 'file')
   fileUpload.setAttribute('accept', '.png, .jpg, .gif')
@@ -3461,6 +622,7 @@ function convertImage () {
   const material = model.materials.createMaterial(SVOX.MATSTANDARD, SVOX.BOTH, 0.5, 0, true)
   material.setDeform(10)
   material.clamp = 'y'
+  const materialIndex = model.materials.materials.indexOf(material)
 
   let pixel = 0
   const colors = {}
@@ -3476,14 +638,15 @@ function convertImage () {
       hex = '#' + hex.substr(hex.length - 3, 3)
 
       if (pixels.data[pixel + 3] > 0) {
-        let color = colors[hex]
-        if (!color) {
-          color = Color.fromHex(hex)
-          colors[hex] = color
-          material.addColor(color)
+        let voxColor = colors[hex]
+
+        if (voxColor === null || voxColor === undefined) {
+          const voxBgr = voxBGRForHex(hex)
+          voxColor = (voxBgr | (materialIndex << 24)) >>> 0
+          colors[hex] = voxColor
         }
 
-        model.voxels.setVoxel(x, 0, z, new Voxel(color, model.materials))
+        model.voxels.setColorAt(x, 0, z, voxColor)
       }
       pixel += 4
     }
@@ -3496,7 +659,7 @@ function convertImage () {
 
 /* ------ Add an image as Base64------ */
 
-function addImage () {
+export function addImage () {
   const fileUpload = document.createElement('input')
   fileUpload.setAttribute('type', 'file')
   fileUpload.setAttribute('accept', '.png, .jpg, .gif')
@@ -3529,7 +692,7 @@ function imageToBase64 (e) {
 
 /* --------- Add Environment -------- */
 
-function addEnvironment () {
+export function addEnvironment () {
   editor.setValue(
     'texture id = env' +
          ', image = ' + (day ? environmentDaySmall : environmentNightSmall) + '\r\n' +
@@ -3539,27 +702,27 @@ function addEnvironment () {
 
 /* ------ SVOX model downloads ------ */
 
-function downloadTextAsShown () {
+export function downloadTextAsShown () {
   downloadTextFile(editor.getValue().replace(/(\r\n|\n)/gm, '\r\n'), 'model.svox')
 }
 
-function downloadUncompressed (repeat) {
+export function downloadUncompressed (repeat) {
   const model = ModelReader.readFromString(editor.getValue())
   downloadTextFile(ModelWriter.writeToString(model, false, repeat), 'model.svox')
 }
 
-function downloadCompressed () {
+export function downloadCompressed () {
   const model = ModelReader.readFromString(editor.getValue())
   downloadTextFile(ModelWriter.writeToString(model, true), 'model.min.svox')
 }
 
-function downloadAFrameComponent (fullScene, compressed, digits) {
+export function downloadAFrameComponent (fullScene, compressed, digits) {
   const model = ModelReader.readFromString(editor.getValue())
   const svoxmesh = SvoxMeshGenerator.generate(model)
   downloadTextFile(SvoxToAFrameConverter.generate(svoxmesh, fullScene, compressed, digits), fullScene ? 'myscene.html' : 'mymodel.js')
 }
 
-function downloadGltf (binary) {
+export function downloadGltf (binary) {
   try {
     const model = document.getElementById('model')
     if (model) {
@@ -3587,7 +750,7 @@ function downloadGltf (binary) {
   }
 }
 
-function downloadGlbFile (body, name) {
+export function downloadGlbFile (body, name) {
   const a = document.createElement('a')
   const type = name.split('.').pop()
   a.href = URL.createObjectURL(new Blob([body], { type: `gltf-binary/${type}` }))
@@ -3595,7 +758,7 @@ function downloadGlbFile (body, name) {
   a.click()
 }
 
-function downloadTextFile (text, name) {
+export function downloadTextFile (text, name) {
   const a = document.createElement('a')
   const type = name.split('.').pop()
   a.href = URL.createObjectURL(new Blob([text], { type: `text/${type === 'txt' ? 'plain' : type}` }))
@@ -3603,7 +766,7 @@ function downloadTextFile (text, name) {
   a.click()
 }
 
-function copyViewerUrl () {
+export function copyViewerUrl () {
   let url = window.location.origin + '/playground.html?'
   url += day ? '' : 'd=0&'
   url += background ? '' : 'g=0&'
@@ -3925,7 +1088,7 @@ function render (parent, elTag, elAttributes, elText) {
   if (parent !== undefined) { return parent.appendChild(element) } else { return element }
 }
 
-function renderCopy (parent, elTag, elTemplate, elAttributes) {
+export function renderCopy (parent, elTag, elTemplate, elAttributes) {
   const element = document.createElement(elTag)
   for (const attrName in elTemplate) {
     element.setAttribute(attrName, elTemplate[attrName])
@@ -4318,10 +1481,7 @@ class SvoxToAFrameConverter {
         result += 'MeshNormalMaterial({\n'
         break
       default: {
-        throw {
-          name: 'SyntaxError',
-          message: `Unknown material type '${definition.type}'.`
-        }
+        throw new Error(`SyntaxError: Unknown material type '${definition.type}'.`)
       }
     }
 
@@ -4475,11 +1635,11 @@ class GLTFExporter {
   }
 
   /**
-	 * Parse scenes and generate GLTF output
-	 * @param  {Scene or [THREE.Scenes]} input   Scene or Array of THREE.Scenes
-	 * @param  {Function} onDone  Callback on completed
-	 * @param  {Object} options options
-	 */
+   * Parse scenes and generate GLTF output
+   * @param  {Scene or [THREE.Scenes]} input   Scene or Array of THREE.Scenes
+   * @param  {Function} onDone  Callback on completed
+   * @param  {Object} options options
+   */
   parse (input, onDone, options) {
     const writer = new GLTFWriter()
     const plugins = []
@@ -4636,7 +1796,7 @@ function getMinMax (attribute, start, count) {
       let value
 
       if (attribute.itemSize > 4) {
-				 // no support for interleaved data for itemSize > 4
+        // no support for interleaved data for itemSize > 4
 
         value = attribute.array[i * attribute.itemSize + a]
       } else {
@@ -4736,11 +1896,11 @@ class GLTFWriter {
   }
 
   /**
-	 * Parse scenes and generate GLTF output
-	 * @param  {Scene or [THREE.Scenes]} input   Scene or Array of THREE.Scenes
-	 * @param  {Function} onDone  Callback on completed
-	 * @param  {Object} options options
-	 */
+   * Parse scenes and generate GLTF output
+   * @param  {Scene or [THREE.Scenes]} input   Scene or Array of THREE.Scenes
+   * @param  {Function} onDone  Callback on completed
+   * @param  {Object} options options
+   */
   write (input, onDone, options) {
     this.options = Object.assign({}, {
       // default options
@@ -4804,8 +1964,8 @@ class GLTFWriter {
           headerView.setUint32(0, GLB_HEADER_MAGIC, true)
           headerView.setUint32(4, GLB_VERSION, true)
           const totalByteLength = GLB_HEADER_BYTES +
-						jsonChunkPrefix.byteLength + jsonChunk.byteLength +
-						binaryChunkPrefix.byteLength + binaryChunk.byteLength
+          jsonChunkPrefix.byteLength + jsonChunk.byteLength +
+          binaryChunkPrefix.byteLength + binaryChunk.byteLength
           headerView.setUint32(8, totalByteLength, true)
 
           const glbBlob = new Blob([
@@ -4839,11 +1999,11 @@ class GLTFWriter {
   }
 
   /**
-	 * Serializes a userData.
-	 *
-	 * @param {THREE.Object3D|THREE.Material} object
-	 * @param {Object} objectDef
-	 */
+   * Serializes a userData.
+   *
+   * @param {THREE.Object3D|THREE.Material} object
+   * @param {Object} objectDef
+   */
   serializeUserData (object, objectDef) {
     if (Object.keys(object.userData).length === 0) return
 
@@ -4867,16 +2027,16 @@ class GLTFWriter {
       if (Object.keys(json).length > 0) objectDef.extras = json
     } catch (error) {
       console.warn('THREE.GLTFExporter: userData of \'' + object.name + '\' ' +
-				'won\'t be serialized because of JSON.stringify error - ' + error.message)
+        'won\'t be serialized because of JSON.stringify error - ' + error.message)
     }
   }
 
   /**
-	 * Assign and return a temporal unique id for an object
-	 * especially which doesn't have .uuid
-	 * @param  {Object} object
-	 * @return {Integer}
-	 */
+   * Assign and return a temporal unique id for an object
+   * especially which doesn't have .uuid
+   * @param  {Object} object
+   * @return {Integer}
+   */
   getUID (object) {
     if (!this.uids.has(object)) this.uids.set(object, this.uid++)
 
@@ -4884,11 +2044,11 @@ class GLTFWriter {
   }
 
   /**
-	 * Checks if normal attribute values are normalized.
-	 *
-	 * @param {BufferAttribute} normal
-	 * @returns {Boolean}
-	 */
+   * Checks if normal attribute values are normalized.
+   *
+   * @param {BufferAttribute} normal
+   * @returns {Boolean}
+   */
   isNormalizedNormalAttribute (normal) {
     const cache = this.cache
 
@@ -4905,16 +2065,16 @@ class GLTFWriter {
   }
 
   /**
-	 * Creates normalized normal buffer attribute.
-	 *
-	 * @param {BufferAttribute} normal
-	 * @returns {BufferAttribute}
-	 *
-	 */
+   * Creates normalized normal buffer attribute.
+   *
+   * @param {BufferAttribute} normal
+   * @returns {BufferAttribute}
+   *
+   */
   createNormalizedNormalAttribute (normal) {
     const cache = this.cache
 
-    if (cache.attributesNormalized.has(normal))	return cache.attributesNormalized.get(normal)
+    if (cache.attributesNormalized.has(normal)) return cache.attributesNormalized.get(normal)
 
     const attribute = normal.clone()
     const v = new THREE.Vector3()
@@ -4938,12 +2098,12 @@ class GLTFWriter {
   }
 
   /**
-	 * Applies a texture transform, if present, to the map definition. Requires
-	 * the KHR_texture_transform extension.
-	 *
-	 * @param {Object} mapDef
-	 * @param {THREE.Texture} texture
-	 */
+   * Applies a texture transform, if present, to the map definition. Requires
+   * the KHR_texture_transform extension.
+   *
+   * @param {Object} mapDef
+   * @param {THREE.Texture} texture
+   */
   applyTextureTransform (mapDef, texture) {
     let didTransform = false
     const transformDef = {}
@@ -4971,10 +2131,10 @@ class GLTFWriter {
   }
 
   /**
-	 * Process a buffer to append to the default one.
-	 * @param  {ArrayBuffer} buffer
-	 * @return {Integer}
-	 */
+   * Process a buffer to append to the default one.
+   * @param  {ArrayBuffer} buffer
+   * @return {Integer}
+   */
   processBuffer (buffer) {
     const json = this.json
     const buffers = this.buffers
@@ -4988,14 +2148,14 @@ class GLTFWriter {
   }
 
   /**
-	 * Process and generate a BufferView
-	 * @param  {BufferAttribute} attribute
-	 * @param  {number} componentType
-	 * @param  {number} start
-	 * @param  {number} count
-	 * @param  {number} target (Optional) Target usage of the BufferView
-	 * @return {Object}
-	 */
+   * Process and generate a BufferView
+   * @param  {BufferAttribute} attribute
+   * @param  {number} componentType
+   * @param  {number} start
+   * @param  {number} count
+   * @param  {number} target (Optional) Target usage of the BufferView
+   * @return {Object}
+   */
   processBufferView (attribute, componentType, start, count, target) {
     const json = this.json
 
@@ -5022,7 +2182,7 @@ class GLTFWriter {
         let value
 
         if (attribute.itemSize > 4) {
-					 // no support for interleaved data for itemSize > 4
+          // no support for interleaved data for itemSize > 4
 
           value = attribute.array[i * attribute.itemSize + a]
         } else {
@@ -5077,10 +2237,10 @@ class GLTFWriter {
   }
 
   /**
-	 * Process and generate a BufferView from an image Blob.
-	 * @param {Blob} blob
-	 * @return {Promise<Integer>}
-	 */
+   * Process and generate a BufferView from an image Blob.
+   * @param {Blob} blob
+   * @return {Promise<Integer>}
+   */
   processBufferViewImage (blob) {
     const writer = this
     const json = writer.json
@@ -5106,13 +2266,13 @@ class GLTFWriter {
   }
 
   /**
-	 * Process attribute to generate an accessor
-	 * @param  {BufferAttribute} attribute Attribute to process
-	 * @param  {THREE.BufferGeometry} geometry (Optional) Geometry used for truncated draw range
-	 * @param  {Integer} start (Optional)
-	 * @param  {Integer} count (Optional)
-	 * @return {Integer|null} Index of the processed accessor on the "accessors" array
-	 */
+   * Process attribute to generate an accessor
+   * @param  {BufferAttribute} attribute Attribute to process
+   * @param  {THREE.BufferGeometry} geometry (Optional) Geometry used for truncated draw range
+   * @param  {Integer} start (Optional)
+   * @param  {Integer} count (Optional)
+   * @return {Integer|null} Index of the processed accessor on the "accessors" array
+   */
   processAccessor (attribute, geometry, start, count) {
     const options = this.options
     const json = this.json
@@ -5191,12 +2351,12 @@ class GLTFWriter {
   }
 
   /**
-	 * Process image
-	 * @param  {Image} image to process
-	 * @param  {Integer} format of the image (e.g. RGBFormat, RGBAFormat etc)
-	 * @param  {Boolean} flipY before writing out the image
-	 * @return {Integer}     Index of the processed texture in the "images" array
-	 */
+   * Process image
+   * @param  {Image} image to process
+   * @param  {Integer} format of the image (e.g. RGBFormat, RGBAFormat etc)
+   * @param  {Boolean} flipY before writing out the image
+   * @return {Integer}     Index of the processed texture in the "images" array
+   */
   processImage (image, format, flipY) {
     const writer = this
     const cache = writer.cache
@@ -5230,9 +2390,9 @@ class GLTFWriter {
       }
 
       if ((typeof HTMLImageElement !== 'undefined' && image instanceof HTMLImageElement) ||
-				(typeof HTMLCanvasElement !== 'undefined' && image instanceof HTMLCanvasElement) ||
-				(typeof OffscreenCanvas !== 'undefined' && image instanceof OffscreenCanvas) ||
-				(typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap)) {
+          (typeof HTMLCanvasElement !== 'undefined' && image instanceof HTMLCanvasElement) ||
+          (typeof OffscreenCanvas !== 'undefined' && image instanceof OffscreenCanvas) ||
+          (typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap)) {
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
       } else {
         if (format !== THREE.RGBAFormat && format !== THREE.RGBFormat) {
@@ -9439,3 +6599,8 @@ SVOX.models.FlaskRoundSilver = SVOX.models.FlaskRoundBlack.replaceAll('000', 'CB
 SVOX.models.FlaskRoundRed = SVOX.models.FlaskRoundBlack.replaceAll('000', '800')
 SVOX.models.FlaskRoundGreen = SVOX.models.FlaskRoundBlack.replaceAll('000', '060')
 SVOX.models.FlaskRoundBlue = SVOX.models.FlaskRoundBlack.replaceAll('000', '008')
+SVOX.models.__base = `
+  model size = 10 1 10, shape = cylinder-y, scale = 0.15 0.15 0.15, origin = +y, clamp = y
+  material lighting = both, roughness = 1, colors = A:#7BC8A4 B:#5B9884
+  voxels 10B 8(BAAAAAAAAB) 10B
+`

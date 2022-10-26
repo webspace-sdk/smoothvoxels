@@ -11,9 +11,6 @@ export default class ModelWriter {
   static writeToString (model, compressed, repeat) {
     repeat = Math.round(repeat || 1)
 
-    // Prepare the model (count colors, recalculate bounding box, etc.)
-    model.prepareForWrite()
-
     // Retrieve all colors
     const colors = []
     const colorIds = {}
