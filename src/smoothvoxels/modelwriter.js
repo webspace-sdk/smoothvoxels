@@ -27,7 +27,7 @@ export default class ModelWriter {
    * @param compressed Wether the voxels need to be compressed using Recursive Runlength Encoding.
    * @param repeat An integer specifying whether to repeat the voxels to double or tripple the size, default is 1.
    */
-  static writeToString (model, compressed, repeat) {
+  static writeToString (model, compressed, repeat, modelLine = null, materialLine = null) {
     repeat = Math.round(repeat || 1)
 
     const voxColorToCount = new Map()
@@ -90,49 +90,53 @@ export default class ModelWriter {
 
     result += 'model\r\n'
 
-    // Add the size to the result
-    const [sizeX, sizeY, sizeZ] = model.voxels.size
-    if (sizeY === sizeX && sizeZ === sizeX) { result += `size = ${sizeX * repeat}\r\n` } else { result += `size = ${sizeX * repeat} ${sizeY * repeat} ${sizeZ * repeat}\r\n` }
+    if (modelLine) {
+      result += modelLine + '\r\n'
+    } else {
+      // Add the size to the result
+      const [sizeX, sizeY, sizeZ] = model.voxels.size
+      if (sizeY === sizeX && sizeZ === sizeX) { result += `size = ${sizeX * repeat}\r\n` } else { result += `size = ${sizeX * repeat} ${sizeY * repeat} ${sizeZ * repeat}\r\n` }
 
-    if (model.shape !== 'box') { result += `shape = ${model.shape}\r\n` }
+      if (model.shape !== 'box') { result += `shape = ${model.shape}\r\n` }
 
-    // Add the scale
-    if (model.scale.x !== 1 || model.scale.y !== 1 || model.scale.z !== 1 || repeat !== 1) {
-      if (model.scale.y === model.scale.x && model.scale.z === model.scale.x) { result += `scale = ${model.scale.x / repeat}\r\n` } else { result += `scale = ${model.scale.x / repeat} ${model.scale.y / repeat} ${model.scale.z / repeat}\r\n` }
+      // Add the scale
+      if (model.scale.x !== 1 || model.scale.y !== 1 || model.scale.z !== 1 || repeat !== 1) {
+        if (model.scale.y === model.scale.x && model.scale.z === model.scale.x) { result += `scale = ${model.scale.x / repeat}\r\n` } else { result += `scale = ${model.scale.x / repeat} ${model.scale.y / repeat} ${model.scale.z / repeat}\r\n` }
+      }
+
+      if (model.resize) { result += `resize = ${model.resize}\r\n` }
+
+      // Add the rotation (degrees)
+      if (model.rotation.x !== 0 || model.rotation.y !== 0 || model.rotation.z !== 0) {
+        result += `rotation = ${model.rotation.x} ${model.rotation.y} ${model.rotation.z}\r\n`
+      }
+
+      // Add the position (in world scale)
+      if (model.position.x !== 0 || model.position.y !== 0 || model.position.z !== 0) {
+        result += `position = ${model.position.x} ${model.position.y} ${model.position.z}\r\n`
+      }
+
+      if (model.origin) result += `origin = ${model.origin}\r\n`
+      if (model.flatten) result += `flatten = ${model.flatten}\r\n`
+      if (model.clamp) result += `clamp = ${model.clamp}\r\n`
+      if (model.skip) result += `skip = ${model.skip}\r\n`
+      if (model.tile) result += `tile = ${model.tile}\r\n`
+
+      if (model.ao) result += `ao =${model.ao.color.toString() !== '#000' ? ' ' + model.ao.color : ''} ${model.ao.maxDistance} ${model.ao.strength}${model.ao.angle !== 70 ? ' ' + model.ao.angle : ''}\r\n`
+      if (model.asSides) result += `aosides = ${model.aoSides}\r\n`
+      if (model.asSamples) result += `aosamples = ${model.aoSamples}\r\n`
+
+      if (model.wireframe) result += 'wireframe = true\r\n'
+
+      if (!model.simplify) result += 'simplify = false\r\n'
+
+      if (model.data) result += `data = ${this._serializeVertexData(model.data)}\r\n`
+
+      if (model.shell) result += `shell = ${this._getShell(model.shell)}\r\n`
     }
-
-    if (model.resize) { result += `resize = ${model.resize}\r\n` }
-
-    // Add the rotation (degrees)
-    if (model.rotation.x !== 0 || model.rotation.y !== 0 || model.rotation.z !== 0) {
-      result += `rotation = ${model.rotation.x} ${model.rotation.y} ${model.rotation.z}\r\n`
-    }
-
-    // Add the position (in world scale)
-    if (model.position.x !== 0 || model.position.y !== 0 || model.position.z !== 0) {
-      result += `position = ${model.position.x} ${model.position.y} ${model.position.z}\r\n`
-    }
-
-    if (model.origin) result += `origin = ${model.origin}\r\n`
-    if (model.flatten) result += `flatten = ${model.flatten}\r\n`
-    if (model.clamp) result += `clamp = ${model.clamp}\r\n`
-    if (model.skip) result += `skip = ${model.skip}\r\n`
-    if (model.tile) result += `tile = ${model.tile}\r\n`
-
-    if (model.ao) result += `ao =${model.ao.color.toString() !== '#000' ? ' ' + model.ao.color : ''} ${model.ao.maxDistance} ${model.ao.strength}${model.ao.angle !== 70 ? ' ' + model.ao.angle : ''}\r\n`
-    if (model.asSides) result += `aosides = ${model.aoSides}\r\n`
-    if (model.asSamples) result += `aosamples = ${model.aoSamples}\r\n`
-
-    if (model.wireframe) result += 'wireframe = true\r\n'
-
-    if (!model.simplify) result += 'simplify = false\r\n'
-
-    if (model.data) result += `data = ${this._serializeVertexData(model.data)}\r\n`
-
-    if (model.shell) result += `shell = ${this._getShell(model.shell)}\r\n`
 
     // Add the materials and colors to the result
-    result += this._serializeMaterials(model, sortedVoxColors, voxColorToHex)
+    result += this._serializeMaterials(model, sortedVoxColors, voxColorToHex, materialLine)
 
     // Add the voxels to the result
     if (!compressed || repeat !== 1) { result += this._serializeVoxels(model, repeat, voxelWidth) } else { result += this._serializeVoxelsRLE(model, 100) }
@@ -211,7 +215,7 @@ export default class ModelWriter {
    * Serialize the materials of the model.
    * @param model The model data, including the materials.
    */
-  static _serializeMaterials (model, sortedVoxColors, voxColorToHex) {
+  static _serializeMaterials (model, sortedVoxColors, voxColorToHex, materialLine = null) {
     let result = ''
     model.materials.forEach(function (material) {
       const settings = []
@@ -274,7 +278,7 @@ export default class ModelWriter {
 
       if (material.shell) settings.push(`shell = ${this._getShell(material.shell)}`)
 
-      result += 'material ' + settings.join(', ') + '\r\n'
+      result += 'material ' + (materialLine || settings.join(', ')) + '\r\n'
 
       if (colorParts.length > 0) {
         result += '  colors = '
