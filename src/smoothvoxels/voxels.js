@@ -146,6 +146,20 @@ export default class Voxels {
     return this.setPaletteIndexAt(x, y, z, EMPTY_VOXEL_PALETTE_INDEX)
   }
 
+  getVoxColorCounts () {
+    const colorCounts = new Map()
+
+    for (let i = 0; i < this._refCounts.length; i += 1) {
+      const count = this._refCounts[i]
+      if (count === 0) continue
+
+      const color = this.colorForPaletteIndex(i + RESERVED_PALETTE_INDEXES)
+      colorCounts.set(color, count)
+    }
+
+    return colorCounts
+  }
+
   getTotalNonEmptyVoxels () {
     let sum = 0
 

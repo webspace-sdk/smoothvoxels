@@ -68,7 +68,7 @@ export default class Model {
     this.lights = []
     this.textures = {}
     this.materials = new MaterialList()
-    this.voxBgrToColorId = new Map()
+    this.voxColorToColorId = new Map()
     this.voxels = null
 
     this.scale = { x: 1, y: 1, z: 1 }

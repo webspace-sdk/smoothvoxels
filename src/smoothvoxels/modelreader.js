@@ -318,7 +318,7 @@ export default class ModelReader {
     materialData.colors = materialData.colors.replace(CLEANDEFINITION, '$1$2:$3 ')
 
     const colors = materialData.colors.split(' ').filter(x => x)
-    const { voxBgrToColorId } = model
+    const { voxColorToColorId } = model
 
     colors.forEach(function (colorData) {
       let colorId = colorData.split(':')[0]
@@ -344,7 +344,7 @@ export default class ModelReader {
         colorIdToVoxBgr.set(colorId, bgr)
         colorIdToMaterialIndex.set(colorId, materialIndex)
         seenColorIds.add(colorId)
-        voxBgrToColorId.set(bgr, colorId)
+        voxColorToColorId.set((bgr | materialIndex << 24) >>> 0, colorId)
       }
     }, this)
   }
