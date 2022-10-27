@@ -215,6 +215,15 @@ export default class ModelWriter {
     let result = ''
     model.materials.forEach(function (material) {
       const settings = []
+      const colorParts = []
+      const materialIndex = model.materials.materials.indexOf(material)
+
+      for (const voxColor of sortedVoxColors) {
+        if (((voxColor >> 24) & 0xFF) !== materialIndex) continue
+        colorParts.push(`${model.voxColorToColorId.get(voxColor)}:${voxColorToHex.get(voxColor)}`)
+      }
+
+      if (colorParts.length === 0) return
 
       if (material.type !== MATSTANDARD) settings.push(`type = ${material.type}`)
       if (material.lighting !== FLAT) settings.push(`lighting = ${material.lighting}`)
@@ -266,12 +275,10 @@ export default class ModelWriter {
       if (material.shell) settings.push(`shell = ${this._getShell(material.shell)}`)
 
       result += 'material ' + settings.join(', ') + '\r\n'
-      result += '  colors ='
 
-      const materialIndex = model.materials.materials.indexOf(material)
-      for (const voxColor of sortedVoxColors) {
-        if (((voxColor >> 24) & 0xFF) !== materialIndex) continue
-        result += ` ${model.voxColorToColorId.get(voxColor)}:${voxColorToHex.get(voxColor)}`
+      if (colorParts.length > 0) {
+        result += '  colors = '
+        result += colorParts.join(' ')
       }
 
       result += '\r\n'
@@ -329,9 +336,6 @@ export default class ModelWriter {
 
     const resultBuffer = new Uint8Array(voxels.size[0] * voxels.size[1] * voxels.size[2] * voxelWidth * repeat * 2)
     let resultOffset = 0
-
-    const appendChar = (ch) => {
-    }
 
     resultBuffer[resultOffset++] = 0x76 // v
     resultBuffer[resultOffset++] = 0x6F // o

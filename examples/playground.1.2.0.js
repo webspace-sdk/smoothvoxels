@@ -510,8 +510,10 @@ function handleMagicaVoxelUpload (e) {
     }
 
     try {
-      convertMagicaVoxel(parseMagicaVoxel(reader.result), model)
-      editor.setValue(ModelWriter.writeToString(model, false), -1)
+      const parsed = parseMagicaVoxel(reader.result)
+      convertMagicaVoxel(parsed, model)
+      const modelString = ModelWriter.writeToString(model)
+      editor.setValue(modelString, -1)
       editor.gotoLine(1)
       if (!autoRender) { renderModel() }
     } catch (ex) {
