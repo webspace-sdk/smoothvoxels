@@ -15,7 +15,7 @@ import Voxels, { xyzRangeForSize, shiftForSize, voxColorForRGBT, voxBGRForHex, r
 import WorkerPool from './smoothvoxels/workerpool'
 import './smoothvoxels/smoothvoxel'
 
-import parseMagicaVoxel from './parse-magica-voxel'
+import voxToSvox from './vox-to-svox'
 
 export {
   BaseMaterial,
@@ -38,5 +38,5 @@ export {
   voxBGRForHex,
   rgbtForVoxColor,
   WorkerPool,
-  parseMagicaVoxel
+  voxToSvox
 }
