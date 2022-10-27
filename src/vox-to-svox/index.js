@@ -106,7 +106,7 @@ export default function (bufferData, model = null) {
     const svoxColor = voxColorForRGBT(r, g, b, newMaterialIndex)
     // ?? not sure why this is needed but objects come in mirrored
 
-    voxels.setColorAt(vx - shiftX - minX, vy - shiftY - minY, vz - shiftZ - minZ, svoxColor)
+    voxels.setColorAt(vx - shiftX - minX, vy - shiftY, vz - shiftZ - minZ, svoxColor)
   })
 
   return model
