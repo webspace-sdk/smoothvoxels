@@ -6,6 +6,7 @@ import Light from './smoothvoxels/light'
 import Material from './smoothvoxels/material'
 import MaterialList from './smoothvoxels/materiallist'
 import SvoxMeshGenerator from './smoothvoxels/svoxmeshgenerator'
+import SvoxToThreeMeshConverter from './smoothvoxels/svoxtothreemeshconverter'
 import Model from './smoothvoxels/model'
 import ModelReader from './smoothvoxels/modelreader'
 import ModelWriter from './smoothvoxels/modelwriter'
@@ -26,6 +27,7 @@ export {
   Material,
   MaterialList,
   SvoxMeshGenerator,
+  SvoxToThreeMeshConverter,
   Model,
   ModelReader,
   ModelWriter,
