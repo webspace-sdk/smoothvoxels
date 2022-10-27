@@ -7,21 +7,21 @@ import Voxels, { shiftForSize, voxColorForRGBT } from '../smoothvoxels/voxels'
 import { MATSTANDARD, FLAT } from '../smoothvoxels/constants'
 import Model from '../smoothvoxels/model'
 
-const BufferImpl = Buffer || BrowserBuffer
+const BufferImpl = typeof (Buffer) !== 'undefined' ? Buffer : BrowserBuffer
 
-function parseHeader (Buffer) {
+function parseHeader (buffer) {
   const ret = {}
   const state = {
-    Buffer,
+    Buffer: buffer,
     readByteIndex: 0
   }
-  ret[readId(state)] = BufferImpl.readInt32LE(intByteLength)
+  ret[readId(state)] = buffer.readInt32LE(intByteLength)
   return ret
 };
 
 function parseMagicaVoxel (BufferLikeData) {
   let buffer = BufferLikeData
-  buffer = new BufferImpl(new Uint8Array(BufferLikeData)) // eslint-disable-line
+  buffer = BufferImpl.from(new Uint8Array(BufferLikeData)) // eslint-disable-line
 
   const header = parseHeader(buffer)
   const body = recReadChunksInRange(
@@ -40,7 +40,6 @@ function parseMagicaVoxel (BufferLikeData) {
 
 export default function (bufferData, model = null) {
   const vox = parseMagicaVoxel(bufferData)
-  console.log(vox)
 
   // Palette map (since palette indices can be moved in Magica Voxel by CTRL-Drag)
   const iMap = []
