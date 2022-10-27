@@ -2,10 +2,12 @@ import { intByteLength } from './constants'
 import recReadChunksInRange from './recReadChunksInRange'
 import readId from './readId'
 import useDefaultPalette from './useDefaultPalette'
-import { Buffer } from 'buffer'
+import { Buffer as BrowserBuffer } from 'buffer'
 import Voxels, { shiftForSize, voxColorForRGBT } from '../smoothvoxels/voxels'
 import { MATSTANDARD, FLAT } from '../smoothvoxels/constants'
 import Model from '../smoothvoxels/model'
+
+const BufferImpl = Buffer || BrowserBuffer
 
 function parseHeader (Buffer) {
   const ret = {}
@@ -13,13 +15,13 @@ function parseHeader (Buffer) {
     Buffer,
     readByteIndex: 0
   }
-  ret[readId(state)] = Buffer.readInt32LE(intByteLength)
+  ret[readId(state)] = BufferImpl.readInt32LE(intByteLength)
   return ret
 };
 
 function parseMagicaVoxel (BufferLikeData) {
   let buffer = BufferLikeData
-  buffer = new Buffer(new Uint8Array(BufferLikeData)) // eslint-disable-line
+  buffer = new BufferImpl(new Uint8Array(BufferLikeData)) // eslint-disable-line
 
   const header = parseHeader(buffer)
   const body = recReadChunksInRange(
