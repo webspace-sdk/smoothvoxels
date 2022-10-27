@@ -73,8 +73,6 @@ export default function imgToSvox (img, model = null, tempCanvas = null) {
 
   model.voxels = new Voxels([model.size.x, model.size.y, model.size.z], paletteBits)
 
-  console.log('new voxels', [model.size.x, model.size.y, model.size.z], model.voxels.size)
-
   const xShift = shiftForSize(model.size.x)
   const zShift = shiftForSize(model.size.z)
 
@@ -95,7 +93,6 @@ export default function imgToSvox (img, model = null, tempCanvas = null) {
       pixel += 4
     }
   }
-  console.log('new voxels2', model.voxels.size)
 
   return model
 }
