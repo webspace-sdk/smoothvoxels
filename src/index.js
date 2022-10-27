@@ -12,8 +12,6 @@ import ModelWriter from './smoothvoxels/modelwriter'
 import Buffers from './smoothvoxels/buffers'
 import Noise from './smoothvoxels/noise'
 import Voxels, { xyzRangeForSize, shiftForSize, voxColorForRGBT, voxBGRForHex, rgbtForVoxColor } from './smoothvoxels/voxels'
-import WorkerPool from './smoothvoxels/workerpool'
-import './smoothvoxels/smoothvoxel'
 
 import voxToSvox from './vox-to-svox'
 import imgToSvox from './img-to-svox'
@@ -38,7 +36,6 @@ export {
   voxColorForRGBT,
   voxBGRForHex,
   rgbtForVoxColor,
-  WorkerPool,
   voxToSvox,
   imgToSvox
 }

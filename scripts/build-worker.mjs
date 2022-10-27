@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url'
 import { readFileSync, writeFileSync, renameSync } from 'fs'
 import { spawnSync } from 'child_process'
 import esbuild from 'esbuild'
+import inlineWorkerPlugin from 'esbuild-plugin-inline-worker'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 console.log('base path', join(__dirname, '..'))
@@ -11,7 +12,7 @@ const buildConfig = {
   basePath: join(__dirname, '..'),
   bundle: true,
   constants: {},
-  entry: 'src/index.js',
+  entry: 'src/worker.js',
   format: 'esm',
   minify: true,
   outdir: 'dist',
@@ -53,6 +54,7 @@ class Builder {
       outdir: buildConfig.outdir,
       platform: buildConfig.platform.name,
       sourcemap: buildConfig.sourcemap,
+      plugins: [inlineWorkerPlugin()],
       target: `${buildConfig.platform.target}${buildConfig.platform.version}`
     })
 
@@ -92,7 +94,7 @@ class Builder {
 
   convertToProductionFile () {
     const filename = basename(buildConfig.entry)
-    const newFilename = `${pkg.name}.js`
+    const newFilename = `${pkg.name}-worker.js`
     const contents = readFileSync(`${buildConfig.outdir}/${filename}`, { encoding: 'utf-8' })
 
     spawnSync('chmod', ['+x', `${buildConfig.outdir}/${filename}`], { stdio: 'ignore' })
