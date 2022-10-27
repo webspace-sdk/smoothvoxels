@@ -661,7 +661,9 @@ export default class ModelReader {
     let chunk = chunks.next()
     while (!chunk.done) {
       const value = chunk.value[0]
-      if (value[0] >= '0' && value[0] <= '9') {
+      const v0 = value[0]
+      const v1 = value[1]
+      if (v0 >= '0' && v0 <= '9') {
         count = parseInt(value, 10)
       } else if (value === '(') {
         // Convert the chunk to normal RLE and add it to the result (repeatedly)
@@ -670,15 +672,15 @@ export default class ModelReader {
         count = 1
       } else if (value === ')') {
         return result
-      } else if (value.length > 1 && value[0] >= 'A' && value[0] <= 'Z' && value[1] === value[0]) {
+      } else if (value.length > 1 && v0 >= 'A' && v0 <= 'Z' && v1 === v0) {
         if (count > 1) {
-          result.push([value[0], count])
-          result.push([value[0], value.length - 1])
+          result.push([v0, count])
+          result.push([v0, value.length - 1])
         } else {
-          result.push([value[0], value.length])
+          result.push([v0, value.length])
         }
         count = 1
-      } else if (value.length > 1 && value[0] === '-' && value[1] === '-') {
+      } else if (value.length > 1 && v0 === '-' && v1 === '-') {
         if (count > 1) {
           result.push(['-', count])
           result.push(['-', value.length - 1])
