@@ -3,8 +3,9 @@ import recReadChunksInRange from './recReadChunksInRange'
 import readId from './readId'
 import useDefaultPalette from './useDefaultPalette'
 import { Buffer } from 'buffer'
-import { shiftForSize, voxColorForRGBT } from '../smoothvoxels/voxels'
+import Voxels, { shiftForSize, voxColorForRGBT } from '../smoothvoxels/voxels'
 import { MATSTANDARD, FLAT } from '../smoothvoxels/constants'
+import Model from '../smoothvoxels/model'
 
 function parseHeader (Buffer) {
   const ret = {}
@@ -37,14 +38,7 @@ function parseMagicaVoxel (BufferLikeData) {
 
 export default function (bufferData, model = null) {
   const vox = parseMagicaVoxel(bufferData)
-
-  // if (model = null) {
-  // }
-
-  // Alpha channel is unused(?) in Magica voxel, so just use the same material for all
-  // If all colors are already available this new material will have no colors and not be written by the modelwriter
-  const newMaterial = model.materials.createMaterial(MATSTANDARD, FLAT)
-  const newMaterialIndex = model.materials.materials.indexOf(newMaterial)
+  console.log(vox)
 
   // Palette map (since palette indices can be moved in Magica Voxel by CTRL-Drag)
   const iMap = []
@@ -57,30 +51,62 @@ export default function (bufferData, model = null) {
   let minX = Infinity; let minY = Infinity; let minZ = Infinity
   let maxX = -Infinity; let maxY = -Infinity; let maxZ = -Infinity
 
-  vox.XYZI.forEach(function (v) {
-    minX = Math.min(minX, v.x)
-    minY = Math.min(minY, v.y)
-    minZ = Math.min(minZ, v.z)
-    maxX = Math.max(maxX, v.x)
-    maxY = Math.max(maxY, v.y)
-    maxZ = Math.max(maxZ, v.z)
+  // Only use first xyzi chunk
+  const xyziChunk = Array.isArray(vox.XYZI[0]) ? vox.XYZI[0] : vox.XYZI
+
+  xyziChunk.forEach(function (v) {
+    const { x, y, z } = v
+    minX = Math.min(minX, x)
+    minY = Math.min(minY, y)
+    minZ = Math.min(minZ, z)
+    maxX = Math.max(maxX, x)
+    maxY = Math.max(maxY, y)
+    maxZ = Math.max(maxZ, z)
   })
 
-  const sizeX = maxX - minX + 1
-  const sizeY = maxY - minY + 1
-  const sizeZ = maxZ - minZ + 1
+  const voxSizeX = maxX - minX + 1
+  const voxSizeY = maxY - minY + 1
+  const voxSizeZ = maxZ - minZ + 1
 
-  const shiftX = shiftForSize(sizeX)
-  const shiftY = shiftForSize(sizeY)
-  const shiftZ = shiftForSize(sizeZ)
+  if (model === null) {
+    model = new Model()
+    model.origin = '-y'
+    model.scale = { x: 0.05, y: 0.05, z: 0.05 }
+    model.size = { x: voxSizeX, y: voxSizeZ, z: voxSizeY }
 
-  vox.XYZI.forEach(function (v) {
-    const c = v.c
-    const voxcol = vox.RGBA[c - 1]
-    const svoxColor = voxColorForRGBT(voxcol.r, voxcol.g, voxcol.b, newMaterialIndex)
-    model.voxels.setColorAt(v.x - shiftX, v.z - shiftZ, -v.y - shiftY, svoxColor)
+    let paletteBits = 1
+
+    const seenColors = new Set()
+
+    xyziChunk.forEach(({ c }) => seenColors.add(c))
+
+    const numberOfColors = seenColors.size
+    if (numberOfColors >= 2) { paletteBits = 2 }
+    if (numberOfColors >= 4) { paletteBits = 4 }
+    if (numberOfColors >= 16) { paletteBits = 8 }
+
+    model.voxels = new Voxels([model.size.x, model.size.y, model.size.z], paletteBits)
+  }
+  // Alpha channel is unused(?) in Magica voxel, so just use the same material for all
+  // If all colors are already available this new material will have no colors and not be written by the modelwriter
+  const newMaterial = model.materials.createMaterial(MATSTANDARD, FLAT)
+  const newMaterialIndex = model.materials.materials.indexOf(newMaterial)
+
+  const shiftX = shiftForSize(model.size.x)
+  const shiftY = shiftForSize(model.size.y)
+  const shiftZ = shiftForSize(model.size.z)
+
+  const voxels = model.voxels
+  const RGBA = vox.RGBA
+
+  xyziChunk.forEach(function (v) {
+    const { x: vx, y: vz, z: vy, c } = v
+    const { r, g, b } = RGBA[c - 1]
+    const svoxColor = voxColorForRGBT(r, g, b, newMaterialIndex)
+    // ?? not sure why this is needed but objects come in mirrored
+
+    voxels.setColorAt(vx - shiftX - minX, vy - shiftY - minY, vz - shiftZ - minZ, svoxColor)
   })
 
-  // let scale = 1 / Math.max(model.voxels.bounds.size.x, model.voxels.bounds.size.y, model.voxels.bounds.size.z);
-  // model.scale = { x:scale, y:scale, z:scale };
+  return model
 }

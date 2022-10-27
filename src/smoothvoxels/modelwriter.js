@@ -381,7 +381,7 @@ export default class ModelWriter {
     }
 
     resultBuffer[resultOffset++] = 0x0 // \r
-    return (new TextDecoder('utf-8')).decode(resultBuffer.subarray(0, resultOffset))
+    return (new TextDecoder('utf-8')).decode(resultBuffer.subarray(0, resultOffset - 1))
   }
 
   /**

@@ -76,7 +76,8 @@ if (typeof window !== 'undefined') {
         //  //SvoxToThreeMeshConverter.generate(svoxmesh);
         // }
 
-        const buffers = new Buffers(1024 * 1024)
+        // Set based on magicavoxel menger
+        const buffers = new Buffers(1024 * 768 * 2)
         const t0 = performance.now()
         const svoxmesh = SvoxMeshGenerator.generate(model, buffers)
         // console.log('SvoxMeshGenerator.generate took ' + (performance.now() - t0) + ' ms.')

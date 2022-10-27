@@ -17,13 +17,12 @@
 /* global OffscreenCanvas */
 /* global ImageBitmap */
 /* global Blob */
-/* global alert */
 /* global Image */
 // =====================================================
 // /playground/playground.js
 // =====================================================
 
-import { Noise, voxBGRForHex, voxColorForRGBT, shiftForSize, parseMagicaVoxel, ModelReader, Model, ModelWriter, SvoxMeshGenerator } from '../dist/smoothvoxels.js'
+import { Noise, voxBGRForHex, voxToSvox, ModelReader, Model, ModelWriter, SvoxMeshGenerator } from '../dist/smoothvoxels.js'
 
 const alert = x => console.error(x)
 /* ------ Startup functions ------ */

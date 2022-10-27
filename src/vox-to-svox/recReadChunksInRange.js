@@ -30,9 +30,9 @@ export default function recReadChunksInRange (Buffer, bufferStartIndex, bufferEn
     console.assert(state.readByteIndex === totalChunkEndIndex, `${id} length mismatch ${state.readByteIndex}:${totalChunkEndIndex}`)
     if (!accum[id]) {
       accum[id] = chunkContent
-    } else if (accum[id] && !accum[id].length) {
+    } else if (accum[id] && !accum[id][0]?.length) {
       accum[id] = [accum[id], chunkContent]
-    } else if (accum[id] && accum[id].length) {
+    } else if (accum[id] && accum[id][0]?.length) {
       accum[id].push(chunkContent)
     }
   }
