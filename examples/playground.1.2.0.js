@@ -22,7 +22,7 @@
 // /playground/playground.js
 // =====================================================
 
-import { Noise, voxBGRForHex, voxToSvox, ModelReader, Model, ModelWriter, SvoxMeshGenerator } from '../dist/smoothvoxels.js'
+import { Noise, imgToSvox, voxToSvox, ModelReader, Model, ModelWriter, SvoxMeshGenerator } from '../dist/smoothvoxels.js'
 
 const alert = x => console.error(x)
 /* ------ Startup functions ------ */
@@ -509,8 +509,7 @@ function handleMagicaVoxelUpload (e) {
     }
 
     try {
-      const parsed = parseMagicaVoxel(reader.result)
-      convertMagicaVoxel(parsed, model)
+      model = voxToSvox(reader.result)
       const modelString = ModelWriter.writeToString(model)
       editor.setValue(modelString, -1)
       editor.gotoLine(1)
@@ -526,51 +525,6 @@ function handleMagicaVoxelUpload (e) {
 
   reader.readAsArrayBuffer(file)
 };
-
-function convertMagicaVoxel (vox, model) {
-  // Alpha channel is unused(?) in Magica voxel, so just use the same material for all
-  // If all colors are already available this new material will have no colors and not be written by the modelwriter
-  const newMaterial = model.materials.createMaterial(SVOX.MATSTANDARD, SVOX.FLAT)
-  const newMaterialIndex = model.materials.materials.indexOf(newMaterial)
-
-  // Palette map (since palette indices can be moved in Magica Voxel by CTRL-Drag)
-  const iMap = []
-  if (vox.IMAP) {
-    for (let i = 1; i <= vox.IMAP.pal_indices.length; i++) {
-      iMap[vox.IMAP.pal_indices[i - 1]] = i
-    }
-  }
-
-  let minX = Infinity; let minY = Infinity; let minZ = Infinity
-  let maxX = -Infinity; let maxY = -Infinity; let maxZ = -Infinity
-
-  vox.XYZI.forEach(function (v) {
-    minX = Math.min(minX, v.x)
-    minY = Math.min(minY, v.y)
-    minZ = Math.min(minZ, v.z)
-    maxX = Math.max(maxX, v.x)
-    maxY = Math.max(maxY, v.y)
-    maxZ = Math.max(maxZ, v.z)
-  })
-
-  const sizeX = maxX - minX + 1
-  const sizeY = maxY - minY + 1
-  const sizeZ = maxZ - minZ + 1
-
-  const shiftX = shiftForSize(sizeX)
-  const shiftY = shiftForSize(sizeY)
-  const shiftZ = shiftForSize(sizeZ)
-
-  vox.XYZI.forEach(function (v) {
-    const c = v.c
-    const voxcol = vox.RGBA[c - 1]
-    const svoxColor = voxColorForRGBT(voxcol.r, voxcol.g, voxcol.b, newMaterialIndex)
-    model.voxels.setColorAt(v.x - shiftX, v.z - shiftZ, -v.y - shiftY, svoxColor)
-  })
-
-  // let scale = 1 / Math.max(model.voxels.bounds.size.x, model.voxels.bounds.size.y, model.voxels.bounds.size.z);
-  // model.scale = { x:scale, y:scale, z:scale };
-}
 
 /* ------ Create a model from an image ------ */
 
@@ -594,7 +548,13 @@ function handleImageUpload (e) {
     const img = new Image()
 
     // All the handling is done in convertImage
-    img.onload = convertImage
+    img.onload = () => {
+      const model = imgToSvox(img)
+      console.log(model)
+      editor.setValue(ModelWriter.writeToString(model, false), -1)
+      editor.gotoLine(1)
+      if (!autoRender) { renderModel() }
+    }
 
     img.onerror = function () {
       alert('The image could not be loaded')
@@ -602,61 +562,6 @@ function handleImageUpload (e) {
 
     img.src = URL.createObjectURL(this.files[0])
   }
-};
-
-function convertImage () {
-  const uploadCanvas = document.createElement('canvas')
-  uploadCanvas.id = 'uploadCanvas'
-
-  uploadCanvas.width = this.width
-  uploadCanvas.height = this.height
-  const ctx = uploadCanvas.getContext('2d')
-  ctx.drawImage(this, 0, 0)
-  const pixels = ctx.getImageData(0, 0, this.width, this.height)
-
-  const size = Math.max(this.width, this.height)
-
-  const model = new Model()
-  model.scale = { x: 1 / size, y: 0.1, z: 1 / size }
-  model.origin = '+z'
-  model.rotation = { x: 90, y: 0, z: 0 }
-
-  const material = model.materials.createMaterial(SVOX.MATSTANDARD, SVOX.BOTH, 0.5, 0, true)
-  material.setDeform(10)
-  material.clamp = 'y'
-  const materialIndex = model.materials.materials.indexOf(material)
-
-  let pixel = 0
-  const colors = {}
-  for (let z = 0; z < this.height; z++) {
-    for (let x = 0; x < this.width; x++) {
-      // 4096 Colors
-      // let col = ((pixels.data[pixel+0]&0xF0)<<5) + ((pixels.data[pixel+1]&0xD0)) + ((pixels.data[pixel+2]&0xF0)>>4);
-
-      // 512 Colors
-      const col = ((pixels.data[pixel + 0] & 0xE0) << 4) + ((pixels.data[pixel + 1] & 0xE0)) + ((pixels.data[pixel + 2] & 0xE0) >> 4)
-
-      let hex = '000' + Number(col).toString(16)
-      hex = '#' + hex.substr(hex.length - 3, 3)
-
-      if (pixels.data[pixel + 3] > 0) {
-        let voxColor = colors[hex]
-
-        if (voxColor === null || voxColor === undefined) {
-          const voxBgr = voxBGRForHex(hex)
-          voxColor = (voxBgr | (materialIndex << 24)) >>> 0
-          colors[hex] = voxColor
-        }
-
-        model.voxels.setColorAt(x, 0, z, voxColor)
-      }
-      pixel += 4
-    }
-  }
-
-  editor.setValue(ModelWriter.writeToString(model, false), -1)
-  editor.gotoLine(1)
-  if (!autoRender) { renderModel() }
 };
 
 /* ------ Add an image as Base64------ */

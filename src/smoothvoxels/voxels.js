@@ -7,7 +7,7 @@ const VERSION = 0
 const EMPTY_VOXEL_PALETTE_INDEX = 0
 
 // Max size allowed for chunks by default.
-const MAX_SIZE = 128
+export const MAX_SIZE = 128
 
 /* version, size x, y, z, 3x reserved */
 const HEADER_SIZE = 8

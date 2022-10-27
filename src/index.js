@@ -16,6 +16,7 @@ import WorkerPool from './smoothvoxels/workerpool'
 import './smoothvoxels/smoothvoxel'
 
 import voxToSvox from './vox-to-svox'
+import imgToSvox from './img-to-svox'
 
 export {
   BaseMaterial,
@@ -38,5 +39,6 @@ export {
   voxBGRForHex,
   rgbtForVoxColor,
   WorkerPool,
-  voxToSvox
+  voxToSvox,
+  imgToSvox
 }
