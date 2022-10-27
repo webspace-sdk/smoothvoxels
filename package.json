@@ -1,6 +1,6 @@
 {
   "name": "smoothvoxels",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Smooth Voxels",
   "main": "src/index.js",
   "scripts": {
