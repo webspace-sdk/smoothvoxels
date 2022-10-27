@@ -167,8 +167,10 @@ export default class ModelReader {
     const colorIdToVoxBgr = new Map()
     const colorIdToMaterialIndex = new Map()
 
+    const seenColorIds = new Set()
+
     for (const materialData of modelData.materials) {
-      this._createMaterial(model, materialData, colorIdToVoxBgr, colorIdToMaterialIndex)
+      this._createMaterial(model, materialData, colorIdToVoxBgr, colorIdToMaterialIndex, seenColorIds)
     }
 
     // Find the color (& material) for the shell(s)
@@ -221,7 +223,7 @@ export default class ModelReader {
      * Create one material from its parsed data
      * @param {object} materialData The simple object from the parsed model string.
      */
-  static _createMaterial (model, materialData, colorIdToVoxBgr, colorIdToMaterialIndex) {
+  static _createMaterial (model, materialData, colorIdToVoxBgr, colorIdToMaterialIndex, seenColorIds) {
     // Cleanup data
     let lighting = FLAT
     if (materialData.lighting === QUAD) lighting = QUAD
@@ -316,6 +318,7 @@ export default class ModelReader {
     materialData.colors = materialData.colors.replace(CLEANDEFINITION, '$1$2:$3 ')
 
     const colors = materialData.colors.split(' ').filter(x => x)
+    const { voxBgrToColorId } = model
 
     colors.forEach(function (colorData) {
       let colorId = colorData.split(':')[0]
@@ -329,6 +332,10 @@ export default class ModelReader {
 
       const color = colorData.split(':')[1]
 
+      if (seenColorIds.has(colorId)) {
+        throw new Error(`SyntaxError: Duplicate ID '${colorId}'`)
+      }
+
       if (!colorIdToVoxBgr.has(colorId)) {
         const bgr = voxBGRForHex(color)
         if (!/^[A-Z][a-z]*$/.test(colorId)) {
@@ -336,8 +343,8 @@ export default class ModelReader {
         }
         colorIdToVoxBgr.set(colorId, bgr)
         colorIdToMaterialIndex.set(colorId, materialIndex)
-      } else {
-        throw new Error(`SyntaxError: Duplicate ID '${colorId}'`)
+        seenColorIds.add(colorId)
+        voxBgrToColorId.set(bgr, colorId)
       }
     }, this)
   }

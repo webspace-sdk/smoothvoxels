@@ -462,8 +462,9 @@ export default class Voxels {
 
   _getOffset (x, y, z) {
     const { size, xShift, yShift, zShift } = this
+    const s2 = size[2]
 
-    return (x + xShift) * size[1] * size[2] + (y + yShift) * size[2] + (z + zShift)
+    return (x + xShift) * size[1] * s2 + (y + yShift) * s2 + (z + zShift)
   }
 
   _rebuildRefCounts () {
