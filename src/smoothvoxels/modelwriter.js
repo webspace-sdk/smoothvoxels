@@ -322,11 +322,25 @@ export default class ModelWriter {
 
     const emptyVoxel = '-' + ' '.repeat(Math.max(voxelWidth - 1))
     const gutter = ' '.repeat(voxelWidth)
-    let result = 'voxels\r\n'
 
     const voxels = model.voxels
 
     const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(voxels.size)
+
+    const resultBuffer = new Uint8Array(voxels.size[0] * voxels.size[1] * voxels.size[2] * voxelWidth * repeat * 2)
+    let resultOffset = 0
+
+    const appendChar = (ch) => {
+    }
+
+    resultBuffer[resultOffset++] = 0x76 // v
+    resultBuffer[resultOffset++] = 0x6F // o
+    resultBuffer[resultOffset++] = 0x78 // x
+    resultBuffer[resultOffset++] = 0x65 // e
+    resultBuffer[resultOffset++] = 0x6C // l
+    resultBuffer[resultOffset++] = 0x73 // s
+    resultBuffer[resultOffset++] = 0x0D // \r
+    resultBuffer[resultOffset++] = 0x0A // \n
 
     for (let z = minZ; z <= maxZ; z++) {
       for (let zr = 0; zr < repeat; zr++) {
@@ -337,20 +351,33 @@ export default class ModelWriter {
               for (let xr = 0; xr < repeat; xr++) {
                 if (paletteIndex !== 0) {
                   const colorId = voxColorToColorId.get(voxels.getColorAt(x, y, z))
-                  result += colorId
+
+                  for (let i = 0, l = colorId.length; i < l; i++) {
+                    resultBuffer[resultOffset++] = colorId.charCodeAt(i)
+                  }
+
                   let l = colorId.length
-                  while (l++ < voxelWidth) { result += ' ' }
-                } else { result += emptyVoxel }
+                  while (l++ < voxelWidth) { resultBuffer[resultOffset++] = 0x20 }
+                } else {
+                  for (let i = 0, l = emptyVoxel.length; i < l; i++) {
+                    resultBuffer[resultOffset++] = emptyVoxel.charCodeAt(i)
+                  }
+                }
               }
             }
-            result += gutter
+
+            for (let i = 0, l = gutter.length; i < l; i++) {
+              resultBuffer[resultOffset++] = gutter.charCodeAt(i)
+            }
           }
         }
-        result += '\r\n'
+        resultBuffer[resultOffset++] = 0x0D // \r
+        resultBuffer[resultOffset++] = 0x0A // \n
       }
     }
 
-    return result
+    resultBuffer[resultOffset++] = 0x0 // \r
+    return (new TextDecoder('utf-8')).decode(resultBuffer.subarray(0, resultOffset))
   }
 
   /**
