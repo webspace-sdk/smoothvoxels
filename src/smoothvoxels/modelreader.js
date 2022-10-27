@@ -167,8 +167,10 @@ export default class ModelReader {
     const colorIdToVoxBgr = new Map()
     const colorIdToMaterialIndex = new Map()
 
+    const seenColorIds = new Set()
+
     for (const materialData of modelData.materials) {
-      this._createMaterial(model, materialData, colorIdToVoxBgr, colorIdToMaterialIndex)
+      this._createMaterial(model, materialData, colorIdToVoxBgr, colorIdToMaterialIndex, seenColorIds)
     }
 
     // Find the color (& material) for the shell(s)
@@ -221,7 +223,7 @@ export default class ModelReader {
      * Create one material from its parsed data
      * @param {object} materialData The simple object from the parsed model string.
      */
-  static _createMaterial (model, materialData, colorIdToVoxBgr, colorIdToMaterialIndex) {
+  static _createMaterial (model, materialData, colorIdToVoxBgr, colorIdToMaterialIndex, seenColorIds) {
     // Cleanup data
     let lighting = FLAT
     if (materialData.lighting === QUAD) lighting = QUAD
@@ -316,6 +318,7 @@ export default class ModelReader {
     materialData.colors = materialData.colors.replace(CLEANDEFINITION, '$1$2:$3 ')
 
     const colors = materialData.colors.split(' ').filter(x => x)
+    const { voxColorToColorId } = model
 
     colors.forEach(function (colorData) {
       let colorId = colorData.split(':')[0]
@@ -329,6 +332,10 @@ export default class ModelReader {
 
       const color = colorData.split(':')[1]
 
+      if (seenColorIds.has(colorId)) {
+        throw new Error(`SyntaxError: Duplicate ID '${colorId}'`)
+      }
+
       if (!colorIdToVoxBgr.has(colorId)) {
         const bgr = voxBGRForHex(color)
         if (!/^[A-Z][a-z]*$/.test(colorId)) {
@@ -336,8 +343,8 @@ export default class ModelReader {
         }
         colorIdToVoxBgr.set(colorId, bgr)
         colorIdToMaterialIndex.set(colorId, materialIndex)
-      } else {
-        throw new Error(`SyntaxError: Duplicate ID '${colorId}'`)
+        seenColorIds.add(colorId)
+        voxColorToColorId.set((bgr | materialIndex << 24) >>> 0, colorId)
       }
     }, this)
   }
@@ -654,7 +661,9 @@ export default class ModelReader {
     let chunk = chunks.next()
     while (!chunk.done) {
       const value = chunk.value[0]
-      if (value[0] >= '0' && value[0] <= '9') {
+      const v0 = value[0]
+      const v1 = value[1]
+      if (v0 >= '0' && v0 <= '9') {
         count = parseInt(value, 10)
       } else if (value === '(') {
         // Convert the chunk to normal RLE and add it to the result (repeatedly)
@@ -663,15 +672,15 @@ export default class ModelReader {
         count = 1
       } else if (value === ')') {
         return result
-      } else if (value.length > 1 && value[0] >= 'A' && value[0] <= 'Z' && value[1] === value[0]) {
+      } else if (value.length > 1 && v0 >= 'A' && v0 <= 'Z' && v1 === v0) {
         if (count > 1) {
-          result.push([value[0], count])
-          result.push([value[0], value.length - 1])
+          result.push([v0, count])
+          result.push([v0, value.length - 1])
         } else {
-          result.push([value[0], value.length])
+          result.push([v0, value.length])
         }
         count = 1
-      } else if (value.length > 1 && value[0] === '-' && value[1] === '-') {
+      } else if (value.length > 1 && v0 === '-' && v1 === '-') {
         if (count > 1) {
           result.push(['-', count])
           result.push(['-', value.length - 1])

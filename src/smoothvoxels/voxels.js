@@ -7,7 +7,7 @@ const VERSION = 0
 const EMPTY_VOXEL_PALETTE_INDEX = 0
 
 // Max size allowed for chunks by default.
-const MAX_SIZE = 128
+export const MAX_SIZE = 128
 
 /* version, size x, y, z, 3x reserved */
 const HEADER_SIZE = 8
@@ -144,6 +144,20 @@ export default class Voxels {
 
   removeVoxelAt (x, y, z) {
     return this.setPaletteIndexAt(x, y, z, EMPTY_VOXEL_PALETTE_INDEX)
+  }
+
+  getVoxColorCounts () {
+    const colorCounts = new Map()
+
+    for (let i = 0; i < this._refCounts.length; i += 1) {
+      const count = this._refCounts[i]
+      if (count === 0) continue
+
+      const color = this.colorForPaletteIndex(i + RESERVED_PALETTE_INDEXES)
+      colorCounts.set(color, count)
+    }
+
+    return colorCounts
   }
 
   getTotalNonEmptyVoxels () {
@@ -462,8 +476,9 @@ export default class Voxels {
 
   _getOffset (x, y, z) {
     const { size, xShift, yShift, zShift } = this
+    const s2 = size[2]
 
-    return (x + xShift) * size[1] * size[2] + (y + yShift) * size[2] + (z + zShift)
+    return (x + xShift) * size[1] * s2 + (y + yShift) * s2 + (z + zShift)
   }
 
   _rebuildRefCounts () {

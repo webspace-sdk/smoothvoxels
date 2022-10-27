@@ -1,4 +1,23 @@
 import { MATSTANDARD, FLAT, FRONT } from './constants.js'
+import { xyzRangeForSize } from './voxels.js'
+
+const SINGLE_HEX_VALUES = new Map()
+SINGLE_HEX_VALUES.set(0, 0)
+SINGLE_HEX_VALUES.set(0x11, 1)
+SINGLE_HEX_VALUES.set(0x22, 2)
+SINGLE_HEX_VALUES.set(0x33, 3)
+SINGLE_HEX_VALUES.set(0x44, 4)
+SINGLE_HEX_VALUES.set(0x55, 5)
+SINGLE_HEX_VALUES.set(0x66, 6)
+SINGLE_HEX_VALUES.set(0x77, 7)
+SINGLE_HEX_VALUES.set(0x88, 8)
+SINGLE_HEX_VALUES.set(0x99, 9)
+SINGLE_HEX_VALUES.set(0xaa, 10)
+SINGLE_HEX_VALUES.set(0xbb, 11)
+SINGLE_HEX_VALUES.set(0xcc, 12)
+SINGLE_HEX_VALUES.set(0xdd, 13)
+SINGLE_HEX_VALUES.set(0xee, 14)
+SINGLE_HEX_VALUES.set(0xff, 15)
 
 export default class ModelWriter {
   /**
@@ -11,52 +30,69 @@ export default class ModelWriter {
   static writeToString (model, compressed, repeat) {
     repeat = Math.round(repeat || 1)
 
-    // Prepare the model (count colors, recalculate bounding box, etc.)
-    model.prepareForWrite()
+    const voxColorToCount = new Map()
+    const voxColorToHex = new Map()
 
-    // Retrieve all colors
-    const colors = []
-    const colorIds = {}
-    model.materials.forEach(function (material) {
-      material.colors.forEach(function (color) {
-        colors.push(color)
-        colorIds[color.id] = color.id
-      })
+    const { voxels, voxColorToColorId } = model
+
+    for (const [voxColor, count] of voxels.getVoxColorCounts()) {
+      if (!voxColorToCount.has(voxColor)) {
+        const r = voxColor & 0xff
+        const g = (voxColor >> 8) & 0xff
+        const b = (voxColor >> 16) & 0xff
+
+        let hex
+
+        if (SINGLE_HEX_VALUES.has(r) && SINGLE_HEX_VALUES.has(g) && SINGLE_HEX_VALUES.has(b)) {
+          hex = '#' + (SINGLE_HEX_VALUES.get(b) + SINGLE_HEX_VALUES.get(g) * 16 + SINGLE_HEX_VALUES.get(r) * 256).toString(16).padStart(3, '0')
+        } else {
+          hex = '#' + r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + b.toString(16).padStart(2, '0')
+        }
+
+        voxColorToHex.set(voxColor, hex.toUpperCase())
+      }
+
+      const c = voxColorToCount.get(voxColor) || 0
+      voxColorToCount.set(voxColor, c + count)
+    }
+
+    // Sort the vox colors on (usage) count
+    const sortedVoxColors = [...voxColorToCount.keys()].sort((a, b) => {
+      return voxColorToCount.get(b) - voxColorToCount.get(a)
     })
 
-    // Sort the colors on (usage) count
-    colors.sort(function (a, b) {
-      return b.count - a.count
-    })
-
-    // Give the new colors their Id, reusing existing Id's
-    let maxIdLength = 0
     let index = 0
-    for (let c = 0; c < colors.length; c++) {
-      if (!colors[c].id) {
+    let maxIdLength = 0
+
+    for (let c = 0; c < sortedVoxColors.length; c++) {
+      const voxColor = sortedVoxColors[c]
+
+      if (!voxColorToColorId.has(voxColor)) {
         let colorId
         do {
           colorId = this._colorIdForIndex(index++)
-        } while (colorIds[colorId])
-        colorIds[colorId] = colorId
-        colors[c].id = colorId
+        } while (voxColorToColorId.has(colorId))
+
+        voxColorToColorId.set(voxColor, colorId)
       }
-      maxIdLength = Math.max(colors[c].id.length, maxIdLength)
+
+      maxIdLength = Math.max(voxColorToColorId.get(voxColor).length, maxIdLength)
     }
 
     // If multi character color Id's (2 or 3 long) are used, use extra spaces for the '-' for empty voxels
     const voxelWidth = compressed || maxIdLength === 1 || maxIdLength > 3 ? 1 : maxIdLength
 
-    // Add the textures to the result
+    /// / Add the textures to the result
     let result = this._serializeTextures(model)
 
-    // Add the lights to the result
+    /// / Add the lights to the result
     result += this._serializeLights(model)
 
     result += 'model\r\n'
+
     // Add the size to the result
-    const size = model.voxels.bounds.size
-    if (size.y === size.x && size.z === size.x) { result += `size = ${size.x * repeat}\r\n` } else { result += `size = ${size.x * repeat} ${size.y * repeat} ${size.z * repeat}\r\n` }
+    const [sizeX, sizeY, sizeZ] = model.voxels.size
+    if (sizeY === sizeX && sizeZ === sizeX) { result += `size = ${sizeX * repeat}\r\n` } else { result += `size = ${sizeX * repeat} ${sizeY * repeat} ${sizeZ * repeat}\r\n` }
 
     if (model.shape !== 'box') { result += `shape = ${model.shape}\r\n` }
 
@@ -96,7 +132,7 @@ export default class ModelWriter {
     if (model.shell) result += `shell = ${this._getShell(model.shell)}\r\n`
 
     // Add the materials and colors to the result
-    result += this._serializeMaterials(model)
+    result += this._serializeMaterials(model, sortedVoxColors, voxColorToHex)
 
     // Add the voxels to the result
     if (!compressed || repeat !== 1) { result += this._serializeVoxels(model, repeat, voxelWidth) } else { result += this._serializeVoxelsRLE(model, 100) }
@@ -175,12 +211,19 @@ export default class ModelWriter {
    * Serialize the materials of the model.
    * @param model The model data, including the materials.
    */
-  static _serializeMaterials (model) {
+  static _serializeMaterials (model, sortedVoxColors, voxColorToHex) {
     let result = ''
     model.materials.forEach(function (material) {
-      if (material.colors.length === 0) { return }
-
       const settings = []
+      const colorParts = []
+      const materialIndex = model.materials.materials.indexOf(material)
+
+      for (const voxColor of sortedVoxColors) {
+        if (((voxColor >> 24) & 0xFF) !== materialIndex) continue
+        colorParts.push(`${model.voxColorToColorId.get(voxColor)}:${voxColorToHex.get(voxColor)}`)
+      }
+
+      if (colorParts.length === 0) return
 
       if (material.type !== MATSTANDARD) settings.push(`type = ${material.type}`)
       if (material.lighting !== FLAT) settings.push(`lighting = ${material.lighting}`)
@@ -232,10 +275,11 @@ export default class ModelWriter {
       if (material.shell) settings.push(`shell = ${this._getShell(material.shell)}`)
 
       result += 'material ' + settings.join(', ') + '\r\n'
-      result += '  colors ='
-      material.colors.forEach(function (color) {
-        result += ` ${color.id}${color.exId == null ? '' : '(' + color.exId + ')'}:${color}`
-      })
+
+      if (colorParts.length > 0) {
+        result += '  colors = '
+        result += colorParts.join(' ')
+      }
 
       result += '\r\n'
     }, this)
@@ -281,33 +325,63 @@ export default class ModelWriter {
    * @param model The model data
    */
   static _serializeVoxels (model, repeat, voxelWidth) {
+    const { voxColorToColorId } = model
+
     const emptyVoxel = '-' + ' '.repeat(Math.max(voxelWidth - 1))
     const gutter = ' '.repeat(voxelWidth)
-    let result = 'voxels\r\n'
 
     const voxels = model.voxels
-    for (let z = voxels.minZ; z <= voxels.maxZ; z++) {
+
+    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(voxels.size)
+
+    const resultBuffer = new Uint8Array(voxels.size[0] * voxels.size[1] * voxels.size[2] * voxelWidth * repeat * 2)
+    let resultOffset = 0
+
+    resultBuffer[resultOffset++] = 0x76 // v
+    resultBuffer[resultOffset++] = 0x6F // o
+    resultBuffer[resultOffset++] = 0x78 // x
+    resultBuffer[resultOffset++] = 0x65 // e
+    resultBuffer[resultOffset++] = 0x6C // l
+    resultBuffer[resultOffset++] = 0x73 // s
+    resultBuffer[resultOffset++] = 0x0D // \r
+    resultBuffer[resultOffset++] = 0x0A // \n
+
+    for (let z = minZ; z <= maxZ; z++) {
       for (let zr = 0; zr < repeat; zr++) {
-        for (let y = voxels.minY; y <= voxels.maxY; y++) {
+        for (let y = minY; y <= maxY; y++) {
           for (let yr = 0; yr < repeat; yr++) {
-            for (let x = voxels.minX; x <= voxels.maxX; x++) {
-              const voxel = voxels.getVoxel(x, y, z)
+            for (let x = minX; x <= maxX; x++) {
+              const paletteIndex = voxels.getPaletteIndexAt(x, y, z)
               for (let xr = 0; xr < repeat; xr++) {
-                if (voxel) {
-                  result += voxel.color.id
-                  let l = voxel.color.id.length
-                  while (l++ < voxelWidth) { result += ' ' }
-                } else { result += emptyVoxel }
+                if (paletteIndex !== 0) {
+                  const colorId = voxColorToColorId.get(voxels.getColorAt(x, y, z))
+
+                  for (let i = 0, l = colorId.length; i < l; i++) {
+                    resultBuffer[resultOffset++] = colorId.charCodeAt(i)
+                  }
+
+                  let l = colorId.length
+                  while (l++ < voxelWidth) { resultBuffer[resultOffset++] = 0x20 }
+                } else {
+                  for (let i = 0, l = emptyVoxel.length; i < l; i++) {
+                    resultBuffer[resultOffset++] = emptyVoxel.charCodeAt(i)
+                  }
+                }
               }
             }
-            result += gutter
+
+            for (let i = 0, l = gutter.length; i < l; i++) {
+              resultBuffer[resultOffset++] = gutter.charCodeAt(i)
+            }
           }
         }
-        result += '\r\n'
+        resultBuffer[resultOffset++] = 0x0D // \r
+        resultBuffer[resultOffset++] = 0x0A // \n
       }
     }
 
-    return result
+    resultBuffer[resultOffset++] = 0x0 // \r
+    return (new TextDecoder('utf-8')).decode(resultBuffer.subarray(0, resultOffset - 1))
   }
 
   /**
@@ -319,23 +393,30 @@ export default class ModelWriter {
   static _serializeVoxelsRLE (model, compressionWindow) {
     const queue = []
     let count = 0
-    let lastColor
+    let lastVoxColor
 
-    // Loop over the model, RLE-ing subsequent same colors
-    model.voxels.forEachInBoundary(function (voxel) {
-      const color = voxel ? voxel.color : null
-      if (color === lastColor) {
-        count++
-      } else {
-        // Add this chunk to the RLE queue
-        this._addRleChunk(queue, lastColor, count, compressionWindow)
-        lastColor = color
-        count = 1
+    const { voxels, voxColorToColorId } = model
+    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(voxels.size)
+
+    for (let z = minZ; z <= maxZ; z++) {
+      for (let y = minY; y <= maxY; y++) {
+        for (let x = minX; x <= maxX; x++) {
+          const paletteIndex = voxels.getPaletteIndexAt(x, y, z)
+          const voxColor = paletteIndex === 0 ? null : voxels.getColorAt(x, y, z)
+
+          if (voxColor === lastVoxColor) {
+            count++
+          } else {
+            this._addRleChunk(voxColorToColorId, queue, lastVoxColor, count, compressionWindow)
+            lastVoxColor = voxColor
+            count = 1
+          }
+        }
       }
-    }, this)
+    }
 
     // Add the last chunk to the RLE queue
-    this._addRleChunk(queue, lastColor, count, compressionWindow)
+    this._addRleChunk(voxColorToColorId, queue, lastVoxColor, count, compressionWindow)
 
     // Create the final result string
     let result = ''
@@ -353,12 +434,12 @@ export default class ModelWriter {
    * @param count The number of times this color is repeated over the voxels.
    * @param compressionWindow Typical values are from 10 to 100.
    */
-  static _addRleChunk (queue, color, count, compressionWindow) {
+  static _addRleChunk (voxColorToColorId, queue, voxColor, count, compressionWindow) {
     if (count === 0) { return }
 
     // Add the chunk to the RLE queue
     let chunk = count > 1 ? count.toString() : ''
-    chunk += color ? color.id : '-'
+    chunk += voxColor === null ? '-' : voxColorToColorId.get(voxColor)
     queue.push([chunk, 1, chunk])
 
     // Check for repeating patterns of length 1 to the compression window

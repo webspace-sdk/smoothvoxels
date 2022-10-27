@@ -9,114 +9,31 @@
     <link rel="stylesheet" type="text/css" href="smoothvoxels.css">
     <link rel="icon"       type="image/png" href="https://cdn.glitch.com/7426b469-4cb2-4027-abe8-f01d443ec980%2FFavicon.png?v=1622324946073">  
     
-    <script>
-    window.SVOX = { models: [] }
-    </script>
-
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     
     <!-- A-Frame Extras Component which (among other things) allows for the Oculus Go movement using the trackpad -->
     <!-- https://github.com/donmccurdy/aframe-extras -->
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.0/dist/aframe-extras.min.js"></script>
-
-
-    <script src="../dist/smoothvoxels.js"></script>
-    <script src="playground.1.2.0.js"></script>
-    <script>
-      SVOX.Noise = function () {
-  const p = []
-  for (let i = 0; i < 256; i++) {
-    p[i] = Math.floor(Math.random() * 256)
-    p[i + 256] = p[i]
-  }
-
-  function fade (t) {
-    return t * t * t * (t * (t * 6 - 15) + 10)
-  }
-
-  function lerp (t, a, b) {
-    return a + t * (b - a)
-  }
-
-  function grad (hash, x, y, z) {
-    const h = hash & 15
-    const u = h < 8 ? x : y; const v = h < 4 ? y : h === 12 || h === 14 ? x : z
-    return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v)
-  }
-
-  return {
-
-    noise: function (x, y, z) {
-      const floorX = Math.floor(x)
-      const floorY = Math.floor(y)
-      const floorZ = Math.floor(z)
-
-      const X = floorX & 255
-      const Y = floorY & 255
-      const Z = floorZ & 255
-
-      x -= floorX
-      y -= floorY
-      z -= floorZ
-
-      const xMinus1 = x - 1; const yMinus1 = y - 1; const zMinus1 = z - 1
-      const u = fade(x); const v = fade(y); const w = fade(z)
-      const A = p[X] + Y
-      const AA = p[A] + Z
-      const AB = p[A + 1] + Z
-      const B = p[X + 1] + Y
-      const BA = p[B] + Z
-      const BB = p[B + 1] + Z
-
-      return lerp(w,
-        lerp(v,
-          lerp(u, grad(p[AA], x, y, z),
-            grad(p[BA], xMinus1, y, z)),
-          lerp(u, grad(p[AB], x, yMinus1, z),
-            grad(p[BB], xMinus1, yMinus1, z))
-        ),
-        lerp(v,
-          lerp(u, grad(p[AA + 1], x, y, zMinus1),
-            grad(p[BA + 1], xMinus1, y, z - 1)),
-          lerp(u, grad(p[AB + 1], x, yMinus1, zMinus1),
-            grad(p[BB + 1], xMinus1, yMinus1, zMinus1))
-        )
-      )
-    }
-  }
-};
-    </script>
        
     <!-- Ace Editor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ace.min.js"></script>    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ext-searchbox.min.js"></script>
 
     <script>
-    // The model for the green rotating base 
-    SVOX.models.__base = `
-      model size = 10 1 10, shape = cylinder-y, scale = 0.15 0.15 0.15, origin = +y, clamp = y
-      material lighting = both, roughness = 1, colors = A:#7BC8A4 B:#5B9884
-      voxels 10B 8(BAAAAAAAAB) 10B
-    `;
-      
-     AFRAME.components["look-controls"].Component.prototype.onTouchMove = function (t) {
-                        let PI_2 = Math.PI/2;
-                        let e = null;
-                        let canvas = this.el.sceneEl.canvas;
-                        let yaw = this.yawObject;
-                        let pitch = this.pitchObject;
-                        if (this.touchStarted && this.data.touchEnabled) {
-                          let deltaX = -2 * Math.PI * (t.touches[0].pageX - this.touchStart.x) / canvas.clientWidth;
-                          let deltaY = -2 * Math.PI * (t.touches[0].pageY - this.touchStart.y) / canvas.clientHeight;
-                          pitch.rotation.x += .3 * deltaY, yaw.rotation.y += .5 * deltaX;
-                          pitch.rotation.x = Math.max(-PI_2, Math.min(PI_2, pitch.rotation.x)); 
-                          this.touchStart = {
-                                x: t.touches[0].pageX,
-                                y: t.touches[0].pageY
-                            };
-                        };
-                     };
+      window.SVOX = { models: {} }
+      window.SVOXReady = false;
+    </script>
 
+    <script type="module">
+      import * as Playground from "./playground.1.2.0.js";
+
+      for (const [k, v] of Object.entries(Playground)) {
+        window[k] = v;
+      }
+
+      window.SVOXReady = true;
+
+      document.querySelector("#base").setAttribute("svox", "model: __base");
     </script>
 
   </head>
@@ -302,7 +219,7 @@
     
       
       <a-entity id="container">  
-        <a-entity id="base" svox="model:__base" shadow></a-entity>
+        <a-entity id="base"  shadow></a-entity>
         <!-- <a-box position="0 0.5 0" material="color:red; opacity:0.25;"></a-box> -->
       </a-entity>
         
@@ -313,7 +230,25 @@
         
    </body>
 
-  <script>
+   <script>
+     AFRAME.components["look-controls"].Component.prototype.onTouchMove = function (t) {
+                        let PI_2 = Math.PI/2;
+                        let e = null;
+                        let canvas = this.el.sceneEl.canvas;
+                        let yaw = this.yawObject;
+                        let pitch = this.pitchObject;
+                        if (this.touchStarted && this.data.touchEnabled) {
+                          let deltaX = -2 * Math.PI * (t.touches[0].pageX - this.touchStart.x) / canvas.clientWidth;
+                          let deltaY = -2 * Math.PI * (t.touches[0].pageY - this.touchStart.y) / canvas.clientHeight;
+                          pitch.rotation.x += .3 * deltaY, yaw.rotation.y += .5 * deltaX;
+                          pitch.rotation.x = Math.max(-PI_2, Math.min(PI_2, pitch.rotation.x)); 
+                          this.touchStart = {
+                                x: t.touches[0].pageX,
+                                y: t.touches[0].pageY
+                            };
+                        };
+                     };
+
     var editor = ace.edit("editor");
     editor.setShowPrintMargin(false);
     editor.session.setMode("ace/mode/text");
@@ -802,8 +737,12 @@ function dot(vec3a, vec3b) { return vec3a.x * vec3b.x + vec3a.y * vec3b.y + vec3
     ];
     
     
-document.querySelector('a-scene').addEventListener('loaded', function() { 
-  
+document.querySelector('a-scene').addEventListener('loaded', async function() { 
+
+    while (!window.SVOXReady) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+
     let parameters = [];
     let temp = location.toString().split('?');
     if (temp.length > 1) {
@@ -898,10 +837,10 @@ let renderTimer = null;
 function onModelChange() {
   if (renderTimer)
     clearTimeout(renderTimer);
-  if (autoRender) {
+  if (getAutoRender()) {
     renderTimer = setTimeout(function() {
       renderTimer = null;
-      if (autoRender)    
+      if (getAutoRender())    
         renderModel();
     }, 500);
   }

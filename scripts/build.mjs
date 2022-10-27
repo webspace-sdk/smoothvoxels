@@ -13,7 +13,7 @@ const buildConfig = {
   bundle: true,
   constants: {},
   entry: 'src/index.js',
-  format: 'iife',
+  format: 'esm',
   minify: true,
   outdir: 'dist',
   sourcemap: false,

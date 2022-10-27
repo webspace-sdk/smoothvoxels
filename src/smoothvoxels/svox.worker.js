@@ -4,7 +4,8 @@ import ModelReader from './modelreader'
 import SvoxMeshGenerator from './svoxmeshgenerator'
 import Buffers from './buffers'
 
-const buffers = new Buffers(384 * 1024)
+// Set based on magicavoxel menger - this is a lot of memory :P
+const buffers = new Buffers(1024 * 768 * 2)
 
 onmessage = function (event) { // eslint-disable-line
   try {
