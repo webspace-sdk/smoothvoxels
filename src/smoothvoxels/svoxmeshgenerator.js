@@ -164,6 +164,7 @@ export default class SvoxMeshGenerator {
     // Add all vertices to the geometry
     model.materials.baseMaterials.forEach(function (baseMaterial) {
       const start = mesh.indicesIndex
+      let hasFaces = false
 
       for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
         const material = materials[faceMaterials[faceIndex]]
@@ -171,12 +172,18 @@ export default class SvoxMeshGenerator {
         // Check for material match and face culling from simplifier
         if (material._baseMaterial === baseMaterial && faceCulled.get(faceIndex) === 0) {
           SvoxMeshGenerator._generateFace(model, buffers, faceIndex, mesh)
+
+          if (!hasFaces) {
+            hasFaces = true
+          }
         }
       }
 
-      // Add the group for this material
-      const end = mesh.indicesIndex
-      mesh.groups.push({ start, count: (end - start), materialIndex: baseMaterial.index })
+      if (hasFaces) {
+        // Add the group for this material
+        const end = mesh.indicesIndex
+        mesh.groups.push({ start, count: (end - start), materialIndex: baseMaterial.index })
+      }
     }, this)
 
     const vertCount = (mesh.maxIndex + 1)
