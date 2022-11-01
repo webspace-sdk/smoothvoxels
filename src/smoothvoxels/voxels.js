@@ -4,7 +4,7 @@ import Bits from './bits'
 // r | (g << 8) | (b << 16) | (type << 24);
 
 const VERSION = 0
-const EMPTY_VOXEL_PALETTE_INDEX = 0
+export const EMPTY_VOXEL_PALETTE_INDEX = 0
 
 // Max size allowed for chunks by default.
 export const MAX_SIZE = 128
