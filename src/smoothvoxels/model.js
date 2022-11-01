@@ -115,6 +115,8 @@ export default class Model {
     const allowDeform = maximumDeformCount > 0
     const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(voxels.size)
 
+    tmpVertIndexLookup.clear()
+
     const materials = this.materials.materials
     const xShift = shiftForSize(voxels.size[0])
     const yShift = shiftForSize(voxels.size[1])
@@ -432,7 +434,7 @@ export default class Model {
         vertScatter[vertIndex] = scatter
       }
     } else {
-      vertIndex = this.vertCount
+      vertIndex = this.vertCount++
       vertIndexLookup.set(key, vertIndex)
 
       vertX[vertIndex] = x
@@ -484,8 +486,6 @@ export default class Model {
       vertColorB[vertColorOffset + vertColorIndex] = vb
       vertColorCount[vertIndex]++
     }
-
-    this.vertCount++
 
     return vertIndex
   }

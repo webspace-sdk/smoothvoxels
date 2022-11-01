@@ -10,7 +10,7 @@ export default class SvoxBufferGeometry extends THREE.BufferGeometry {
   update (svoxMesh, addGroups = true) {
     const { positions, normals, colors, bounds, uvs, data, indices } = svoxMesh
 
-    this.freeAttributeMemory()
+    this.freeMemory()
 
     let boundingBox = this.boundingBox
     let boundingSphere = this.boundingSphere
