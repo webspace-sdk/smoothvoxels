@@ -4,7 +4,7 @@
 
 This is an optimized and npm packaged fork of the [Smooth Voxels](https://svox.glitch.me/) library by Samuel van Egmond.
 
-It has been updated to use Typed Arrays and bitfields which results in a 5x or so speedup. All features from the main project are supported other than Shells.
+It has been updated to use Typed Arrays and bitfields which results in a 5x or so speedup. All features from the main project are supported.
 
 A copy of the Smooth Voxel Playground using this library can be found here:
 
