@@ -10,16 +10,19 @@ export default class SvoxMeshGenerator {
 
     const { nonCulledFaceCount } = model
 
+    const shells = SvoxMeshGenerator._getAllShells(model)
+    const maxShellCount = shells.map(shell => shell.length).reduce((a, b) => Math.max(a, b), 0) + 1
+
     const mesh = {
       materials: [],
       groups: [],
-      indices: new Uint32Array(nonCulledFaceCount * 4 * 6),
+      indices: new Uint32Array(nonCulledFaceCount * 4 * 6 * maxShellCount),
       indicesIndex: 0,
       maxIndex: -1,
-      positions: new Float32Array(nonCulledFaceCount * 4 * 3),
-      normals: new Float32Array(nonCulledFaceCount * 4 * 3),
-      colors: new Float32Array(nonCulledFaceCount * 4 * 3),
-      uvs: new Float32Array(nonCulledFaceCount * 4 * 2),
+      positions: new Float32Array(nonCulledFaceCount * 4 * 3 * maxShellCount),
+      normals: new Float32Array(nonCulledFaceCount * 4 * 3 * maxShellCount),
+      colors: new Float32Array(nonCulledFaceCount * 4 * 3 * maxShellCount),
+      uvs: new Float32Array(nonCulledFaceCount * 4 * 2 * maxShellCount),
       data: null
     }
 
@@ -44,7 +47,7 @@ export default class SvoxMeshGenerator {
 
     // t0 = performance.now()
     vertCache.clear()
-    SvoxMeshGenerator._generateAll(model, mesh, buffers)
+    SvoxMeshGenerator._generateAll(model, mesh, buffers, shells)
     // console.log('Mesh generation took ' + (performance.now() - t0) + ' ms')
 
     return mesh
@@ -157,9 +160,13 @@ export default class SvoxMeshGenerator {
     return material
   }
 
-  static _generateAll (model, mesh, buffers) {
+  static _generateAll (model, mesh, buffers, shells) {
     const materials = model.materials.materials
     const { faceMaterials, faceCulled } = buffers
+
+    const modelScaleX = model.scale.x
+    const modelScaleY = model.scale.y
+    const modelScaleZ = model.scale.z
 
     // Add all vertices to the geometry
     model.materials.baseMaterials.forEach(function (baseMaterial) {
@@ -167,14 +174,29 @@ export default class SvoxMeshGenerator {
       let hasFaces = false
 
       for (let faceIndex = 0, c = model.faceCount; faceIndex < c; faceIndex++) {
-        const material = materials[faceMaterials[faceIndex]]
-
         // Check for material match and face culling from simplifier
-        if (material._baseMaterial === baseMaterial && faceCulled.get(faceIndex) === 0) {
+        if (faceCulled.get(faceIndex) !== 0) continue
+        const faceMaterialIndex = faceMaterials[faceIndex]
+        const faceMaterial = materials[faceMaterialIndex]
+
+        if (faceMaterial._baseMaterial === baseMaterial) {
           SvoxMeshGenerator._generateFace(model, buffers, faceIndex, mesh)
 
           if (!hasFaces) {
             hasFaces = true
+          }
+        }
+
+        for (let i = 0, l = shells.length; i < l; i++) {
+          const [voxMaterial, shellMaterial, shellDistance, shellR, shellG, shellB] = shells[i]
+
+          if (shellMaterial._baseMaterial === baseMaterial &&
+              voxMaterial === faceMaterial) {
+            SvoxMeshGenerator._generateShellFace(model, buffers, faceIndex, mesh, shellDistance * modelScaleX, shellDistance * modelScaleY, shellDistance * modelScaleZ, shellR, shellG, shellB, shellMaterial, modelScaleX, modelScaleY, modelScaleZ)
+
+            if (!hasFaces) {
+              hasFaces = true
+            }
           }
         }
       }
@@ -453,4 +475,349 @@ export default class SvoxMeshGenerator {
 
     mesh.indicesIndex += 6
   }
+
+  static _generateShellFace (model, buffers, faceIndex, mesh, distanceX, distanceY, distanceZ, colorR, colorG, colorB, material) {
+    const { faceVertIndices, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, vertX, vertY, vertZ, faceVertColorR, faceVertColorG, faceVertColorB, faceVertUs, faceVertVs, faceSmooth } = buffers
+
+    const vert0Index = faceVertIndices[faceIndex * 4]
+    const vert1Index = faceVertIndices[faceIndex * 4 + 1]
+    const vert2Index = faceVertIndices[faceIndex * 4 + 2]
+    const vert3Index = faceVertIndices[faceIndex * 4 + 3]
+
+    let vert0X = vertX[vert0Index]
+    let vert0Y = vertY[vert0Index]
+    let vert0Z = vertZ[vert0Index]
+    let vert1X = vertX[vert1Index]
+    let vert1Y = vertY[vert1Index]
+    let vert1Z = vertZ[vert1Index]
+    let vert2X = vertX[vert2Index]
+    let vert2Y = vertY[vert2Index]
+    let vert2Z = vertZ[vert2Index]
+    let vert3X = vertX[vert3Index]
+    let vert3Y = vertY[vert3Index]
+    let vert3Z = vertZ[vert3Index]
+
+    let shellDirection0X = faceVertSmoothNormalX[faceIndex * 4]
+    let shellDirection0Y = faceVertSmoothNormalY[faceIndex * 4]
+    let shellDirection0Z = faceVertSmoothNormalZ[faceIndex * 4]
+    const shellDirection1X = faceVertSmoothNormalX[faceIndex * 4 + 1]
+    const shellDirection1Y = faceVertSmoothNormalY[faceIndex * 4 + 1]
+    const shellDirection1Z = faceVertSmoothNormalZ[faceIndex * 4 + 1]
+    let shellDirection2X = faceVertSmoothNormalX[faceIndex * 4 + 2]
+    let shellDirection2Y = faceVertSmoothNormalY[faceIndex * 4 + 2]
+    let shellDirection2Z = faceVertSmoothNormalZ[faceIndex * 4 + 2]
+    const shellDirection3X = faceVertSmoothNormalX[faceIndex * 4 + 3]
+    const shellDirection3Y = faceVertSmoothNormalY[faceIndex * 4 + 3]
+    const shellDirection3Z = faceVertSmoothNormalZ[faceIndex * 4 + 3]
+
+    let norm0X, norm0Y, norm0Z, norm1X, norm1Y, norm1Z, norm2X, norm2Y, norm2Z, norm3X, norm3Y, norm3Z
+
+    const smooth = faceSmooth.get(faceIndex) === 1
+
+    switch (material.lighting) {
+      case SMOOTH:
+        norm0X = faceVertSmoothNormalX[faceIndex * 4]
+        norm0Y = faceVertSmoothNormalY[faceIndex * 4]
+        norm0Z = faceVertSmoothNormalZ[faceIndex * 4]
+        norm1X = faceVertSmoothNormalX[faceIndex * 4 + 1]
+        norm1Y = faceVertSmoothNormalY[faceIndex * 4 + 1]
+        norm1Z = faceVertSmoothNormalZ[faceIndex * 4 + 1]
+        norm2X = faceVertSmoothNormalX[faceIndex * 4 + 2]
+        norm2Y = faceVertSmoothNormalY[faceIndex * 4 + 2]
+        norm2Z = faceVertSmoothNormalZ[faceIndex * 4 + 2]
+        norm3X = faceVertSmoothNormalX[faceIndex * 4 + 3]
+        norm3Y = faceVertSmoothNormalY[faceIndex * 4 + 3]
+        norm3Z = faceVertSmoothNormalZ[faceIndex * 4 + 3]
+        break
+      case BOTH:
+        if (smooth) {
+          norm0X = faceVertBothNormalX[faceIndex * 4]
+          norm0Y = faceVertBothNormalY[faceIndex * 4]
+          norm0Z = faceVertBothNormalZ[faceIndex * 4]
+          norm1X = faceVertBothNormalX[faceIndex * 4 + 1]
+          norm1Y = faceVertBothNormalY[faceIndex * 4 + 1]
+          norm1Z = faceVertBothNormalZ[faceIndex * 4 + 1]
+          norm2X = faceVertBothNormalX[faceIndex * 4 + 2]
+          norm2Y = faceVertBothNormalY[faceIndex * 4 + 2]
+          norm2Z = faceVertBothNormalZ[faceIndex * 4 + 2]
+          norm3X = faceVertBothNormalX[faceIndex * 4 + 3]
+          norm3Y = faceVertBothNormalY[faceIndex * 4 + 3]
+          norm3Z = faceVertBothNormalZ[faceIndex * 4 + 3]
+        } else {
+          norm0X = faceVertFlatNormalX[faceIndex * 4]
+          norm0Y = faceVertFlatNormalY[faceIndex * 4]
+          norm0Z = faceVertFlatNormalZ[faceIndex * 4]
+          norm1X = faceVertFlatNormalX[faceIndex * 4 + 1]
+          norm1Y = faceVertFlatNormalY[faceIndex * 4 + 1]
+          norm1Z = faceVertFlatNormalZ[faceIndex * 4 + 1]
+          norm2X = faceVertFlatNormalX[faceIndex * 4 + 2]
+          norm2Y = faceVertFlatNormalY[faceIndex * 4 + 2]
+          norm2Z = faceVertFlatNormalZ[faceIndex * 4 + 2]
+          norm3X = faceVertFlatNormalX[faceIndex * 4 + 3]
+          norm3Y = faceVertFlatNormalY[faceIndex * 4 + 3]
+          norm3Z = faceVertFlatNormalZ[faceIndex * 4 + 3]
+        }
+
+        break
+      default:
+        norm0X = faceVertFlatNormalX[faceIndex * 4]
+        norm0Y = faceVertFlatNormalY[faceIndex * 4]
+        norm0Z = faceVertFlatNormalZ[faceIndex * 4]
+        norm1X = faceVertFlatNormalX[faceIndex * 4 + 1]
+        norm1Y = faceVertFlatNormalY[faceIndex * 4 + 1]
+        norm1Z = faceVertFlatNormalZ[faceIndex * 4 + 1]
+        norm2X = faceVertFlatNormalX[faceIndex * 4 + 2]
+        norm2Y = faceVertFlatNormalY[faceIndex * 4 + 2]
+        norm2Z = faceVertFlatNormalZ[faceIndex * 4 + 2]
+        norm3X = faceVertFlatNormalX[faceIndex * 4 + 3]
+        norm3Y = faceVertFlatNormalY[faceIndex * 4 + 3]
+        norm3Z = faceVertFlatNormalZ[faceIndex * 4 + 3]
+        break
+    }
+
+    let uv0U = faceVertUs[faceIndex * 4]
+    let uv0V = faceVertVs[faceIndex * 4]
+    const uv1U = faceVertUs[faceIndex * 4 + 1]
+    const uv1V = faceVertVs[faceIndex * 4 + 1]
+    let uv2U = faceVertUs[faceIndex * 4 + 2]
+    let uv2V = faceVertVs[faceIndex * 4 + 2]
+    const uv3U = faceVertUs[faceIndex * 4 + 3]
+    const uv3V = faceVertVs[faceIndex * 4 + 3]
+
+    if (material.side === BACK) {
+      let swapX, swapY, swapZ
+
+      swapX = vert0X; swapY = vert0Y; swapZ = vert0Z
+      vert0X = vert2X; vert0Y = vert2Y; vert0Z = vert2Z
+      vert2X = swapX; vert2Y = swapY; vert2Z = swapZ
+
+      swapX = norm0X; swapY = norm0Y; swapZ = norm0Z
+      norm0X = norm2X; norm0Y = norm2Y; norm0Z = norm2Z
+      norm2X = swapX; norm2Y = swapY; norm2Z = swapZ
+
+      swapX = uv0U; swapY = uv0V
+      uv0U = uv2U; uv0V = uv2V
+      uv2U = swapX; uv2V = swapY
+
+      swapX = shellDirection0X; swapY = shellDirection0Y; swapZ = shellDirection0Z
+      shellDirection0X = shellDirection2X; shellDirection0Y = shellDirection2Y; shellDirection0Z = shellDirection2Z
+      shellDirection2X = swapX; shellDirection2Y = swapY; shellDirection2Z = swapZ
+    }
+
+    // Push out the vertices according to the average normals
+    vert0X += distanceX * shellDirection0X
+    vert0Y += distanceY * shellDirection0Y
+    vert0Z += distanceZ * shellDirection0Z
+    vert1X += distanceX * shellDirection1X
+    vert1Y += distanceY * shellDirection1Y
+    vert1Z += distanceZ * shellDirection1Z
+    vert2X += distanceX * shellDirection2X
+    vert2Y += distanceY * shellDirection2Y
+    vert2Z += distanceZ * shellDirection2Z
+    vert3X += distanceX * shellDirection3X
+    vert3Y += distanceY * shellDirection3Y
+    vert3Z += distanceZ * shellDirection3Z
+
+    if (!(material.lighting === SMOOTH || (material.lighting === BOTH && smooth))) {
+      // Average the normals to get the flat normals
+      let normFace1X = norm2X + norm1X + norm0X
+      let normFace1Y = norm2Y + norm1Y + norm0Y
+      let normFace1Z = norm2Z + norm1Z + norm0Z
+      let normFace2X = norm0X + norm3X + norm2X
+      let normFace2Y = norm0Y + norm3Y + norm2Y
+      let normFace2Z = norm0Z + norm3Z + norm2Z
+
+      const normFace1Length = Math.sqrt(normFace1X * normFace1X + normFace1Y * normFace1Y + normFace1Z * normFace1Z)
+      const normFace2Length = Math.sqrt(normFace2X * normFace2X + normFace2Y * normFace2Y + normFace2Z * normFace2Z)
+
+      const normFace1LengthInv = 1 / normFace1Length
+      const normFace2LengthInv = 1 / normFace2Length
+
+      normFace1X *= normFace1LengthInv
+      normFace1Y *= normFace1LengthInv
+      normFace1Z *= normFace1LengthInv
+      normFace2X *= normFace2LengthInv
+      normFace2Y *= normFace2LengthInv
+      normFace2Z *= normFace2LengthInv
+
+      // Average the normals to get the flat normals
+      if (material.lighting === QUAD) {
+        const combinedFaceLength = Math.sqrt(normFace1X * normFace1X + normFace1Y * normFace1Y + normFace1Z * normFace1Z) + Math.sqrt(normFace2X * normFace2X + normFace2Y * normFace2Y + normFace2Z * normFace2Z)
+        const combinedFaceLengthInv = 1 / combinedFaceLength
+
+        normFace1X = normFace2X = (normFace1X + normFace2X) * combinedFaceLengthInv
+        normFace1Y = normFace2Y = (normFace1Y + normFace2Y) * combinedFaceLengthInv
+        normFace1Z = normFace2Z = (normFace1Z + normFace2Z) * combinedFaceLengthInv
+      }
+
+      // Note: because of indices, this code when migrated has the wrong FLAT norm for the first and last vert of face 2
+      // For now, just use QUAD
+      norm0X = normFace1X
+      norm0Y = normFace1Y
+      norm0Z = normFace1Z
+      norm1X = normFace1X
+      norm1Y = normFace1Y
+      norm1Z = normFace1Z
+      norm2X = normFace1X
+      norm2Y = normFace1Y
+      norm2Z = normFace1Z
+      norm3X = normFace2X
+      norm3Y = normFace2Y
+      norm3Z = normFace2Z
+    }
+
+    const indices = mesh.indices
+    const positions = mesh.positions
+    const normals = mesh.normals
+    const colors = mesh.colors
+    const uvs = mesh.uvs
+
+    // UVs need to be rounded since left and right side are usually off by a bit
+    const vert0Key = vert0X * 3 + vert0Y * 61673 + vert0Z * 87119 + norm0X * 2766691 + norm0Y * 73091 + norm0Z * 5040949 + colorR * 8636137 + colorG * 2360719 + colorB * 4739729 + Math.round(uv0U * 1000) * 719959 + Math.round(uv0V * 1000) * 172741
+    const vert1Key = vert1X * 3 + vert1Y * 61673 + vert1Z * 87119 + norm1X * 2766691 + norm1Y * 73091 + norm1Z * 5040949 + colorR * 8636137 + colorG * 2360719 + colorB * 4739729 + Math.round(uv1U * 1000) * 719959 + Math.round(uv1V * 1000) * 172741
+    const vert2Key = vert2X * 3 + vert2Y * 61673 + vert2Z * 87119 + norm2X * 2766691 + norm2Y * 73091 + norm2Z * 5040949 + colorR * 8636137 + colorG * 2360719 + colorB * 4739729 + Math.round(uv2U * 1000) * 719959 + Math.round(uv2V * 1000) * 172741
+    const vert3Key = vert3X * 3 + vert3Y * 61673 + vert3Z * 87119 + norm3X * 2766691 + norm3Y * 73091 + norm3Z * 5040949 + colorR * 8636137 + colorG * 2360719 + colorB * 4739729 + Math.round(uv3U * 1000) * 719959 + Math.round(uv3V * 1000) * 172741
+
+    const hasVert0 = vertCache.has(vert0Key)
+    const hasVert1 = vertCache.has(vert1Key)
+    const hasVert2 = vertCache.has(vert2Key)
+    const hasVert3 = vertCache.has(vert3Key)
+
+    let vert0Idx, vert1Idx, vert2Idx, vert3Idx
+
+    if (hasVert0) {
+      vert0Idx = vertCache.get(vert0Key)
+    } else {
+      vert0Idx = mesh.maxIndex + 1
+      const offset30 = vert0Idx * 3
+      const offset31 = offset30 + 1
+      const offset32 = offset30 + 2
+      const offset20 = vert0Idx * 2
+      const offset21 = offset20 + 1
+      mesh.maxIndex = vert0Idx
+      positions[offset30] = vert0X
+      positions[offset31] = vert0Y
+      positions[offset32] = vert0Z
+      normals[offset30] = norm0X
+      normals[offset31] = norm0Y
+      normals[offset32] = norm0Z
+      colors[offset30] = colorR
+      colors[offset31] = colorG
+      colors[offset32] = colorB
+      uvs[offset20] = uv0U
+      uvs[offset21] = uv0V
+      vertCache.set(vert0Key, vert0Idx)
+    }
+
+    if (hasVert1) {
+      vert1Idx = vertCache.get(vert1Key)
+    } else {
+      vert1Idx = mesh.maxIndex + 1
+      const offset30 = vert1Idx * 3
+      const offset31 = offset30 + 1
+      const offset32 = offset30 + 2
+      const offset20 = vert1Idx * 2
+      const offset21 = offset20 + 1
+      mesh.maxIndex = vert1Idx
+      positions[offset30] = vert1X
+      positions[offset31] = vert1Y
+      positions[offset32] = vert1Z
+      normals[offset30] = norm1X
+      normals[offset31] = norm1Y
+      normals[offset32] = norm1Z
+      colors[offset30] = colorR
+      colors[offset31] = colorG
+      colors[offset32] = colorB
+      uvs[offset20] = uv1U
+      uvs[offset21] = uv1V
+      vertCache.set(vert1Key, vert1Idx)
+    }
+
+    if (hasVert2) {
+      vert2Idx = vertCache.get(vert2Key)
+    } else {
+      vert2Idx = mesh.maxIndex + 1
+      const offset30 = vert2Idx * 3
+      const offset31 = offset30 + 1
+      const offset32 = offset30 + 2
+      const offset20 = vert2Idx * 2
+      const offset21 = offset20 + 1
+      mesh.maxIndex = vert2Idx
+      positions[offset30] = vert2X
+      positions[offset31] = vert2Y
+      positions[offset32] = vert2Z
+      normals[offset30] = norm2X
+      normals[offset31] = norm2Y
+      normals[offset32] = norm2Z
+      colors[offset30] = colorR
+      colors[offset31] = colorG
+      colors[offset32] = colorB
+      uvs[offset20] = uv2U
+      uvs[offset21] = uv2V
+      vertCache.set(vert2Key, vert2Idx)
+    }
+
+    if (hasVert3) {
+      vert3Idx = vertCache.get(vert3Key)
+    } else {
+      vert3Idx = mesh.maxIndex + 1
+      const offset30 = vert3Idx * 3
+      const offset31 = offset30 + 1
+      const offset32 = offset30 + 2
+      const offset20 = vert3Idx * 2
+      const offset21 = offset20 + 1
+      mesh.maxIndex = vert3Idx
+      positions[offset30] = vert3X
+      positions[offset31] = vert3Y
+      positions[offset32] = vert3Z
+      normals[offset30] = norm3X
+      normals[offset31] = norm3Y
+      normals[offset32] = norm3Z
+      colors[offset30] = colorR
+      colors[offset31] = colorG
+      colors[offset32] = colorB
+      uvs[offset20] = uv3U
+      uvs[offset21] = uv3V
+      vertCache.set(vert3Key, vert3Idx)
+    }
+
+    const iIdx = mesh.indicesIndex
+
+    // Face 1
+    indices[iIdx] = vert2Idx
+    indices[iIdx + 1] = vert1Idx
+    indices[iIdx + 2] = vert0Idx
+
+    // Face 2
+    indices[iIdx + 3] = vert0Idx
+    indices[iIdx + 4] = vert3Idx
+    indices[iIdx + 5] = vert2Idx
+
+    mesh.indicesIndex += 6
+  }
+
+  static _getAllShells (model) {
+    const shells = []
+
+    model.materials.forEach(function (material) {
+      let shell
+      if (model.shell && model.shell.length > 0 && !material.shell) { shell = model.shell }
+      if (material.shell && material.shell.length > 0) { shell = material.shell }
+
+      if (shell) {
+        shell.forEach(function (sh) {
+          const voxBgr = sh.voxBgr
+          const b = ((voxBgr >> 16) & 0xff) / 255.0
+          const g = ((voxBgr >> 8) & 0xff) / 255.0
+          const r = ((voxBgr >> 0) & 0xff) / 255.0
+
+          shells.push([material, model.materials.materials[sh.materialIndex], sh.distance, r, g, b])
+        }, this)
+      }
+    }, this)
+
+    shells.sort((a, b) => a[1] - b[1])
+
+    return shells
+  };
 }
