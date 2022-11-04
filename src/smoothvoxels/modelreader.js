@@ -174,10 +174,10 @@ export default class ModelReader {
     }
 
     // Find the color (& material) for the shell(s)
-    // this._resolveShellColors(model.shell, model)
-    // model.materials.forEach(function (material) {
-    //   this._resolveShellColors(material.shell, model)
-    // }, this)
+    this._resolveShellColors(model.shell, model, colorIdToVoxBgr, colorIdToMaterialIndex)
+    model.materials.forEach(function (material) {
+      this._resolveShellColors(material.shell, model, colorIdToVoxBgr, colorIdToMaterialIndex)
+    }, this)
 
     // Create all voxels
     this._createVoxels(model, modelData.voxels, colorIdToVoxBgr, colorIdToMaterialIndex)
@@ -522,14 +522,15 @@ export default class ModelReader {
      * @param {object} shell The shell array containing objects with containing colorId and distance
      * @param {object} model The shell object containing colorId and distance
      */
-  static _resolveShellColors (shell, model) {
+  static _resolveShellColors (shell, model, colorIdToVoxBgr, colorIdToMaterialIndex) {
     if (!shell || shell.length === 0) { return }
 
     shell.forEach(function (sh) {
-      sh.color = model.colors[sh.colorId]
-      if (!sh.color) {
+      if (!colorIdToVoxBgr.has(sh.colorId)) {
         throw new Error(`SyntaxError: shell color ID '${sh.colorId}' is not a known color`)
       }
+      sh.voxBgr = colorIdToVoxBgr.get(sh.colorId)
+      sh.materialIndex = colorIdToMaterialIndex.get(sh.colorId)
     }, this)
   }
 
