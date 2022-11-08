@@ -37,10 +37,10 @@ export default class ModelReader {
      * @param {any} modelString The string containing the model.
      * @returns {Model} The model.
      */
-  static readFromString (modelString) {
+  static readFromString (modelString, extraOptionalModelFields = {}) {
     const modelData = this._parse(modelString)
-    this._validateModel(modelData)
-    return this._createModel(modelData)
+    this._validateModel(modelData, extraOptionalModelFields)
+    return this._createModel(modelData, extraOptionalModelFields)
   }
 
   /**
@@ -112,7 +112,7 @@ export default class ModelReader {
      * @param {object} modelData The simple object from the parsed model string.
      * @returns {Model} The model class with its properties, materials and voxels.
      */
-  static _createModel (modelData) {
+  static _createModel (modelData, extraOptionalModelFields) {
     const model = new Model()
 
     model.size = this._parseXYZInt('size', modelData.size, null, true)
@@ -181,6 +181,33 @@ export default class ModelReader {
 
     // Create all voxels
     this._createVoxels(model, modelData.voxels, colorIdToVoxBgr, colorIdToMaterialIndex)
+
+    if (extraOptionalModelFields) {
+      for (const [field, type] of Object.entries(extraOptionalModelFields)) {
+        if (modelData[field]) {
+          switch (type) {
+            case 'int':
+              model[field] = parseInt(modelData[field], 10)
+              break
+
+            case 'float':
+              model[field] = parseFloat(modelData[field])
+              break
+
+            case 'string':
+              model[field] = modelData[field]
+              break
+
+            case 'boolean':
+              model[field] = modelData[field] === 'true'
+              break
+
+            default:
+              throw new Error(`Unknown type ${type} for field ${field}`)
+          }
+        }
+      }
+    }
 
     return model
   }
@@ -778,8 +805,8 @@ export default class ModelReader {
      * Check whether properties are missing or unrecognized from the model data.
      * @param {object} modelData The simple object from the parsed model string.
      */
-  static _validateModel (modelData) {
-    this._validateProperties(modelData, MANDATORY_MODEL_FIELDS, OPTIONAL_MODEL_FIELDS, 'model')
+  static _validateModel (modelData, extraOptionalModelFields) {
+    this._validateProperties(modelData, MANDATORY_MODEL_FIELDS, [...Object.keys(extraOptionalModelFields), ...OPTIONAL_MODEL_FIELDS], 'model')
 
     for (const lightData of modelData.lights) {
       this._validateLight(lightData)
