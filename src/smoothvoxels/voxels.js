@@ -6,7 +6,7 @@ import Bits from './bits'
 const VERSION = 0
 export const EMPTY_VOXEL_PALETTE_INDEX = 0
 
-// Max size allowed for chunks by default.
+// Max size allowed for voxels by default.
 export const MAX_SIZE = 128
 
 /* version, size x, y, z, 3x reserved */
@@ -16,13 +16,13 @@ const VOXEL_TYPE_DIFFUSE = 0x00
 
 // Used in ops, this voxel should be removed.
 const VOXEL_TYPE_REMOVE = 0xff
-const REMOVE_VOXEL_COLOR = (VOXEL_TYPE_REMOVE << 24) >>> 0
+export const REMOVE_VOXEL_COLOR = (VOXEL_TYPE_REMOVE << 24) >>> 0
 
-const VOX_CHUNK_FILTERS = {
+const VOXEL_FILTERS = {
   NONE: 0,
-  // Filters out cells in the provided chunk that are not also in the target chunk
+  // Filters out cells in the provided voxels that are not also in the target voxels
   PAINT: 1,
-  // Filters out cells in the provided chunk that are in the target chunk
+  // Filters out cells in the provided voxels that are in the target voxels
   KEEP: 2
 }
 
@@ -286,10 +286,10 @@ export default class Voxels {
     return this.palette[(idx - RESERVED_PALETTE_INDEXES) * PALETTE_ENTRY_SIZE_INTS]
   }
 
-  filterByChunk (targetChunk, offsetX, offsetY, offsetZ, filter) {
-    if (filter === VOX_CHUNK_FILTERS.NONE) return
+  filterByVoxels (targetVoxels, offsetX, offsetY, offsetZ, filter) {
+    if (filter === VOXEL_FILTERS.NONE) return
 
-    const targetSize = targetChunk.size
+    const targetSize = targetVoxels.size
     const [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize)
 
     const { size } = this
@@ -315,11 +315,11 @@ export default class Voxels {
             targetZ > targetMaxZ ||
             targetZ < targetMinZ
 
-          const targetHasVoxel = !targetOutOfRange && targetChunk.hasVoxelAt(targetX, targetY, targetZ)
+          const targetHasVoxel = !targetOutOfRange && targetVoxels.hasVoxelAt(targetX, targetY, targetZ)
 
           if (
-            (filter === VOX_CHUNK_FILTERS.PAINT && !targetHasVoxel) ||
-            (filter === VOX_CHUNK_FILTERS.KEEP && targetHasVoxel)
+            (filter === VOXEL_FILTERS.PAINT && !targetHasVoxel) ||
+            (filter === VOXEL_FILTERS.KEEP && targetHasVoxel)
           ) {
             this.setEmptyAt(x, y, z)
           }
@@ -375,12 +375,12 @@ export default class Voxels {
     this.resizeTo([sx, sy, sz])
   }
 
-  // Resizes this chunk to the specified size.
+  // Resizes this voxels to the specified size.
   resizeTo (size) {
     if (this.size[0] >= size[0] && this.size[1] >= size[1] && this.size[2] >= size[2]) return
 
-    // Create a new chunk and cpoy this chunk into it.
-    const chunk = new Voxels(size)
+    // Create a new voxels and cpoy these voxels into it.
+    const voxels = new Voxels(size)
     const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(this.size)
 
     for (let x = minX; x <= maxX; x += 1) {
@@ -389,23 +389,23 @@ export default class Voxels {
           const idx = this.getPaletteIndexAt(x, y, z)
 
           if (idx !== 0) {
-            chunk.setColorAt(x, y, z, this.getColorAt(x, y, z))
+            voxels.setColorAt(x, y, z, this.getColorAt(x, y, z))
           }
         }
       }
     }
 
-    // Reach in and grab buffer from the new chunk and assign it to this chunk.
-    const { buffer } = chunk.palette;
+    // Reach in and grab buffer from the new voxels and assign it to this voxels.
+    const { buffer } = voxels.palette;
     [this.size[0], this.size[1], this.size[2]] = size
-    const { bitsPerIndex } = chunk
+    const { bitsPerIndex } = voxels
     this.bitsPerIndex = bitsPerIndex
 
     const [, palette, indices] = createViewsForBitsPerIndex(size, bitsPerIndex, buffer)
 
     this.palette = palette
     this.indices = indices
-    this._refCounts = chunk._refCounts
+    this._refCounts = voxels._refCounts
     this._recomputeSizeFieldsForBuffer(buffer)
   }
 
@@ -414,7 +414,7 @@ export default class Voxels {
 
     const { size, palette, indices } = json
     // Slow, only use for tests + debugging
-    const chunk = new Voxels(size)
+    const voxels = new Voxels(size)
 
     // Set colors in palette order, so palette ends up matching order specified.
     for (let i = 0; i < palette.length + RESERVED_PALETTE_INDEXES; i += 1) {
@@ -424,15 +424,15 @@ export default class Voxels {
         if (paletteIndex === i) {
           if (paletteIndex >= RESERVED_PALETTE_INDEXES) {
             const color = palette[paletteIndex - RESERVED_PALETTE_INDEXES]
-            chunk.setColorAtOffset(j, color)
+            voxels.setColorAtOffset(j, color)
           } else if (paletteIndex === i) {
-            chunk.setPaletteIndexAtOffset(j, paletteIndex)
+            voxels.setPaletteIndexAtOffset(j, paletteIndex)
           }
         }
       }
     }
 
-    return chunk
+    return voxels
   }
 
   toJSON (arg, readable) {
@@ -493,10 +493,10 @@ export default class Voxels {
     }
   }
 
-  applyToChunk (targetChunk, offsetX = 0, offsetY = 0, offsetZ = 0) {
+  applyToVoxels (targetVoxels, offsetX = 0, offsetY = 0, offsetZ = 0) {
     iPalOpToIPalSnap.clear()
 
-    let targetSize = targetChunk.size
+    let targetSize = targetVoxels.size
     let [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize)
 
     const { size } = this
@@ -518,7 +518,7 @@ export default class Voxels {
             let requiredSizeY = targetSize[1]
             let requiredSizeZ = targetSize[2]
 
-            // Check for chunk resize
+            // Check for voxels resize
             // If target we need to write to is out of range, resize frame.
             if (targetX > targetMaxX) {
               requiredSizeX = targetX * 2
@@ -550,8 +550,8 @@ export default class Voxels {
             }
 
             if (targetSize[0] < requiredSizeX || targetSize[1] < requiredSizeY || targetSize[2] < requiredSizeZ) {
-              targetChunk.resizeTo([requiredSizeX, requiredSizeY, requiredSizeZ])
-              targetSize = targetChunk.size;
+              targetVoxels.resizeTo([requiredSizeX, requiredSizeY, requiredSizeZ])
+              targetSize = targetVoxels.size;
 
               [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize)
 
@@ -566,18 +566,18 @@ export default class Voxels {
 
               if (color === REMOVE_VOXEL_COLOR) {
                 // For remove, set target to empty cell
-                targetChunk.setEmptyAt(targetX, targetY, targetZ)
+                targetVoxels.setEmptyAt(targetX, targetY, targetZ)
               } else {
                 // Otherwise, set the color and potentially expand target palette.
-                const iPalSnap = targetChunk.setColorAt(targetX, targetY, targetZ, color)
+                const iPalSnap = targetVoxels.setColorAt(targetX, targetY, targetZ, color)
 
                 iPalOpToIPalSnap.set(iPalOp, iPalSnap)
               }
             } else {
-              const currentIPalSnap = targetChunk.getPaletteIndexAt(targetX, targetY, targetZ)
+              const currentIPalSnap = targetVoxels.getPaletteIndexAt(targetX, targetY, targetZ)
 
               if (currentIPalSnap !== newIPalSnap) {
-                targetChunk.setPaletteIndexAt(targetX, targetY, targetZ, newIPalSnap)
+                targetVoxels.setPaletteIndexAt(targetX, targetY, targetZ, newIPalSnap)
               }
             }
           }
@@ -586,10 +586,10 @@ export default class Voxels {
     }
   }
 
-  createInverse = (targetChunk, offset) => {
+  createInverse = (targetVoxels, offset) => {
     iPalOpToIPalSnap.clear()
 
-    const targetSize = targetChunk.size
+    const targetSize = targetVoxels.size
     const [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize)
 
     const { size } = this
@@ -616,11 +616,11 @@ export default class Voxels {
             targetY < targetMinY ||
             targetZ > targetMaxZ ||
             targetZ < targetMinZ ||
-            !targetChunk.hasVoxelAt(targetX, targetY, targetZ)
+            !targetVoxels.hasVoxelAt(targetX, targetY, targetZ)
           ) {
             inverse.setColorAt(x, y, z, REMOVE_VOXEL_COLOR)
           } else {
-            const currentColor = targetChunk.getColorAt(targetX, targetY, targetZ)
+            const currentColor = targetVoxels.getColorAt(targetX, targetY, targetZ)
             inverse.setColorAt(x, y, z, currentColor)
           }
         }
@@ -630,10 +630,10 @@ export default class Voxels {
     return inverse
   }
 
-  // Given the target chunk, merge this chunk with it, where the merge operation resolves cell-level
+  // Given the target voxels, merge this voxels with it, where the merge operation resolves cell-level
   // conflicts by removing voxels of this patch. If targetAlwaysWins is true, then any voxel in the target
-  // chunk will be removed from this patch, otherwise it will be removed if the target has a higher value.
-  mergeWith (targetChunk, offset, targetOffset, targetAlwaysWins = false) {
+  // voxels will be removed from this patch, otherwise it will be removed if the target has a higher value.
+  mergeWith (targetVoxels, offset, targetOffset, targetAlwaysWins = false) {
     iPalOpToIPalSnap.clear()
 
     // Cache of palette index -> palette index tie breaking
@@ -643,7 +643,7 @@ export default class Voxels {
     const offsetY = targetOffset[1] - offset[1]
     const offsetZ = targetOffset[2] - offset[2]
 
-    const targetSize = targetChunk.size
+    const targetSize = targetVoxels.size
     const [targetMinX, targetMaxX, targetMinY, targetMaxY, targetMinZ, targetMaxZ] = xyzRangeForSize(targetSize)
 
     const { size } = this
@@ -668,7 +668,7 @@ export default class Voxels {
             targetZ > targetMaxZ ||
             targetZ < targetMinZ
 
-          const targetHasVoxel = !targetOutOfRange && targetChunk.hasVoxelAt(targetX, targetY, targetZ)
+          const targetHasVoxel = !targetOutOfRange && targetVoxels.hasVoxelAt(targetX, targetY, targetZ)
 
           // If the target doesn't have a voxel here, no chance of a conflict
           if (!targetHasVoxel) continue
@@ -679,7 +679,7 @@ export default class Voxels {
           } else {
             // We tie break on the highest color between the two. If the other one has a higher color, then
             // just remove this voxel from this patch.
-            if (targetAlwaysWins || targetChunk.getColorAt(targetX, targetY, targetZ) > this.getColorAt(x, y, z)) {
+            if (targetAlwaysWins || targetVoxels.getColorAt(targetX, targetY, targetZ) > this.getColorAt(x, y, z)) {
               this.removeVoxelAt(x, y, z)
             }
 
