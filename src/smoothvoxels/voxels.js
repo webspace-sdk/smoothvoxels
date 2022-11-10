@@ -464,9 +464,9 @@ export default class Voxels {
   clone () {
     return new Voxels(
       this.size,
+      this.bitsPerIndex,
       this.palette.buffer.slice(0),
       this.indices.view.buffer.slice(0),
-      this.bitsPerIndex,
       this.palette.byteOffset,
       this.palette.byteLength,
       this.indices.view.byteOffset,

@@ -37,10 +37,10 @@ export default class ModelReader {
      * @param {any} modelString The string containing the model.
      * @returns {Model} The model.
      */
-  static readFromString (modelString, extraOptionalModelFields = {}) {
+  static readFromString (modelString, extraOptionalModelFields = {}, skipVoxels = false) {
     const modelData = this._parse(modelString)
     this._validateModel(modelData, extraOptionalModelFields)
-    return this._createModel(modelData, extraOptionalModelFields)
+    return this._createModel(modelData, extraOptionalModelFields, skipVoxels)
   }
 
   /**
@@ -112,7 +112,7 @@ export default class ModelReader {
      * @param {object} modelData The simple object from the parsed model string.
      * @returns {Model} The model class with its properties, materials and voxels.
      */
-  static _createModel (modelData, extraOptionalModelFields) {
+  static _createModel (modelData, extraOptionalModelFields, skipVoxels) {
     const model = new Model()
 
     model.size = this._parseXYZInt('size', modelData.size, null, true)
@@ -179,8 +179,10 @@ export default class ModelReader {
       this._resolveShellColors(material.shell, model, colorIdToVoxBgr, colorIdToMaterialIndex)
     }, this)
 
-    // Create all voxels
-    this._createVoxels(model, modelData.voxels, colorIdToVoxBgr, colorIdToMaterialIndex)
+    if (!skipVoxels) {
+      // Create all voxels
+      this._createVoxels(model, modelData.voxels, colorIdToVoxBgr, colorIdToMaterialIndex)
+    }
 
     if (extraOptionalModelFields) {
       for (const [field, type] of Object.entries(extraOptionalModelFields)) {
