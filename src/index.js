@@ -13,7 +13,7 @@ import ModelReader from './smoothvoxels/modelreader'
 import ModelWriter from './smoothvoxels/modelwriter'
 import Buffers from './smoothvoxels/buffers'
 import Noise from './smoothvoxels/noise'
-import Voxels, { xyzRangeForSize, shiftForSize, voxColorForRGBT, voxBGRForHex, rgbtForVoxColor, REMOVE_VOXEL_COLOR } from './smoothvoxels/voxels'
+import Voxels, { VOXEL_FILTERS, MAX_SIZE, xyzRangeForSize, shiftForSize, voxColorForRGBT, voxBGRForHex, rgbtForVoxColor, REMOVE_VOXEL_COLOR } from './smoothvoxels/voxels'
 
 import voxToSvox from './vox-to-svox'
 import imgToSvox from './img-to-svox'
@@ -42,5 +42,7 @@ export {
   rgbtForVoxColor,
   voxToSvox,
   imgToSvox,
-  REMOVE_VOXEL_COLOR
+  REMOVE_VOXEL_COLOR,
+  MAX_SIZE,
+  VOXEL_FILTERS
 }

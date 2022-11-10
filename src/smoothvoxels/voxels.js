@@ -18,7 +18,7 @@ const VOXEL_TYPE_DIFFUSE = 0x00
 const VOXEL_TYPE_REMOVE = 0xff
 export const REMOVE_VOXEL_COLOR = (VOXEL_TYPE_REMOVE << 24) >>> 0
 
-const VOXEL_FILTERS = {
+export const VOXEL_FILTERS = {
   NONE: 0,
   // Filters out cells in the provided voxels that are not also in the target voxels
   PAINT: 1,
