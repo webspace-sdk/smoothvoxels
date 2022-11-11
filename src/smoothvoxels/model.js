@@ -288,9 +288,9 @@ export default class Model {
     let minX, minY, minZ, maxX, maxY, maxZ
     const { faceVertIndices, faceCulled, vertX, vertY, vertZ } = buffers
 
-    let offsetX = -(minX + maxX) / 2
-    let offsetY = -(minY + maxY) / 2
-    let offsetZ = -(minZ + maxZ) / 2
+    let shiftX = shiftForSize(this.voxels.size[0])
+    let shiftY = shiftForSize(this.voxels.size[1])
+    let shiftZ = shiftForSize(this.voxels.size[2])
 
     if (!resize) {
       // Just use it's original bounds
@@ -300,8 +300,6 @@ export default class Model {
       maxY = this.bounds.maxY + 1
       minZ = this.bounds.minZ
       maxZ = this.bounds.maxZ + 1
-
-      offsetX = offsetY = offsetZ = 0
     } else {
       // Determine the actual model size if resize is set (to model or bounds)
       minX = Number.POSITIVE_INFINITY
@@ -310,6 +308,7 @@ export default class Model {
       maxX = Number.NEGATIVE_INFINITY
       maxY = Number.NEGATIVE_INFINITY
       maxZ = Number.NEGATIVE_INFINITY
+      shiftX = shiftY = shiftZ = 0
 
       for (let faceIndex = 0, c = this.faceCount; faceIndex < c; faceIndex++) {
         if (faceCulled.get(faceIndex) === 1) continue
@@ -342,25 +341,29 @@ export default class Model {
       }
 
       if (resize === MODEL) {
-        const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(this.voxels.size)
+        const [vminX, vmaxX, vminY, vmaxY, vminZ, vmaxZ] = xyzRangeForSize(this.voxels.size)
 
         // Resize the actual model to the original voxel bounds
-        const scaleX = (maxX - minX + 1) / (maxX - minX)
-        const scaleY = (maxY - minY + 1) / (maxY - minY)
-        const scaleZ = (maxZ - minZ + 1) / (maxZ - minZ)
+        const scaleX = (vmaxX - vminX + 1) / (maxX - minX)
+        const scaleY = (vmaxY - vminY + 1) / (maxY - minY)
+        const scaleZ = (vmaxZ - vminZ + 1) / (maxZ - minZ)
         bos.rescale = Math.min(scaleX, scaleY, scaleZ)
       }
-
-      if (this._origin.nx) offsetX = -minX
-      if (this._origin.px) offsetX = -maxX
-      if (this._origin.ny) offsetY = -minY
-      if (this._origin.py) offsetY = -maxY
-      if (this._origin.nz) offsetZ = -minZ
-      if (this._origin.pz) offsetZ = -maxZ
     }
 
+    let offsetX = -(minX + maxX) / 2
+    let offsetY = -(minY + maxY) / 2
+    let offsetZ = -(minZ + maxZ) / 2
+
+    if (this._origin.nx) offsetX = -minX
+    if (this._origin.px) offsetX = -maxX
+    if (this._origin.ny) offsetY = -minY
+    if (this._origin.py) offsetY = -maxY
+    if (this._origin.nz) offsetZ = -minZ
+    if (this._origin.pz) offsetZ = -maxZ
+
     bos.bounds = { minX, minY, minZ, maxX, maxY, maxZ }
-    bos.offset = { x: offsetX, y: offsetY, z: offsetZ }
+    bos.offset = { x: offsetX + shiftX, y: offsetY + shiftY, z: offsetZ + shiftZ }
 
     return bos
   }
