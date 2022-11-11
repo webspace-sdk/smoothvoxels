@@ -93,13 +93,9 @@ export default class ModelWriter {
     if (modelLine) {
       result += modelLine + '\r\n'
     } else {
-      if (model.name) {
-        result += `name = ${model.name}\r\n`
-      }
-
-      for (const [key, value] of Object.entries(extraOptionalModelFields)) {
+      for (const key of Object.keys(extraOptionalModelFields)) {
         if (model[key]) {
-          result += `${key} = ${model[value]}\r\n`
+          result += `${key} = ${model[key]}\r\n`
         }
       }
 
