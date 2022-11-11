@@ -11,7 +11,7 @@ import UVAssigner from './uvassigner'
 import ColorCombiner from './colorcombiner'
 import Simplifier from './simplifier'
 import FaceAligner from './facealigner'
-import { BOUNDS, MODEL, _VERTEX_OFFSETS, _FACEINDEXUV_MULTIPLIERS, _FACES, _NEIGHBORS } from './constants'
+import { MODEL, _VERTEX_OFFSETS, _FACEINDEXUV_MULTIPLIERS, _FACES, _NEIGHBORS } from './constants'
 
 import { shiftForSize, xyzRangeForSize, EMPTY_VOXEL_PALETTE_INDEX } from './voxels'
 

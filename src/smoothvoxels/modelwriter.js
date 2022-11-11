@@ -27,7 +27,7 @@ export default class ModelWriter {
    * @param compressed Wether the voxels need to be compressed using Recursive Runlength Encoding.
    * @param repeat An integer specifying whether to repeat the voxels to double or tripple the size, default is 1.
    */
-  static writeToString (model, compressed, repeat, modelLine = null, materialLine = null) {
+  static writeToString (model, compressed, repeat, modelLine = null, materialLine = null, extraOptionalModelFields = {}) {
     repeat = Math.round(repeat || 1)
 
     const voxColorToCount = new Map()
@@ -93,6 +93,16 @@ export default class ModelWriter {
     if (modelLine) {
       result += modelLine + '\r\n'
     } else {
+      if (model.name) {
+        result += `name = ${model.name}\r\n`
+      }
+
+      for (const [key, value] of Object.entries(extraOptionalModelFields)) {
+        if (model[key]) {
+          result += `${key} = ${model[value]}\r\n`
+        }
+      }
+
       // Add the size to the result
       const [sizeX, sizeY, sizeZ] = model.voxels.size
       if (sizeY === sizeX && sizeZ === sizeX) { result += `size = ${sizeX * repeat}\r\n` } else { result += `size = ${sizeX * repeat} ${sizeY * repeat} ${sizeZ * repeat}\r\n` }
