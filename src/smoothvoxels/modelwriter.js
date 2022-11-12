@@ -107,7 +107,7 @@ export default class ModelWriter {
         let colorId
         do {
           colorId = this._colorIdForIndex(index++)
-        } while (voxColorToColorId.has(colorId))
+        } while ([...voxColorToColorId.values()].includes(colorId))
 
         voxColorToColorId.set(voxColor, colorId)
       }
