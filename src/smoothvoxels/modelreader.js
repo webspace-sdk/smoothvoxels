@@ -144,8 +144,6 @@ export default class ModelReader {
 
     model.data = this._parseVertexData(modelData.data, 'model')
 
-    model.shell = this._parseShell(modelData.shell)
-
     if (modelData.lights.some((light) => light.size)) {
       // There are visible lights, so create a basic material for them
       model.materials.createMaterial(MATBASIC, FLAT, 1, 0,
@@ -172,6 +170,8 @@ export default class ModelReader {
     for (const materialData of modelData.materials) {
       this._createMaterial(model, materialData, colorIdToVoxBgr, colorIdToMaterialIndex, seenColorIds)
     }
+
+    model.shell = this._parseShell(modelData.shell)
 
     // Find the color (& material) for the shell(s)
     this._resolveShellColors(model.shell, model, colorIdToVoxBgr, colorIdToMaterialIndex)
