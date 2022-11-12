@@ -35,6 +35,27 @@ export default class ModelWriter {
 
     const { voxels, voxColorToColorId } = model
 
+    // Include all shell materials
+    for (const shell of (model.shell || [])) {
+      for (const voxColor of voxColorToColorId.keys()) {
+        const materialIndex = (voxColor >> 24) & 0xff
+        if (materialIndex === shell.materialIndex) {
+          voxColorToCount.set(voxColor, 1)
+        }
+      }
+    }
+
+    model.materials.forEach(function (material, index) {
+      for (const shell of (material.shell || [])) {
+        for (const voxColor of voxColorToColorId.keys()) {
+          const materialIndex = (voxColor >> 24) & 0xff
+          if (materialIndex === shell.materialIndex) {
+            voxColorToCount.set(voxColor, 1)
+          }
+        }
+      }
+    })
+
     for (const [voxColor, count] of voxels.getVoxColorCounts()) {
       if (!voxColorToCount.has(voxColor)) {
         const r = voxColor & 0xff
@@ -56,7 +77,22 @@ export default class ModelWriter {
       voxColorToCount.set(voxColor, c + count)
     }
 
-    // Sort the vox colors on (usage) count
+    for (const voxColor of voxColorToCount.keys()) {
+      const r = voxColor & 0xff
+      const g = (voxColor >> 8) & 0xff
+      const b = (voxColor >> 16) & 0xff
+
+      let hex
+
+      if (SINGLE_HEX_VALUES.has(r) && SINGLE_HEX_VALUES.has(g) && SINGLE_HEX_VALUES.has(b)) {
+        hex = '#' + (SINGLE_HEX_VALUES.get(b) + SINGLE_HEX_VALUES.get(g) * 16 + SINGLE_HEX_VALUES.get(r) * 256).toString(16).padStart(3, '0')
+      } else {
+        hex = '#' + r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + b.toString(16).padStart(2, '0')
+      }
+
+      voxColorToHex.set(voxColor, hex.toUpperCase())
+    }
+
     const sortedVoxColors = [...voxColorToCount.keys()].sort((a, b) => {
       return voxColorToCount.get(b) - voxColorToCount.get(a)
     })
