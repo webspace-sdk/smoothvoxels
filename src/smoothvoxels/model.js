@@ -11,7 +11,7 @@ import UVAssigner from './uvassigner'
 import ColorCombiner from './colorcombiner'
 import Simplifier from './simplifier'
 import FaceAligner from './facealigner'
-import { MODEL, _VERTEX_OFFSETS, _FACEINDEXUV_MULTIPLIERS, _FACES, _NEIGHBORS } from './constants'
+import { SKIP, MODEL, _VERTEX_OFFSETS, _FACEINDEXUV_MULTIPLIERS, _FACES, _NEIGHBORS } from './constants'
 
 import { shiftForSize, xyzRangeForSize, EMPTY_VOXEL_PALETTE_INDEX } from './voxels'
 
@@ -283,7 +283,9 @@ export default class Model {
   }
 
   determineBoundsOffsetAndRescale (resize, buffers) {
-    const bos = { bounds: null, offset: null, rescale: 1 }
+    const bos = { offset: { x: 0, y: 0, z: 0 }, rescale: 1 }
+
+    if (resize === SKIP) return bos
 
     let minX, minY, minZ, maxX, maxY, maxZ
     const { faceVertIndices, faceCulled, vertX, vertY, vertZ } = buffers
@@ -362,8 +364,9 @@ export default class Model {
     if (this._origin.nz) offsetZ = -minZ
     if (this._origin.pz) offsetZ = -maxZ
 
-    bos.bounds = { minX, minY, minZ, maxX, maxY, maxZ }
-    bos.offset = { x: offsetX + shiftX, y: offsetY + shiftY, z: offsetZ + shiftZ }
+    bos.offset.x = offsetX + shiftX
+    bos.offset.y = offsetY + shiftY
+    bos.offset.z = offsetZ + shiftZ
 
     return bos
   }
