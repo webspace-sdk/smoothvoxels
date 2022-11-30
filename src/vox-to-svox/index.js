@@ -100,11 +100,15 @@ export default function (bufferData, model = null) {
   const voxels = model.voxels
   const RGBA = vox.RGBA
 
+  const hz = Math.floor(voxSizeY / 2)
+
   xyziChunk.forEach(function (v) {
-    const { x: vx, y: vz, z: vy, c } = v
+    let { x: vx, y: vz, z: vy, c } = v
+    // ?? not sure why this is needed but objects come in mirrored
+    vz = -(vz - minY - hz) + hz + minY
+
     const { r, g, b } = RGBA[c - 1]
     const svoxColor = voxColorForRGBT(r, g, b, newMaterialIndex)
-    // ?? not sure why this is needed but objects come in mirrored
 
     voxels.setColorAt(vx - shiftX - minX, vy - shiftY - minZ, vz - shiftZ - minY, svoxColor)
   })
