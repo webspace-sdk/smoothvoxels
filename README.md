@@ -4,6 +4,8 @@
 
 Command line tools for converting VOX to SVOX and SVOX to GLTF are now available here: https://github.com/jel-app/svox-tools
 
+NPM Package: https://www.npmjs.com/package/smoothvoxels
+
 This is an optimized and npm packaged fork of the [Smooth Voxels](https://svox.glitch.me/) library by Samuel van Egmond.
 
 It has been updated to use Typed Arrays and bitfields which results in a 5x or so speedup. All features from the main project are supported.
