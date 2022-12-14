@@ -23,6 +23,7 @@ export default class SvoxMeshGenerator {
       normals: new Float32Array(nonCulledFaceCount * 4 * 3 * maxShellCount),
       colors: new Float32Array(nonCulledFaceCount * 4 * 3 * maxShellCount),
       uvs: new Float32Array(nonCulledFaceCount * 4 * 2 * maxShellCount),
+      bounds: { minX: Infinity, minY: Infinity, minZ: Infinity, maxX: -Infinity, maxY: -Infinity, maxZ: -Infinity, centerX: 0, centerY: 0, centerZ: 0, radius: 0 },
       data: null
     }
 
@@ -209,6 +210,50 @@ export default class SvoxMeshGenerator {
     }, this)
 
     const vertCount = (mesh.maxIndex + 1)
+
+    let minX = Infinity; let minY = Infinity; let minZ = Infinity
+    let maxX = -Infinity; let maxY = -Infinity; let maxZ = -Infinity
+
+    for (let i = 0, l = vertCount * 3; i < l; i += 3) {
+      const x = mesh.positions[i]
+      const y = mesh.positions[i + 1]
+      const z = mesh.positions[i + 2]
+      minX = Math.min(minX, x)
+      minY = Math.min(minY, y)
+      minZ = Math.min(minZ, z)
+      maxX = Math.max(maxX, x)
+      maxY = Math.max(maxY, y)
+      maxZ = Math.max(maxZ, z)
+    }
+
+    const centerX = (minX + maxX) / 2
+    const centerY = (minY + maxY) / 2
+    const centerZ = (minZ + maxZ) / 2
+
+    let maxRadiusSq = -Infinity
+
+    for (let i = 0, l = vertCount * 3; i < l; i += 3) {
+      const x = mesh.positions[i]
+      const y = mesh.positions[i + 1]
+      const z = mesh.positions[i + 2]
+      const dx = x - centerX
+      const dy = y - centerY
+      const dz = z - centerZ
+      maxRadiusSq = Math.max(maxRadiusSq, dx * dx + dy * dy + dz * dz)
+    }
+
+    const radius = Math.sqrt(maxRadiusSq)
+
+    mesh.bounds.minX = minX
+    mesh.bounds.minY = minY
+    mesh.bounds.minZ = minZ
+    mesh.bounds.maxX = maxX
+    mesh.bounds.maxY = maxY
+    mesh.bounds.maxZ = maxZ
+    mesh.bounds.centerX = centerX
+    mesh.bounds.centerY = centerY
+    mesh.bounds.centerZ = centerZ
+    mesh.bounds.radius = radius
 
     mesh.indices = new Uint32Array(mesh.indices.buffer, mesh.indices.byteOffset, mesh.indicesIndex)
     mesh.positions = new Float32Array(mesh.positions.buffer, mesh.positions.byteOffset, vertCount * 3)
@@ -477,7 +522,7 @@ export default class SvoxMeshGenerator {
   }
 
   static _generateShellFace (model, buffers, faceIndex, mesh, distanceX, distanceY, distanceZ, colorR, colorG, colorB, material) {
-    const { faceVertIndices, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, faceVertNormalX, faceVertNormalY, faceVertNormalZ, vertX, vertY, vertZ, faceVertColorR, faceVertColorG, faceVertColorB, faceVertUs, faceVertVs, faceSmooth } = buffers
+    const { faceVertIndices, faceVertBothNormalX, faceVertBothNormalY, faceVertBothNormalZ, faceVertSmoothNormalX, faceVertSmoothNormalY, faceVertSmoothNormalZ, faceVertFlatNormalX, faceVertFlatNormalY, faceVertFlatNormalZ, vertX, vertY, vertZ, faceVertUs, faceVertVs, faceSmooth } = buffers
 
     const vert0Index = faceVertIndices[faceIndex * 4]
     const vert1Index = faceVertIndices[faceIndex * 4 + 1]

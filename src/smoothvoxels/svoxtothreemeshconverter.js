@@ -1,51 +1,73 @@
 /* global THREE */
 
 export default class SvoxToThreeMeshConverter {
-  static generate (model) {
+  static generate (svoxMesh) {
     const materials = []
 
-    model.materials.forEach(function (material) {
+    svoxMesh.materials.forEach(function (material) {
       materials.push(SvoxToThreeMeshConverter._generateMaterial(material))
     }, this)
 
     const geometry = new THREE.BufferGeometry()
-
-    // Set the geometry attribute buffers from the model
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(model.positions, 3))
-    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(model.normals, 3))
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(model.colors, 3))
-
-    if (model.uvs) { geometry.setAttribute('uv', new THREE.Float32BufferAttribute(model.uvs, 2)) }
-
-    if (model.data) {
-      for (let d = 0; d < model.data.length; d++) {
-        geometry.setAttribute(model.data[d].name, new THREE.Float32BufferAttribute(model.data[d].values, model.data[d].width))
-      }
-    }
-
-    geometry.setIndex(new THREE.BufferAttribute(model.indices, 1))
-
-    // let indices = [];
-    // for (let i = 0; i < model.positions.length / 3; i++) {
-    //  indices.push(i);
-    // }
-    // geometry.setIndex(indices);
-
-    // Add the groups for each material
-    model.groups.forEach(function (group) {
-      geometry.addGroup(group.start, group.count, group.materialIndex)
-    }, this)
-
-    geometry.computeBoundingBox()
-    geometry.uvsNeedUpdate = true
-
-    // geometry = THREE.BufferGeometryUtils.mergeVertices(geometry);
-
+    SvoxToThreeMeshConverter.updateGeometry(svoxMesh, geometry, true)
     const mesh = new THREE.Mesh(geometry, materials)
     // return new THREE.VertexNormalsHelper(mesh, 0.1);
     // return new THREE.FaceNormalsHelper(mesh, 0.1);
 
     return mesh
+  }
+
+  static updateGeometry (svoxMesh, geometry, addGroups = true) {
+    for (const attribute of Object.keys(geometry.attributes)) {
+      geometry.deleteAttribute(attribute)
+    }
+
+    let boundingBox = geometry.boundingBox
+    let boundingSphere = geometry.boundingSphere
+
+    const { positions, normals, colors, bounds, uvs, data, indices } = svoxMesh
+
+    if (!boundingBox) {
+      boundingBox = geometry.boundingBox = new THREE.Box3()
+    }
+
+    if (!boundingSphere) {
+      boundingSphere = geometry.boundingSphere = new THREE.Sphere()
+    }
+
+    boundingBox.min.set(bounds.minX, bounds.minY, bounds.minZ)
+    boundingBox.max.set(bounds.minX, bounds.minY, bounds.minZ)
+    boundingSphere.center.set(bounds.centerX, bounds.centerY, bounds.centerZ)
+    boundingSphere.radius = bounds.radius
+
+    // Set the geometry attribute buffers from the model
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3))
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+
+    if (uvs) {
+      geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+    }
+
+    if (data) {
+      for (let d = 0; d < data.length; d++) {
+        geometry.setAttribute(data[d].name, new THREE.Float32BufferAttribute(data[d].values, data[d].width))
+      }
+    }
+
+    geometry.setIndex(new THREE.BufferAttribute(indices, 1))
+    geometry.clearGroups()
+
+    if (addGroups) {
+    // Add the groups for each material
+      svoxMesh.groups.forEach(function (group) {
+        geometry.addGroup(group.start, group.count, group.materialIndex)
+      }, this)
+    } else {
+      geometry.setDrawRange(0, indices.length)
+    }
+
+    geometry.uvsNeedUpdate = true
   }
 
   static _generateMaterial (definition) {

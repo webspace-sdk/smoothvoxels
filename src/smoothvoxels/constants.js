@@ -10,6 +10,7 @@ export const MATNORMAL = 'normal'
 // Material resize constants
 export const BOUNDS = 'bounds' // Resize the bounds to fit the model
 export const MODEL = 'model' // Resize the model to fit the bounds
+export const SKIP = 'skip' // skip all resizing
 
 // Material lighting constants
 export const FLAT = 'flat' // Flat shaded triangles

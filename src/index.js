@@ -6,13 +6,14 @@ import Light from './smoothvoxels/light'
 import Material from './smoothvoxels/material'
 import MaterialList from './smoothvoxels/materiallist'
 import SvoxMeshGenerator from './smoothvoxels/svoxmeshgenerator'
+import SvoxBufferGeometry from './smoothvoxels/svoxbuffergeometry'
 import SvoxToThreeMeshConverter from './smoothvoxels/svoxtothreemeshconverter'
 import Model from './smoothvoxels/model'
 import ModelReader from './smoothvoxels/modelreader'
 import ModelWriter from './smoothvoxels/modelwriter'
 import Buffers from './smoothvoxels/buffers'
 import Noise from './smoothvoxels/noise'
-import Voxels, { xyzRangeForSize, shiftForSize, voxColorForRGBT, voxBGRForHex, rgbtForVoxColor } from './smoothvoxels/voxels'
+import Voxels, { VOXEL_FILTERS, MAX_SIZE, xyzRangeForSize, shiftForSize, voxColorForRGBT, voxBGRForHex, rgbtForVoxColor, REMOVE_VOXEL_COLOR } from './smoothvoxels/voxels'
 
 import voxToSvox from './vox-to-svox'
 import imgToSvox from './img-to-svox'
@@ -27,6 +28,7 @@ export {
   Material,
   MaterialList,
   SvoxMeshGenerator,
+  SvoxBufferGeometry,
   SvoxToThreeMeshConverter,
   Model,
   ModelReader,
@@ -39,5 +41,8 @@ export {
   voxBGRForHex,
   rgbtForVoxColor,
   voxToSvox,
-  imgToSvox
+  imgToSvox,
+  REMOVE_VOXEL_COLOR,
+  MAX_SIZE,
+  VOXEL_FILTERS
 }

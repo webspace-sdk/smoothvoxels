@@ -27,13 +27,34 @@ export default class ModelWriter {
    * @param compressed Wether the voxels need to be compressed using Recursive Runlength Encoding.
    * @param repeat An integer specifying whether to repeat the voxels to double or tripple the size, default is 1.
    */
-  static writeToString (model, compressed, repeat, modelLine = null, materialLine = null) {
+  static writeToString (model, compressed, repeat, modelLine = null, materialLine = null, extraOptionalModelFields = {}) {
     repeat = Math.round(repeat || 1)
 
     const voxColorToCount = new Map()
     const voxColorToHex = new Map()
 
     const { voxels, voxColorToColorId } = model
+
+    // Include all shell materials
+    for (const shell of (model.shell || [])) {
+      for (const voxColor of voxColorToColorId.keys()) {
+        const materialIndex = (voxColor >> 24) & 0xff
+        if (materialIndex === shell.materialIndex) {
+          voxColorToCount.set(voxColor, 1)
+        }
+      }
+    }
+
+    model.materials.forEach(function (material, index) {
+      for (const shell of (material.shell || [])) {
+        for (const voxColor of voxColorToColorId.keys()) {
+          const materialIndex = (voxColor >> 24) & 0xff
+          if (materialIndex === shell.materialIndex) {
+            voxColorToCount.set(voxColor, 1)
+          }
+        }
+      }
+    })
 
     for (const [voxColor, count] of voxels.getVoxColorCounts()) {
       if (!voxColorToCount.has(voxColor)) {
@@ -56,7 +77,22 @@ export default class ModelWriter {
       voxColorToCount.set(voxColor, c + count)
     }
 
-    // Sort the vox colors on (usage) count
+    for (const voxColor of voxColorToCount.keys()) {
+      const r = voxColor & 0xff
+      const g = (voxColor >> 8) & 0xff
+      const b = (voxColor >> 16) & 0xff
+
+      let hex
+
+      if (SINGLE_HEX_VALUES.has(r) && SINGLE_HEX_VALUES.has(g) && SINGLE_HEX_VALUES.has(b)) {
+        hex = '#' + (SINGLE_HEX_VALUES.get(b) + SINGLE_HEX_VALUES.get(g) * 16 + SINGLE_HEX_VALUES.get(r) * 256).toString(16).padStart(3, '0')
+      } else {
+        hex = '#' + r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + b.toString(16).padStart(2, '0')
+      }
+
+      voxColorToHex.set(voxColor, hex.toUpperCase())
+    }
+
     const sortedVoxColors = [...voxColorToCount.keys()].sort((a, b) => {
       return voxColorToCount.get(b) - voxColorToCount.get(a)
     })
@@ -71,7 +107,7 @@ export default class ModelWriter {
         let colorId
         do {
           colorId = this._colorIdForIndex(index++)
-        } while (voxColorToColorId.has(colorId))
+        } while ([...voxColorToColorId.values()].includes(colorId))
 
         voxColorToColorId.set(voxColor, colorId)
       }
@@ -93,6 +129,12 @@ export default class ModelWriter {
     if (modelLine) {
       result += modelLine + '\r\n'
     } else {
+      for (const key of Object.keys(extraOptionalModelFields)) {
+        if (model[key]) {
+          result += `${key} = ${model[key]}\r\n`
+        }
+      }
+
       // Add the size to the result
       const [sizeX, sizeY, sizeZ] = model.voxels.size
       if (sizeY === sizeX && sizeZ === sizeX) { result += `size = ${sizeX * repeat}\r\n` } else { result += `size = ${sizeX * repeat} ${sizeY * repeat} ${sizeZ * repeat}\r\n` }

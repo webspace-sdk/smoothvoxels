@@ -6,13 +6,14 @@ import NormalsCalculator from './normalscalculator'
 import VertexTransformer from './vertextransformer'
 import LightsCalculator from './lightscalculator'
 import AOCalculator from './aocalculator'
+import BoundingBox from './boundingbox'
 import UVAssigner from './uvassigner'
 import ColorCombiner from './colorcombiner'
 import Simplifier from './simplifier'
 import FaceAligner from './facealigner'
-import { BOUNDS, MODEL, _VERTEX_OFFSETS, _FACEINDEXUV_MULTIPLIERS, _FACES, _NEIGHBORS } from './constants'
+import { SKIP, MODEL, _VERTEX_OFFSETS, _FACEINDEXUV_MULTIPLIERS, _FACES, _NEIGHBORS } from './constants'
 
-import { shiftForSize, xyzRangeForSize } from './voxels'
+import { shiftForSize, xyzRangeForSize, EMPTY_VOXEL_PALETTE_INDEX } from './voxels'
 
 const SORT_NUMBERS = (a, b) => a - b
 
@@ -98,6 +99,50 @@ export default class Model {
     this.faceCount = 0
     this.vertCount = 0
     this.nonCulledFaceCount = 0
+    this.bounds = new BoundingBox()
+  }
+
+  recomputeModelAndMaterialBounds () {
+    const { voxels, bounds, materials: { materials } } = this
+    const materialBounds = []
+
+    bounds.reset()
+
+    for (const material of materials) {
+      const bounds = material.bounds
+      bounds.reset()
+      materialBounds.push(bounds)
+    }
+
+    const maxMaterialIndex = materials.length - 1
+
+    if (!voxels) return
+
+    const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(voxels.size)
+    const shiftX = shiftForSize(voxels.size[0])
+    const shiftY = shiftForSize(voxels.size[1])
+    const shiftZ = shiftForSize(voxels.size[2])
+
+    for (let x = minX; x <= maxX; x++) {
+      for (let y = minY; y <= maxY; y++) {
+        for (let z = minZ; z <= maxZ; z++) {
+          const paletteIndex = voxels.getPaletteIndexAt(x, y, z)
+          if (paletteIndex === EMPTY_VOXEL_PALETTE_INDEX) continue
+          const vx = x + shiftX
+          const vy = y + shiftY
+          const vz = z + shiftZ
+
+          const voxColor = voxels.colorForPaletteIndex(paletteIndex)
+          const materialIndex = (voxColor & 0xff000000) >> 24
+
+          if (materialIndex <= maxMaterialIndex) {
+            materialBounds[materialIndex].set(vx, vy, vz)
+          }
+
+          bounds.set(vx, vy, vz)
+        }
+      }
+    }
   }
 
   prepareForRender (buffers) {
@@ -105,6 +150,8 @@ export default class Model {
     const { voxels } = this
 
     const maximumDeformCount = Deformer.maximumDeformCount(this)
+
+    this.recomputeModelAndMaterialBounds()
 
     this.faceCount = 0
     this.vertCount = 0
@@ -115,6 +162,8 @@ export default class Model {
     const allowDeform = maximumDeformCount > 0
     const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(voxels.size)
 
+    tmpVertIndexLookup.clear()
+
     const materials = this.materials.materials
     const xShift = shiftForSize(voxels.size[0])
     const yShift = shiftForSize(voxels.size[1])
@@ -124,7 +173,7 @@ export default class Model {
       for (let vy = minY; vy <= maxY; vy++) {
         for (let vz = minZ; vz <= maxZ; vz++) {
           const paletteIndex = voxels.getPaletteIndexAt(vx, vy, vz)
-          if (paletteIndex === 0) continue
+          if (paletteIndex === EMPTY_VOXEL_PALETTE_INDEX) continue
 
           // Shift to positive values
           const pvx = vx + xShift
@@ -234,44 +283,16 @@ export default class Model {
   }
 
   determineBoundsOffsetAndRescale (resize, buffers) {
-    const bos = { bounds: null, offset: null, rescale: 1 }
+    const bos = { offset: { x: 0, y: 0, z: 0 }, rescale: 1 }
+
+    if (resize === SKIP) return bos
 
     let minX, minY, minZ, maxX, maxY, maxZ
-    const { vertX, vertY, vertZ } = buffers
+    const { faceVertIndices, faceCulled, vertX, vertY, vertZ } = buffers
 
-    if (resize === BOUNDS || resize === MODEL) {
-      // Determine the actual model size if resize is set (to model or bounds)
-      minX = Number.POSITIVE_INFINITY
-      minY = Number.POSITIVE_INFINITY
-      minZ = Number.POSITIVE_INFINITY
-      maxX = Number.NEGATIVE_INFINITY
-      maxY = Number.NEGATIVE_INFINITY
-      maxZ = Number.NEGATIVE_INFINITY
-
-      // Skip the skipped faces when determining the bounds
-      for (let vertIndex = 0, c = this.vertCount; vertIndex < c; vertIndex++) {
-        const vx = vertX[vertIndex]
-        const vy = vertY[vertIndex]
-        const vz = vertZ[vertIndex]
-
-        if (vx < minX) minX = vx
-        if (vy < minY) minY = vy
-        if (vz < minZ) minZ = vz
-        if (vx > maxX) maxX = vx
-        if (vy > maxY) maxY = vy
-        if (vz > maxZ) maxZ = vz
-      }
-
-      if (resize === MODEL) {
-        const [minX, maxX, minY, maxY, minZ, maxZ] = xyzRangeForSize(this.voxels.size)
-
-        // Resize the actual model to the original voxel bounds
-        const scaleX = (maxX - minX + 1) / (maxX - minX)
-        const scaleY = (maxY - minY + 1) / (maxY - minY)
-        const scaleZ = (maxZ - minZ + 1) / (maxZ - minZ)
-        bos.rescale = Math.min(scaleX, scaleY, scaleZ)
-      }
-    }
+    let shiftX = shiftForSize(this.voxels.size[0])
+    let shiftY = shiftForSize(this.voxels.size[1])
+    let shiftZ = shiftForSize(this.voxels.size[2])
 
     if (!resize) {
       // Just use it's original bounds
@@ -281,6 +302,55 @@ export default class Model {
       maxY = this.bounds.maxY + 1
       minZ = this.bounds.minZ
       maxZ = this.bounds.maxZ + 1
+    } else {
+      // Determine the actual model size if resize is set (to model or bounds)
+      minX = Number.POSITIVE_INFINITY
+      minY = Number.POSITIVE_INFINITY
+      minZ = Number.POSITIVE_INFINITY
+      maxX = Number.NEGATIVE_INFINITY
+      maxY = Number.NEGATIVE_INFINITY
+      maxZ = Number.NEGATIVE_INFINITY
+      shiftX = shiftY = shiftZ = 0
+
+      for (let faceIndex = 0, c = this.faceCount; faceIndex < c; faceIndex++) {
+        if (faceCulled.get(faceIndex) === 1) continue
+
+        const faceVertOffset = faceIndex * 4
+        const vert0Index = faceVertIndices[faceVertOffset]
+        const vert1Index = faceVertIndices[faceVertOffset + 1]
+        const vert2Index = faceVertIndices[faceVertOffset + 2]
+        const vert3Index = faceVertIndices[faceVertOffset + 3]
+
+        const vert0X = vertX[vert0Index]
+        const vert0Y = vertY[vert0Index]
+        const vert0Z = vertZ[vert0Index]
+        const vert1X = vertX[vert1Index]
+        const vert1Y = vertY[vert1Index]
+        const vert1Z = vertZ[vert1Index]
+        const vert2X = vertX[vert2Index]
+        const vert2Y = vertY[vert2Index]
+        const vert2Z = vertZ[vert2Index]
+        const vert3X = vertX[vert3Index]
+        const vert3Y = vertY[vert3Index]
+        const vert3Z = vertZ[vert3Index]
+
+        minX = Math.min(minX, vert0X, vert1X, vert2X, vert3X)
+        minY = Math.min(minY, vert0Y, vert1Y, vert2Y, vert3Y)
+        minZ = Math.min(minZ, vert0Z, vert1Z, vert2Z, vert3Z)
+        maxX = Math.max(maxX, vert0X, vert1X, vert2X, vert3X)
+        maxY = Math.max(maxY, vert0Y, vert1Y, vert2Y, vert3Y)
+        maxZ = Math.max(maxZ, vert0Z, vert1Z, vert2Z, vert3Z)
+      }
+
+      if (resize === MODEL) {
+        const [vminX, vmaxX, vminY, vmaxY, vminZ, vmaxZ] = xyzRangeForSize(this.voxels.size)
+
+        // Resize the actual model to the original voxel bounds
+        const scaleX = (vmaxX - vminX + 1) / (maxX - minX)
+        const scaleY = (vmaxY - vminY + 1) / (maxY - minY)
+        const scaleZ = (vmaxZ - vminZ + 1) / (maxZ - minZ)
+        bos.rescale = Math.min(scaleX, scaleY, scaleZ)
+      }
     }
 
     let offsetX = -(minX + maxX) / 2
@@ -294,8 +364,9 @@ export default class Model {
     if (this._origin.nz) offsetZ = -minZ
     if (this._origin.pz) offsetZ = -maxZ
 
-    bos.bounds = { minX, minY, minZ, maxX, maxY, maxZ }
-    bos.offset = { x: offsetX, y: offsetY, z: offsetZ }
+    bos.offset.x = offsetX + shiftX
+    bos.offset.y = offsetY + shiftY
+    bos.offset.z = offsetZ + shiftZ
 
     return bos
   }
@@ -308,7 +379,7 @@ export default class Model {
     if (material.opacity === 0) {
       // No voxel, so no face
       return false
-    } else if (neighborPaletteIndex === 0) {
+    } else if (neighborPaletteIndex === EMPTY_VOXEL_PALETTE_INDEX) {
       // The voxel is next to an empty voxel, so create a face
     } else {
       const neightborMaterialIndex = (voxels.colorForPaletteIndex(neighborPaletteIndex) & 0xff000000) >> 24
@@ -432,7 +503,7 @@ export default class Model {
         vertScatter[vertIndex] = scatter
       }
     } else {
-      vertIndex = this.vertCount
+      vertIndex = this.vertCount++
       vertIndexLookup.set(key, vertIndex)
 
       vertX[vertIndex] = x
@@ -484,8 +555,6 @@ export default class Model {
       vertColorB[vertColorOffset + vertColorIndex] = vb
       vertColorCount[vertIndex]++
     }
-
-    this.vertCount++
 
     return vertIndex
   }

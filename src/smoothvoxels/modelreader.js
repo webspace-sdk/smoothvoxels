@@ -37,10 +37,10 @@ export default class ModelReader {
      * @param {any} modelString The string containing the model.
      * @returns {Model} The model.
      */
-  static readFromString (modelString) {
+  static readFromString (modelString, extraOptionalModelFields = {}, skipVoxels = false) {
     const modelData = this._parse(modelString)
-    this._validateModel(modelData)
-    return this._createModel(modelData)
+    this._validateModel(modelData, extraOptionalModelFields)
+    return this._createModel(modelData, extraOptionalModelFields, skipVoxels)
   }
 
   /**
@@ -112,7 +112,7 @@ export default class ModelReader {
      * @param {object} modelData The simple object from the parsed model string.
      * @returns {Model} The model class with its properties, materials and voxels.
      */
-  static _createModel (modelData) {
+  static _createModel (modelData, extraOptionalModelFields, skipVoxels) {
     const model = new Model()
 
     model.size = this._parseXYZInt('size', modelData.size, null, true)
@@ -144,8 +144,6 @@ export default class ModelReader {
 
     model.data = this._parseVertexData(modelData.data, 'model')
 
-    model.shell = this._parseShell(modelData.shell)
-
     if (modelData.lights.some((light) => light.size)) {
       // There are visible lights, so create a basic material for them
       model.materials.createMaterial(MATBASIC, FLAT, 1, 0,
@@ -173,14 +171,45 @@ export default class ModelReader {
       this._createMaterial(model, materialData, colorIdToVoxBgr, colorIdToMaterialIndex, seenColorIds)
     }
 
+    model.shell = this._parseShell(modelData.shell)
+
     // Find the color (& material) for the shell(s)
     this._resolveShellColors(model.shell, model, colorIdToVoxBgr, colorIdToMaterialIndex)
     model.materials.forEach(function (material) {
       this._resolveShellColors(material.shell, model, colorIdToVoxBgr, colorIdToMaterialIndex)
     }, this)
 
-    // Create all voxels
-    this._createVoxels(model, modelData.voxels, colorIdToVoxBgr, colorIdToMaterialIndex)
+    if (!skipVoxels) {
+      // Create all voxels
+      this._createVoxels(model, modelData.voxels, colorIdToVoxBgr, colorIdToMaterialIndex)
+    }
+
+    if (extraOptionalModelFields) {
+      for (const [field, type] of Object.entries(extraOptionalModelFields)) {
+        if (modelData[field]) {
+          switch (type) {
+            case 'int':
+              model[field] = parseInt(modelData[field], 10)
+              break
+
+            case 'float':
+              model[field] = parseFloat(modelData[field])
+              break
+
+            case 'string':
+              model[field] = modelData[field]
+              break
+
+            case 'boolean':
+              model[field] = modelData[field] === 'true'
+              break
+
+            default:
+              throw new Error(`Unknown type ${type} for field ${field}`)
+          }
+        }
+      }
+    }
 
     return model
   }
@@ -778,8 +807,8 @@ export default class ModelReader {
      * Check whether properties are missing or unrecognized from the model data.
      * @param {object} modelData The simple object from the parsed model string.
      */
-  static _validateModel (modelData) {
-    this._validateProperties(modelData, MANDATORY_MODEL_FIELDS, OPTIONAL_MODEL_FIELDS, 'model')
+  static _validateModel (modelData, extraOptionalModelFields) {
+    this._validateProperties(modelData, MANDATORY_MODEL_FIELDS, [...Object.keys(extraOptionalModelFields), ...OPTIONAL_MODEL_FIELDS], 'model')
 
     for (const lightData of modelData.lights) {
       this._validateLight(lightData)
