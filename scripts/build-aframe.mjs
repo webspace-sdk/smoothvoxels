@@ -12,7 +12,7 @@ const buildConfig = {
   basePath: join(__dirname, '..'),
   bundle: true,
   constants: {},
-  entry: 'src/aframe.js',
+  entry: 'aframe.js',
   format: 'esm',
   minify: true,
   outdir: 'dist',

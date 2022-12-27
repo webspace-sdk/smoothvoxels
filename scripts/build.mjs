@@ -11,7 +11,7 @@ const buildConfig = {
   basePath: join(__dirname, '..'),
   bundle: true,
   constants: {},
-  entry: 'src/index.js',
+  entry: 'index.js',
   format: 'esm',
   minify: true,
   outdir: 'dist',
