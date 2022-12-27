@@ -1,4 +1,4 @@
-/* global THREE */
+import * as THREE from 'three'
 
 export default class SvoxBufferGeometry extends THREE.BufferGeometry {
   constructor () {
