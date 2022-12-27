@@ -4,7 +4,7 @@ import Light from './light'
 import BoundingBox from './boundingbox'
 import Voxels, { shiftForSize, voxBGRForHex } from './voxels'
 
-import { MATSTANDARD, FLAT, QUAD, SMOOTH, BOTH, MATBASIC, FRONT, BOUNDS, MODEL } from './constants.js'
+import { MATSTANDARD, FLAT, QUAD, SMOOTH, BOTH, MATBASIC, FRONT, BOUNDS, MODEL, SKIP } from './constants.js'
 
 const PARSE_REGEX = {
   linecontinuation: /_\s*[\r\n]/gm,
@@ -121,7 +121,7 @@ export default class ModelReader {
     model.position = this._parseXYZFloat('position', modelData.position, '0 0 0', false)
     model.simplify = modelData.simplify !== 'false'
 
-    if (modelData.resize === BOUNDS) { model.resize = BOUNDS } else if (modelData.resize === MODEL) { model.resize = MODEL } else if (modelData.resize) { model.resize = null } else if (modelData.autoresize === 'true') {
+    if (modelData.resize === BOUNDS) { model.resize = BOUNDS } else if (modelData.resize === MODEL) { model.resize = MODEL } else if (modelData.resize === SKIP) { model.resize = SKIP } else if (modelData.resize) { model.resize = null } else if (modelData.autoresize === 'true') {
       // autoResize is deprecated, translate to resize = model
       model.resize = MODEL
     }
