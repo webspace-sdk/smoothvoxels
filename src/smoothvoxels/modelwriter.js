@@ -27,7 +27,7 @@ export default class ModelWriter {
    * @param compressed Wether the voxels need to be compressed using Recursive Runlength Encoding.
    * @param repeat An integer specifying whether to repeat the voxels to double or tripple the size, default is 1.
    */
-  static writeToString (model, compressed, repeat, modelLine = null, materialLine = null, extraOptionalModelFields = {}) {
+  static writeToString (model, compressed, repeat, modelLine = null, materialLine = null, extraOptionalModelFields = {}, skipVoxels = false) {
     repeat = Math.round(repeat || 1)
 
     const voxColorToCount = new Map()
@@ -180,8 +180,10 @@ export default class ModelWriter {
     // Add the materials and colors to the result
     result += this._serializeMaterials(model, sortedVoxColors, voxColorToHex, materialLine)
 
-    // Add the voxels to the result
-    if (!compressed || repeat !== 1) { result += this._serializeVoxels(model, repeat, voxelWidth) } else { result += this._serializeVoxelsRLE(model, 100) }
+    if (!skipVoxels) {
+      // Add the voxels to the result
+      if (!compressed || repeat !== 1) { result += this._serializeVoxels(model, repeat, voxelWidth) } else { result += this._serializeVoxelsRLE(model, 100) }
+    }
 
     return result
   }
