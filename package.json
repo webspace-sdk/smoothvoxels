@@ -1,6 +1,6 @@
 {
   "name": "smoothvoxels",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "Smooth Voxels",
   "scripts": {
     "build": "node scripts/build.mjs --production; node scripts/build-worker.mjs --production ; node scripts/build-aframe.mjs --production",
